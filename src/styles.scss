@@ -1,0 +1,232 @@
+/* You can add global styles to this file, and also import other style files */
+
+// Importar tema base de Material Design - Azure Blue
+@import '@angular/material/prebuilt-themes/azure-blue.css';
+
+// Paleta de colores "Holiday Cheer" personalizada
+:root {
+  // Colores de la paleta Holiday Cheer
+  --holiday-teal-dark: #024554;
+  --holiday-sage-green: #53736A;
+  --holiday-green-medium: #007701;
+  --holiday-lime-green: #A8B545;
+  --holiday-cream: #C2C0A6;
+  
+  // Sobrescribir Material Design primary con la paleta Holiday Cheer
+  --mat-primary-50: #e8f4f1;
+  --mat-primary-100: #c5e4dc;
+  --mat-primary-200: #9fd3c4;
+  --mat-primary-300: #78c1ac;
+  --mat-primary-400: #6ABC69;
+  --mat-primary-500: #53736A;
+  --mat-primary-600: #4b6860;
+  --mat-primary-700: #425c55;
+  --mat-primary-800: #39504a;
+  --mat-primary-900: #024554;
+  
+  // Accent con el verde lima
+  --mat-accent-500: #A8B545;
+}
+
+/* Reset básico para eliminar márgenes y padding por defecto */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+/* Asegurar que el app-root ocupe toda la pantalla */
+app-root {
+  display: block;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* =========================================
+   ESTILOS GLOBALES DE MATERIAL DESIGN
+   Con paleta Holiday Cheer
+   ========================================= */
+
+/* BOTONES - Estilos globales */
+.mat-mdc-raised-button.mat-primary:not(:disabled) {
+  color: var(--holiday-green-medium) !important;
+  
+  &:hover {
+    background-color: rgba(0, 119, 1, 0.08) !important;
+    color: var(--holiday-green-medium) !important;
+  }
+  
+  &:focus {
+    background-color: rgba(0, 119, 1, 0.12) !important;
+    color: var(--holiday-green-medium) !important;
+  }
+  
+  &:active {
+    background-color: rgba(0, 119, 1, 0.16) !important;
+    color: var(--holiday-green-medium) !important;
+  }
+  
+  .mdc-button__label {
+    color: var(--holiday-green-medium) !important;
+  }
+  
+  .mat-ripple-element {
+    background-color: rgba(0, 119, 1, 0.1) !important;
+  }
+}
+
+/* CHECKBOXES - Estilos globales */
+.mat-mdc-checkbox.mat-primary {
+  // Estado checked y indeterminate
+  .mdc-checkbox .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background,
+  .mdc-checkbox .mdc-checkbox__native-control:enabled:indeterminate ~ .mdc-checkbox__background {
+    background-color: var(--holiday-green-medium) !important;
+    border-color: var(--holiday-green-medium) !important;
+  }
+
+  // Estado hover
+  .mdc-checkbox:hover .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background,
+  .mdc-checkbox:hover .mdc-checkbox__native-control:enabled:indeterminate ~ .mdc-checkbox__background {
+    background-color: #005500 !important; // Verde más oscuro en hover
+    border-color: #005500 !important;
+  }
+
+  // Ripple effect
+  .mat-ripple-element {
+    background-color: rgba(0, 119, 1, 0.12) !important;
+  }
+
+  // Focus state
+  .mdc-checkbox__native-control:enabled:focus ~ .mdc-checkbox__background {
+    border-color: var(--holiday-green-medium) !important;
+  }
+
+  // Focus overlay
+  .mdc-checkbox:not(.mdc-checkbox--disabled) .mdc-checkbox__native-control:focus ~ .mdc-checkbox__background::before {
+    background-color: rgba(0, 119, 1, 0.12) !important;
+  }
+}
+
+/* FORM FIELDS - Estilos globales */
+.mat-mdc-form-field {
+  // Labels en estado normal
+  .mat-mdc-form-field-label {
+    color: rgba(0, 0, 0, 0.6) !important;
+    transition: color 0.3s ease;
+  }
+
+  // Estado focused del label
+  &.mat-focused {
+    .mat-mdc-form-field-label {
+      color: var(--holiday-green-medium) !important;
+    }
+
+    // Label flotante en focus
+    .mdc-floating-label {
+      color: var(--holiday-green-medium) !important;
+    }
+  }
+
+  // Label flotante específico
+  .mdc-floating-label--float-above.mdc-floating-label--focused {
+    color: var(--holiday-green-medium) !important;
+  }
+
+  // Para compatibilidad con diferentes estados de MDC
+  .mdc-text-field--focused .mdc-floating-label {
+    color: var(--holiday-green-medium) !important;
+  }
+}
+
+/* UNDERLINES DE INPUT - Estilos globales */
+.mat-mdc-form-field .mdc-text-field--filled {
+  // Línea base siempre gris
+  .mdc-line-ripple::before {
+    border-bottom-color: rgba(0, 0, 0, 0.42) !important;
+    border-bottom-width: 1px !important;
+  }
+
+  // Hover - gris más oscuro
+  &:hover:not(.mdc-text-field--focused) .mdc-line-ripple::before {
+    border-bottom-color: rgba(0, 0, 0, 0.87) !important;
+  }
+
+  // Estado focused - verde Holiday Cheer
+  &.mdc-text-field--focused .mdc-line-ripple::after {
+    border-bottom-color: var(--holiday-green-medium) !important;
+    border-bottom-width: 1px !important;
+    opacity: 1 !important;
+  }
+
+  // Estado unfocused - completamente invisible para evitar azul
+  &:not(.mdc-text-field--focused) .mdc-line-ripple::after {
+    border-bottom-color: transparent !important;
+    border-bottom-width: 0 !important;
+    opacity: 0 !important;
+    background-color: transparent !important;
+  }
+
+  // Sobrescribir cualquier color azul residual
+  .mdc-line-ripple::after {
+    background-color: transparent !important;
+    transition: border-bottom-color 0.2s ease, opacity 0.2s ease !important;
+  }
+}
+
+/* TRANSPARENCIA DE INPUTS FILL - Estilos globales */
+.mat-mdc-form-field .mdc-text-field--filled {
+  background-color: transparent !important;
+  
+  .mdc-text-field__input {
+    background-color: transparent !important;
+  }
+
+  // Remover el fondo gris característico del fill
+  &::before {
+    background-color: transparent !important;
+  }
+
+  &:not(.mdc-text-field--disabled) {
+    background-color: transparent !important;
+    
+    &::before {
+      background-color: transparent !important;
+    }
+  }
+
+  // Estados hover y focus sin fondo gris
+  &:hover:not(.mdc-text-field--disabled) {
+    background-color: transparent !important;
+    
+    &::before {
+      background-color: transparent !important;
+    }
+  }
+
+  &.mdc-text-field--focused {
+    background-color: transparent !important;
+    
+    &::before {
+      background-color: transparent !important;
+    }
+  }
+}
+
+/* ENLACES - Colores de la paleta Holiday Cheer */
+a {
+  color: var(--holiday-sage-green);
+  text-decoration: none;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: var(--holiday-teal-dark);
+    text-decoration: underline;
+  }
+}

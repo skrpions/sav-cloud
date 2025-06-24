@@ -1,0 +1,763 @@
+:host {
+  display: block;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+// Bloque principal - login-page
+.login-page {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  background: #f8f9fa; // Fondo gris claro y neutro
+  margin: 0;
+  padding: 0;
+
+  // Elemento - background (solo la parte superior con imagen)
+  &__background {
+    position: absolute;
+    top: 1rem; // 16px = 1rem
+    left: 1rem; // 16px = 1rem
+    right: 1rem; // 16px = 1rem
+    height: calc(40vh - 1rem); // Ajustar altura por el padding superior
+    background: linear-gradient(195deg, rgba(66, 66, 74, 0.1), rgba(25, 25, 25, 0.1)),
+                url('/images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 0.75rem; // 12px = 0.75rem - border radius completo
+    z-index: 1;
+  }
+
+  // Elemento - header
+  &__header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    padding: 1rem 0;
+    background: transparent;
+  }
+
+  // Elemento - content
+  &__content {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    height: 100vh;
+    z-index: 10;
+  }
+
+  // Elemento - footer
+  &__footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: transparent;
+    padding: 1rem 2rem;
+    z-index: 20;
+  }
+}
+
+// Bloque - header-nav
+.header-nav {
+  max-width: 75rem; // 1200px = 75rem
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  // Elemento - brand
+  &__brand {
+    margin-top: 1rem;
+    color: white;
+    font-size: 1.125rem; // 18px = 1.125rem
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  // Elemento - menu
+  &__menu {
+    display: flex;
+    gap: 2rem;
+  }
+
+  // Elemento - link
+  &__link {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.875rem; // 14px = 0.875rem
+    font-weight: 400;
+    transition: color 0.3s ease;
+
+    // Modificador - hover
+    &:hover {
+      color: white;
+    }
+  }
+
+  // Elemento - actions
+  &__actions {
+    display: flex;
+    align-items: center;
+  }
+
+  // Elemento - button
+  &__button {
+    background: white;
+    color: #344767;
+    font-weight: 600;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem; // 8px = 0.5rem
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: translateY(-0.0625rem); // 1px = 0.0625rem
+      box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2); // 4px 8px
+    }
+  }
+}
+
+// Bloque - login-wrapper
+.login-wrapper {
+  width: 100%;
+  max-width: 25rem; // 400px = 25rem
+  margin: 0 auto;
+  position: relative;
+  z-index: 15;
+}
+
+// Bloque - login-card
+.login-card {
+  background: white;
+  border-radius: 1rem; // 16px = 1rem
+  box-shadow: 0 1.25rem 1.5625rem -0.3125rem rgba(0, 0, 0, 0.1), 0 0.625rem 0.625rem -0.3125rem rgba(0, 0, 0, 0.04); // 20px 25px -5px, 10px 10px -5px
+  border: none;
+  overflow: hidden;
+
+  // Elemento - header
+  &__header {
+    background: linear-gradient(140deg, var(--holiday-teal-dark), var(--holiday-green-medium));
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    margin: -1.5rem -1.5rem 2rem -1.5rem; // -24px = -1.5rem
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  // Elemento - title
+  &__title {
+    font-size: 1.5rem; // 24px = 1.5rem
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    color: white;
+  }
+
+  // Elemento - subtitle
+  &__subtitle {
+    font-size: 0.875rem; // 14px = 0.875rem
+    margin: 0;
+    opacity: 0.8;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  // Elemento - content
+  &__content {
+    padding: 0 2rem 2rem 2rem;
+  }
+}
+
+// Bloque - login-form
+.login-form {
+  width: 100%;
+
+  // Elemento - field
+  &__field {
+    width: 100%;
+    margin-bottom: 1rem;
+
+    ::ng-deep {
+      // Personalización específica para appearance="fill"
+      .mat-mdc-form-field {
+        background-color: transparent !important;
+      }
+
+      // Forzar transparencia en todos los elementos del fill
+      .mdc-text-field--filled {
+        background-color: transparent !important;
+        
+        .mdc-text-field__input {
+          background-color: transparent !important;
+        }
+
+        // Remover el fondo gris característico del fill
+        &::before {
+          background-color: transparent !important;
+        }
+
+        &:not(.mdc-text-field--disabled) {
+          background-color: transparent !important;
+          
+          &::before {
+            background-color: transparent !important;
+          }
+        }
+
+        // Estados hover y focus sin fondo gris
+        &:hover:not(.mdc-text-field--disabled) {
+          background-color: transparent !important;
+          
+          &::before {
+            background-color: transparent !important;
+          }
+        }
+
+        &.mdc-text-field--focused {
+          background-color: transparent !important;
+          
+          &::before {
+            background-color: transparent !important;
+          }
+        }
+      }
+
+      // Personalizar la línea inferior del fill - control completo
+      .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+        .mdc-line-ripple::before {
+          border-bottom-color: rgba(0, 0, 0, 0.42);
+          border-bottom-width: 1px;
+        }
+
+        &:hover .mdc-line-ripple::before {
+          border-bottom-color: rgba(0, 0, 0, 0.87);
+        }
+
+        // Estado focused - verde
+        &.mdc-text-field--focused .mdc-line-ripple::after {
+          border-bottom-color: var(--holiday-green-medium) !important;
+          border-bottom-width: 1px;
+        }
+
+        // Estado unfocused - forzar transparencia para evitar parpadeo azul
+        &:not(.mdc-text-field--focused) .mdc-line-ripple::after {
+          border-bottom-color: transparent !important;
+          border-bottom-width: 0 !important;
+          opacity: 0 !important;
+        }
+
+        // Sobrescribir cualquier transición de Material Design
+        .mdc-line-ripple::after {
+          transition: border-bottom-color 0.3s ease, opacity 0.3s ease !important;
+        }
+      }
+
+      // Estilos para labels e inputs
+      .mat-mdc-form-field-label {
+        color: rgba(0, 0, 0, 0.6);
+        transition: color 0.3s ease;
+      }
+
+      // Label en estado focused con color Holiday Cheer
+      &.mat-focused .mat-mdc-form-field-label {
+        color: var(--holiday-green-medium) !important;
+      }
+
+      // Label flotante en estado focused
+      .mdc-floating-label--float-above {
+        &.mdc-floating-label--focused {
+          color: var(--holiday-green-medium) !important;
+        }
+      }
+
+      .mat-mdc-input-element {
+        color: rgba(0, 0, 0, 0.87);
+        background-color: transparent !important;
+      }
+
+      // Remover cualquier overlay o fondo adicional
+      .mat-mdc-form-field-focus-overlay,
+      .mat-mdc-form-field-subscript-wrapper {
+        background-color: transparent !important;
+      }
+
+      // Asegurar que no haya ripples con fondo
+      .mdc-line-ripple {
+        background-color: transparent !important;
+      }
+    }
+  }
+
+  // Elemento - checkbox-container
+  &__checkbox-container {
+    margin: 1rem 0;
+  }
+
+  // Elemento - checkbox
+  &__checkbox {
+    ::ng-deep {
+      .mat-mdc-checkbox-label {
+        color: rgba(0, 0, 0, 0.87);
+        font-size: 0.875rem; // 14px = 0.875rem
+      }
+
+      // Personalizar colores del checkbox con Holiday Cheer
+      .mdc-checkbox .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background,
+      .mdc-checkbox .mdc-checkbox__native-control:enabled:indeterminate ~ .mdc-checkbox__background {
+        background-color: #007701 !important;
+        border-color: #007701 !important;
+      }
+
+      // Estado hover del checkbox
+      .mdc-checkbox:hover .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background,
+      .mdc-checkbox:hover .mdc-checkbox__native-control:enabled:indeterminate ~ .mdc-checkbox__background {
+        background-color: #007701 !important;
+        border-color: #007701 !important;
+      }
+
+      // Ripple effect del checkbox
+      .mat-mdc-checkbox .mat-ripple-element {
+        background-color: rgba(0, 119, 1, 0.12) !important;
+      }
+
+      // Focus ring del checkbox
+      .mdc-checkbox__native-control:enabled:focus ~ .mdc-checkbox__background {
+        border-color: #007701 !important;
+      }
+
+      // Estado disabled manteniendo consistencia
+      .mdc-checkbox .mdc-checkbox__native-control:disabled:checked ~ .mdc-checkbox__background,
+      .mdc-checkbox .mdc-checkbox__native-control:disabled:indeterminate ~ .mdc-checkbox__background {
+        background-color: rgba(0, 119, 1, 0.38) !important;
+        border-color: rgba(0, 119, 1, 0.38) !important;
+      }
+    }
+  }
+
+  // Elemento - submit-button
+  &__submit-button {
+    width: 100%;
+    margin: 1rem 0;
+    
+    // Permitir que Material Design maneje los estilos del botón
+    // pero personalizar algunos aspectos específicos
+    ::ng-deep {
+      &.mat-mdc-raised-button {
+        height: 3rem; // 48px = 3rem
+        font-weight: 600;
+        
+        .mdc-button__label {
+          font-size: 0.9375rem; // 15px = 0.9375rem
+          letter-spacing: 0.0625rem; // 1px = 0.0625rem
+        }
+      }
+    }
+  }
+
+  // Elemento - signup-container
+  &__signup-container {
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+
+  // Elemento - signup-text
+  &__signup-text {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.875rem; // 14px = 0.875rem
+  }
+
+  // Elemento - signup-link
+  &__signup-link {
+    color: var(--holiday-sage-green);
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 0.25rem;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: var(--holiday-teal-dark);
+      text-decoration: underline;
+    }
+  }
+}
+
+// Clase utilitaria para botones anchos
+.wide-form-field {
+  width: 100%;
+  max-width: 360px;
+}
+
+button.wide-form-field {
+  width: 100%;
+  max-width: 360px;
+  margin-top: 20px;
+  height: 2.5rem !important; // 40px exactos
+  border-radius: 30px !important;
+  
+  .button-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  // Personalización del color del texto del botón con mayor especificidad
+  ::ng-deep {
+    &.mat-mdc-raised-button.mat-primary:not(:disabled) {
+      color: #007701 !important;
+      
+      // Color de hover suave con verde de la paleta
+      &:hover {
+        background-color: rgba(0, 119, 1, 0.08) !important;
+        color: #007701 !important;
+      }
+
+      // Estado de focus con el mismo verde suave
+      &:focus {
+        background-color: rgba(0, 119, 1, 0.12) !important;
+        color: #007701 !important;
+      }
+
+      // Estado pressed/active
+      &:active {
+        background-color: rgba(0, 119, 1, 0.16) !important;
+        color: #007701 !important;
+      }
+      
+      // Sobrescribir ripple effect
+      .mat-ripple-element {
+        background-color: rgba(0, 119, 1, 0.1) !important;
+      }
+      
+      // Sobrescribir el mdc-button específicamente
+      .mdc-button {
+        color: #007701 !important;
+        
+        &:hover {
+          background-color: rgba(0, 119, 1, 0.08) !important;
+        }
+      }
+    }
+
+    // Selectores adicionales para mayor cobertura
+    &.mat-mdc-button.mat-primary {
+      color: #007701 !important;
+      
+      &:hover {
+        background-color: rgba(0, 119, 1, 0.08) !important;
+      }
+    }
+  }
+}
+
+// Bloque - page-footer
+.page-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  // Elemento - content
+  &__content {
+    color: rgba(123, 128, 154, 0.8);
+    font-size: 0.875rem; // 14px = 0.875rem
+    display: flex;
+    align-items: center;
+  }
+
+  // Elemento - link
+  &__link {
+    color: var(--holiday-teal-dark);
+    text-decoration: none;
+    font-weight: 600;
+    margin: 0 0.25rem;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    // Modificador - secondary
+    &--secondary {
+      color: rgba(123, 128, 154, 0.8);
+      font-weight: 400;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: var(--holiday-sage-green);
+      }
+    }
+  }
+
+  // Elemento - links
+  &__links {
+    display: flex;
+    gap: 1.5rem;
+  }
+}
+
+// Responsive Design
+@media (max-width: 48rem) { // 768px = 48rem
+  .login-page {
+    &__background {
+      height: calc(35vh - 0.75rem); // Reducir un poco en móviles
+      top: 0.75rem; // 12px = 0.75rem
+      left: 0.75rem;
+      right: 0.75rem;
+    }
+
+    &__content {
+      padding: 1rem;
+    }
+
+    &__footer {
+      position: relative;
+      padding: 1rem;
+    }
+  }
+
+  .header-nav {
+    padding: 0 1rem;
+
+    &__menu {
+      display: none;
+    }
+  }
+
+  .login-card {
+    &__header {
+      padding: 1.5rem;
+      margin: -1rem -1rem 1.5rem -1rem; // -16px = -1rem
+    }
+
+    &__content {
+      padding: 0 1.5rem 1.5rem 1.5rem;
+    }
+  }
+
+  .page-footer {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+    
+    &__links {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+    
+    &__content {
+      justify-content: center;
+    }
+  }
+}
+
+@media (max-width: 30rem) { // 480px = 30rem
+  .login-page {
+    &__background {
+      height: calc(30vh - 0.5rem); // Aún más pequeño en móviles
+      top: 0.5rem; // 8px = 0.5rem
+      left: 0.5rem;
+      right: 0.5rem;
+    }
+  }
+
+  .header-nav {
+    &__brand {
+      font-size: 1rem; // 16px = 1rem
+    }
+  }
+
+  .page-footer {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+    
+    &__links {
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    &__content {
+      justify-content: center;
+    }
+  }
+}
+
+// Ajuste para pantallas muy pequeñas en altura
+@media (max-height: 37.5rem) { // 600px = 37.5rem
+  .login-page {
+    &__background {
+      height: calc(25vh - 0.25rem);
+      top: 0.25rem; // 4px = 0.25rem
+      left: 0.25rem;
+      right: 0.25rem;
+    }
+
+    &__content {
+      padding: 1rem 2rem;
+    }
+
+    &__footer {
+      position: relative;
+      padding: 0.5rem 2rem;
+    }
+  }
+
+  .login-card {
+    &__header {
+      padding: 1rem;
+    }
+  }
+}
+
+// Estilos de botón y checkbox con máxima especificidad - al final para mayor prioridad
+:host ::ng-deep {
+  .login-form button.mat-mdc-raised-button.mat-primary:not(:disabled) {
+    color: #007701 !important;
+    
+    &:hover {
+      background-color: rgba(0, 119, 1, 0.08) !important;
+      color: #007701 !important;
+    }
+    
+    &:focus {
+      background-color: rgba(0, 119, 1, 0.12) !important;
+      color: #007701 !important;
+    }
+    
+    &:active {
+      background-color: rgba(0, 119, 1, 0.16) !important;
+      color: #007701 !important;
+    }
+    
+    .mdc-button__label {
+      color: #007701 !important;
+    }
+  }
+  
+  // Sobrescribir estados específicos de MDC
+  .mdc-button.mdc-button--raised:not(:disabled) {
+    color: #007701 !important;
+    
+    &:hover {
+      background-color: rgba(0, 119, 1, 0.08) !important;
+    }
+  }
+
+  // Checkbox con colores Holiday Cheer - máxima especificidad
+  .login-form .mat-mdc-checkbox.mat-primary {
+    // Estado checked y indeterminate
+    .mdc-checkbox .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background,
+    .mdc-checkbox .mdc-checkbox__native-control:enabled:indeterminate ~ .mdc-checkbox__background {
+      background-color: #007701 !important;
+      border-color: #007701 !important;
+    }
+
+    // Estado hover
+    .mdc-checkbox:hover .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background,
+    .mdc-checkbox:hover .mdc-checkbox__native-control:enabled:indeterminate ~ .mdc-checkbox__background {
+      background-color: #005500 !important; // Verde más oscuro en hover
+      border-color: #005500 !important;
+    }
+
+    // Ripple effect
+    .mat-ripple-element {
+      background-color: rgba(0, 119, 1, 0.12) !important;
+    }
+
+    // Focus state
+    .mdc-checkbox__native-control:enabled:focus ~ .mdc-checkbox__background {
+      border-color: #007701 !important;
+    }
+
+    // Focus overlay
+    .mdc-checkbox:not(.mdc-checkbox--disabled) .mdc-checkbox__native-control:focus ~ .mdc-checkbox__background::before {
+      background-color: rgba(0, 119, 1, 0.12) !important;
+    }
+  }
+
+  // Labels de inputs con colores Holiday Cheer - máxima especificidad
+  .login-form .mat-mdc-form-field {
+    // Label normal
+    .mat-mdc-form-field-label {
+      color: rgba(0, 0, 0, 0.6) !important;
+      transition: color 0.3s ease;
+    }
+
+    // Estado focused del label
+    &.mat-focused {
+      .mat-mdc-form-field-label {
+        color: #007701 !important;
+      }
+
+      // Label flotante en focus
+      .mdc-floating-label {
+        color: #007701 !important;
+      }
+
+      // Placeholder text en focus
+      .mat-mdc-input-element::placeholder {
+        color: rgba(0, 119, 1, 0.6) !important;
+      }
+    }
+
+    // Label flotante específico
+    .mdc-floating-label--float-above.mdc-floating-label--focused {
+      color: #007701 !important;
+    }
+
+    // Para compatibilidad con diferentes estados de MDC
+    .mdc-text-field--focused .mdc-floating-label {
+      color: #007701 !important;
+    }
+  }
+
+  // Control total del underline para evitar parpadeo azul
+  .login-form .mat-mdc-form-field .mdc-text-field--filled {
+    // Línea base siempre gris
+    .mdc-line-ripple::before {
+      border-bottom-color: rgba(0, 0, 0, 0.42) !important;
+      border-bottom-width: 1px !important;
+    }
+
+    // Hover - gris más oscuro
+    &:hover:not(.mdc-text-field--focused) .mdc-line-ripple::before {
+      border-bottom-color: rgba(0, 0, 0, 0.87) !important;
+    }
+
+    // Estado focused - verde Holiday Cheer
+    &.mdc-text-field--focused .mdc-line-ripple::after {
+      border-bottom-color: #007701 !important;
+      border-bottom-width: 1px !important;
+      opacity: 1 !important;
+    }
+
+    // Estado unfocused - completamente invisible para evitar azul
+    &:not(.mdc-text-field--focused) .mdc-line-ripple::after {
+      border-bottom-color: transparent !important;
+      border-bottom-width: 0 !important;
+      opacity: 0 !important;
+      background-color: transparent !important;
+    }
+
+    // Sobrescribir cualquier color azul residual
+    .mdc-line-ripple::after {
+      background-color: transparent !important;
+      transition: border-bottom-color 0.2s ease, opacity 0.2s ease !important;
+    }
+  }
+} 
