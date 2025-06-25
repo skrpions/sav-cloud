@@ -8,7 +8,7 @@ import { ROUTES } from '../../../../shared/constants/routes';
 import { toast } from 'ngx-sonner';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-register',
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -18,18 +18,18 @@ import { toast } from 'ngx-sonner';
   templateUrl: '../shared/components/form-auth/form-auth.component.html',
   styleUrl: '../shared/components/form-auth/form-auth.component.scss'
 })
-export class LoginComponent extends FormAuthComponent {
+export class RegisterComponent extends FormAuthComponent {
   authForm: FormGroup;
   
   config: AuthFormConfig = {
-    showRememberMe: true,
-    showTermsCheckbox: false,
-    submitButtonText: 'Sign In',
-    title: 'Sign In',
-    subtitle: 'Enter your email and password to Sign In',
-    linkText: "Don't have an account?",
-    linkRoute: ROUTES.AUTH.REGISTER,
-    linkLabel: 'Sign up'
+    showRememberMe: false,
+    showTermsCheckbox: true,
+    submitButtonText: 'Sign Up',
+    title: 'Sign Up',
+    subtitle: 'Enter your email and password to create your account',
+    linkText: "Already have an account?",
+    linkRoute: ROUTES.AUTH.LOGIN,
+    linkLabel: 'Sign in'
   };
 
   constructor() {
@@ -41,40 +41,40 @@ export class LoginComponent extends FormAuthComponent {
     if (this.authForm.valid) {
       try {
         const { email, password } = this.authForm.value;
-        console.log('Login form submitted:', { email });
+        console.log('Register form submitted:', { email });
         
-        const response = await this.authService.signIn({ email, password });
+        const response = await this.authService.signUp({ email, password });
         
         if (response.error) {
           throw response.error;
         }
         
-        console.log('Login successful:', response.data);
+        console.log('Registration successful:', response.data);
         
         // Mostrar toast de éxito
-        toast.success('Welcome back!', {
-          description: 'You have been successfully signed in.',
-          duration: 3000
+        toast.success('Registration successful!', {
+          description: 'Please check your email to verify your account.',
+          duration: 4000
         });
         
-        // Redirigir después del login exitoso
+        // Redirigir al login después del registro exitoso
         setTimeout(() => {
-          this.router.navigate([ROUTES.DASHBOARD]);
-        }, 1000);
+          this.router.navigate([ROUTES.AUTH.LOGIN]);
+        }, 1500);
         
       } catch (error: any) {
-        console.error('Login error:', error);
+        console.error('Registration error:', error);
         
         // Manejar diferentes tipos de error
         let errorMessage = 'An unexpected error occurred. Please try again.';
         
         if (error.message) {
           switch (error.code) {
-            case 'INVALID_CREDENTIALS':
-              errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+            case 'VALIDATION_ERROR':
+              errorMessage = 'Please check your email and password format.';
               break;
             case 'RATE_LIMIT_EXCEEDED':
-              errorMessage = 'Too many login attempts. Please wait a moment and try again.';
+              errorMessage = 'Too many registration attempts. Please wait a moment and try again.';
               break;
             case 'NETWORK_ERROR':
               errorMessage = 'Network error. Please check your connection and try again.';
@@ -84,10 +84,10 @@ export class LoginComponent extends FormAuthComponent {
           }
         }
         
-        console.error('Login failed:', errorMessage);
+        console.error('Registration failed:', errorMessage);
         
         // Mostrar toast de error
-        toast.error('Login failed', {
+        toast.error('Registration failed', {
           description: errorMessage,
           duration: 4000
         });

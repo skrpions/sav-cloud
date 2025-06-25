@@ -230,3 +230,165 @@ a {
     text-decoration: underline;
   }
 }
+
+/* =========================================
+   ESTILOS PERSONALIZADOS PARA NGX-SONNER
+   Con paleta Holiday Cheer
+   ========================================= */
+
+/* Contenedor principal de toasts */
+[data-sonner-toaster] {
+  z-index: 1000;
+  
+  /* Toast base */
+  [data-sonner-toast] {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    margin-bottom: 8px;
+    font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    max-width: 400px;
+    
+    /* Toast de éxito */
+    &[data-type="success"] {
+      border-left: 4px solid var(--holiday-green-medium);
+      background: linear-gradient(135deg, rgba(0, 119, 1, 0.05), rgba(255, 255, 255, 1));
+      
+      [data-icon] {
+        color: var(--holiday-green-medium);
+      }
+      
+      [data-title] {
+        color: var(--holiday-teal-dark);
+        font-weight: 600;
+      }
+      
+      [data-description] {
+        color: var(--holiday-sage-green);
+      }
+    }
+    
+    /* Toast de error */
+    &[data-type="error"] {
+      border-left: 4px solid #dc2626;
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.05), rgba(255, 255, 255, 1));
+      
+      [data-icon] {
+        color: #dc2626;
+      }
+      
+      [data-title] {
+        color: #991b1b;
+        font-weight: 600;
+      }
+      
+      [data-description] {
+        color: #7f1d1d;
+      }
+    }
+    
+    /* Toast de advertencia */
+    &[data-type="warning"] {
+      border-left: 4px solid var(--holiday-lime-green);
+      background: linear-gradient(135deg, rgba(168, 181, 69, 0.05), rgba(255, 255, 255, 1));
+      
+      [data-icon] {
+        color: var(--holiday-lime-green);
+      }
+      
+      [data-title] {
+        color: var(--holiday-teal-dark);
+        font-weight: 600;
+      }
+      
+      [data-description] {
+        color: var(--holiday-sage-green);
+      }
+    }
+    
+    /* Toast de información */
+    &[data-type="info"] {
+      border-left: 4px solid var(--holiday-sage-green);
+      background: linear-gradient(135deg, rgba(83, 115, 106, 0.05), rgba(255, 255, 255, 1));
+      
+      [data-icon] {
+        color: var(--holiday-sage-green);
+      }
+      
+      [data-title] {
+        color: var(--holiday-teal-dark);
+        font-weight: 600;
+      }
+      
+      [data-description] {
+        color: var(--holiday-sage-green);
+      }
+    }
+    
+    /* Botón de cerrar */
+    [data-button] {
+      background: none;
+      border: none;
+      color: rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background: rgba(0, 0, 0, 0.1);
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+    
+    /* Animaciones de entrada y salida */
+    &[data-mounted="true"] {
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    &[data-removed="true"] {
+      animation: slideOut 0.2s ease-in;
+    }
+  }
+}
+
+/* Animaciones para los toasts */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Responsive para toasts en móviles */
+@media (max-width: 640px) {
+  [data-sonner-toaster] {
+    left: 16px !important;
+    right: 16px !important;
+    width: auto !important;
+    
+    [data-sonner-toast] {
+      max-width: none;
+      margin: 0 0 8px 0;
+    }
+  }
+}

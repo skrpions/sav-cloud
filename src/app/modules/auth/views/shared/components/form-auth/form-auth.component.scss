@@ -1,3 +1,8 @@
+// ========================================
+// SHARED AUTH FORM STYLES
+// Estilos compartidos para Login y Register
+// ========================================
+
 :host {
   display: block;
   height: 100vh;
@@ -401,6 +406,18 @@ button.wide-form-field {
   margin-top: 20px;
   height: 2.5rem !important; // 40px exactos
   border-radius: 30px !important;
+}
+
+// Estilos específicos para evitar saltos en botones de auth
+.auth-submit-button {
+  // Ancho y altura fijos para evitar layout shift
+  min-width: 360px !important;
+  width: 360px !important;
+  height: 2.5rem !important;
+  
+  // Centrar el botón
+  margin: 20px auto 0 auto !important;
+  display: block !important;
   
   .button-content {
     display: flex;
@@ -408,10 +425,18 @@ button.wide-form-field {
     justify-content: center;
     gap: 8px;
     
+    .button-text {
+      // Ancho fijo para el texto del botón para evitar saltos
+      min-width: 80px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    
     mat-icon {
       font-size: 18px;
       width: 18px;
       height: 18px;
+      flex-shrink: 0; // Evitar que el icono se reduzca
     }
   }
 
@@ -547,6 +572,13 @@ button.wide-form-field {
     }
   }
 
+  // Ajustar botón para móviles
+  .auth-submit-button {
+    min-width: 100% !important;
+    width: 100% !important;
+    max-width: 300px !important;
+  }
+
   .page-footer {
     flex-direction: column;
     gap: 1rem;
@@ -577,6 +609,17 @@ button.wide-form-field {
   .header-nav {
     &__brand {
       font-size: 1rem; // 16px = 1rem
+    }
+  }
+
+  // Botón más pequeño en móviles muy pequeños
+  .auth-submit-button {
+    min-width: 100% !important;
+    width: 100% !important;
+    max-width: 280px !important;
+    
+    .button-content .button-text {
+      min-width: 60px; // Reducir en móviles pequeños
     }
   }
 

@@ -8,13 +8,6 @@
       <div class="header-nav__brand">
         <span>SAV PRO</span>
       </div>
-      <!-- <nav class="header-nav__menu">
-        <a href="#" class="header-nav__link">Pages</a>
-        <a href="#" class="header-nav__link">Authentication</a>
-        <a href="#" class="header-nav__link">Applications</a>
-        <a href="#" class="header-nav__link">Ecommerce</a>
-        <a href="#" class="header-nav__link">Docs</a>
-      </nav> -->
       <div class="header-nav__actions">
         <!-- <button mat-button class="header-nav__button">Buy Now</button> -->
       </div>
@@ -24,15 +17,15 @@
   <!-- Main Content -->
   <div class="login-page__content">
     <div class="login-wrapper">
-      <!-- Login Card -->
+      <!-- Auth Card -->
       <mat-card class="login-card">
         <div class="login-card__header">
-          <h1 class="login-card__title">Sign In</h1>
-          <p class="login-card__subtitle">Enter your email and password to Sign In</p>
+          <h1 class="login-card__title">{{ config.title }}</h1>
+          <p class="login-card__subtitle">{{ config.subtitle }}</p>
         </div>
 
         <mat-card-content class="login-card__content">
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <form [formGroup]="authForm" (ngSubmit)="onSubmit()" class="login-form">
 
             <!-- Email Field -->
             <mat-form-field appearance="fill" class="login-form__field">
@@ -43,12 +36,12 @@
                 formControlName="email"
                 placeholder="john@email.com"
               >
-              <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
-                Email is required
-              </mat-error>
-              <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
-                Please enter a valid email
-              </mat-error>
+              @if (isFieldRequired(authForm, 'email')) {
+                <mat-error>Email is required</mat-error>
+              }
+              @if (isEmailInvalid(authForm)) {
+                <mat-error>Please enter a valid email</mat-error>
+              }
             </mat-form-field>
 
             <!-- Password Field -->
@@ -70,33 +63,44 @@
               >
                 <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
               </button>
-              <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
-                Password is required
-              </mat-error>
-              <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">
-                Password must be at least 6 characters
-              </mat-error>
+              @if (isFieldRequired(authForm, 'password')) {
+                <mat-error>Password is required</mat-error>
+              }
+              @if (isPasswordMinLengthInvalid(authForm)) {
+                <mat-error>Password must be at least 6 characters</mat-error>
+              }
             </mat-form-field>
 
-            <!-- Remember Me Checkbox -->
-            <div class="login-form__checkbox-container">
-              <mat-checkbox formControlName="rememberMe" color="primary" class="login-form__checkbox">
-                Remember me
-              </mat-checkbox>
-            </div>
+            <!-- Remember Me Checkbox (solo para login) -->
+            @if (config.showRememberMe) {
+              <div class="login-form__checkbox-container">
+                <mat-checkbox formControlName="rememberMe" color="primary" class="login-form__checkbox">
+                  Remember me
+                </mat-checkbox>
+              </div>
+            }
 
-            <!-- Sign In Button -->
-            <button type="submit" mat-raised-button color="primary" class="wide-form-field" [disabled]="loginForm.invalid">
+            <!-- Terms Checkbox (solo para registro) -->
+            @if (config.showTermsCheckbox) {
+              <div class="login-form__checkbox-container">
+                <mat-checkbox formControlName="checkTerms" color="primary" class="login-form__checkbox" [required]="true">
+                  I agree to the <a href="#" class="login-form__signup-link">Terms and Conditions</a>
+                </mat-checkbox>
+              </div>
+            }
+
+            <!-- Submit Button -->
+            <button type="submit" mat-raised-button color="primary" class="wide-form-field auth-submit-button" [disabled]="authForm.invalid">
               <span class="button-content">
-                Sign In
+                <span class="button-text">{{ config.submitButtonText }}</span>
                 <mat-icon>send</mat-icon>
               </span>
             </button>
 
-            <!-- Sign Up Link -->
+            <!-- Navigation Link -->
             <div class="login-form__signup-container">
-              <span class="login-form__signup-text">Don't have an account?</span>
-              <a routerLink="/auth/signup" class="login-form__signup-link">Sign up</a>
+              <span class="login-form__signup-text">{{ config.linkText }}</span>
+              <a [routerLink]="config.linkRoute" class="login-form__signup-link">{{ config.linkLabel }}</a>
             </div>
           </form>
         </mat-card-content>
