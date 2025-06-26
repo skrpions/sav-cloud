@@ -1,0 +1,129 @@
+<div class="dashboard-layout" [class.sidebar-collapsed]="isSidebarCollapsed()">
+  <!-- Sidebar Navigation -->
+  <app-sidebar 
+    (itemClicked)="onSidebarItemClicked($event)"
+    (collapseChanged)="onSidebarCollapseChanged($event)">
+  </app-sidebar>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Header -->
+    <app-header (searchChanged)="onSearchChanged($event)"></app-header>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-content">
+      <!-- Charts Section -->
+      <div class="charts-section">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Website Views</h3>
+            <p>Last Campaign Performance</p>
+          </div>
+          <div class="chart-content">
+            <canvas id="websiteViewsChart" #websiteViewsChart></canvas>
+          </div>
+          <div class="chart-footer">
+            <mat-icon>access_time</mat-icon>
+            <span>campaign sent 2 days ago</span>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Daily Sales</h3>
+            <p>(+15%) increase in today sales.</p>
+          </div>
+          <div class="chart-content">
+            <canvas id="dailySalesChart" #dailySalesChart></canvas>
+          </div>
+          <div class="chart-footer">
+            <mat-icon>access_time</mat-icon>
+            <span>updated 4 min ago</span>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Completed Tasks</h3>
+            <p>Last Campaign Performance</p>
+          </div>
+          <div class="chart-content">
+            <canvas id="completedTasksChart" #completedTasksChart></canvas>
+          </div>
+          <div class="chart-footer">
+            <mat-icon>access_time</mat-icon>
+            <span>just updated</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-section">
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <h4>Bookings</h4>
+              <div class="stat-value">281</div>
+              <div class="stat-change positive">+55% than last week</div>
+            </div>
+            <div class="stat-icon">
+              <mat-icon>calendar_today</mat-icon>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <h4>Today's Users</h4>
+              <div class="stat-value">2,300</div>
+              <div class="stat-change positive">+3% than last month</div>
+            </div>
+            <div class="stat-icon">
+              <mat-icon>groups</mat-icon>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <h4>Revenue</h4>
+              <div class="stat-value">$34,000</div>
+              <div class="stat-change positive">+35% than last month</div>
+            </div>
+            <div class="stat-icon">
+              <mat-icon>attach_money</mat-icon>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <h4>Followers</h4>
+              <div class="stat-value">+2,910</div>
+              <div class="stat-change">Just updated</div>
+            </div>
+            <div class="stat-icon">
+              <mat-icon>people</mat-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gallery Section -->
+      <div class="gallery-section">
+        <div class="gallery-item">
+          <img src="/images/background.jpg" alt="Gallery Image 1" />
+        </div>
+        <div class="gallery-item">
+          <img src="/images/background.jpg" alt="Gallery Image 2" />
+        </div>
+        <div class="gallery-item">
+          <img src="/images/background.jpg" alt="Gallery Image 3" />
+        </div>
+      </div>
+    </div>
+  </main>
+</div> 

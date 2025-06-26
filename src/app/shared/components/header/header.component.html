@@ -1,0 +1,148 @@
+<header class="dashboard-header">
+  <!-- Desktop Layout - Restaurado al original -->
+  <div class="header-left">
+    <div class="breadcrumb">
+      <mat-icon class="breadcrumb-icon">home</mat-icon>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-current">Analytics</span>
+    </div>
+    <h1>Analytics Dashboard</h1>
+    <p>Monitor your sales performance, user engagement and business metrics in real-time.</p>
+  </div>
+  <div class="header-right">
+    <div class="header-actions">
+      <div class="search-container">
+        <mat-form-field appearance="fill" class="search-field">
+          <mat-icon matPrefix class="search-icon">search</mat-icon>
+          <input 
+            matInput 
+            placeholder="Search..." 
+            (input)="onSearchChange($any($event.target).value)" />
+        </mat-form-field>
+      </div>
+      
+      <button mat-icon-button class="action-btn notification-btn" [matMenuTriggerFor]="notificationMenu">
+        <mat-icon matBadge="3" matBadgeColor="warn" matBadgeSize="small" matBadgePosition="above after">notifications</mat-icon>
+      </button>
+      
+      <button mat-icon-button class="action-btn settings-btn">
+        <mat-icon>settings</mat-icon>
+      </button>
+      
+      <div class="user-menu">
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-avatar-btn">
+          <img class="user-avatar-img" src="/images/avatars/avatar-dreamcode.jpeg" alt="User Avatar" />
+          <div class="user-status-indicator"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Layout -->
+  <div class="mobile-layout">
+    <div class="mobile-header-top">
+      <div class="mobile-title">
+        <div class="breadcrumb">
+          <mat-icon class="breadcrumb-icon">home</mat-icon>
+          <span class="breadcrumb-separator">/</span>
+          <span class="breadcrumb-current">Analytics</span>
+        </div>
+        <h1>Analytics Dashboard</h1>
+      </div>
+      <div class="mobile-actions">
+        <button mat-icon-button class="mobile-search-btn" (click)="toggleMobileSearch()">
+          <mat-icon>search</mat-icon>
+        </button>
+        <button mat-icon-button class="action-btn notification-btn" [matMenuTriggerFor]="notificationMenu">
+          <mat-icon matBadge="3" matBadgeColor="warn" matBadgeSize="small" matBadgePosition="above after">notifications</mat-icon>
+        </button>
+        <div class="user-menu">
+          <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-avatar-btn mobile-avatar">
+            <img class="user-avatar-img" src="/images/avatars/avatar-dreamcode.jpeg" alt="User Avatar" />
+            <div class="user-status-indicator"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="mobile-search-container" [class.expanded]="isMobileSearchExpanded">
+      <mat-form-field appearance="fill" class="mobile-search-field">
+        <mat-icon matPrefix class="search-icon">search</mat-icon>
+        <input 
+          matInput 
+          placeholder="Search..." 
+          (input)="onSearchChange($any($event.target).value)"
+          #mobileSearchInput />
+        <button 
+          mat-icon-button 
+          matSuffix 
+          (click)="toggleMobileSearch()"
+          class="close-search-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Shared Menus -->
+  <mat-menu #notificationMenu="matMenu" class="notification-menu">
+    <div class="menu-header">
+      <h4>Notifications</h4>
+      <button mat-icon-button class="mark-read-btn">
+        <mat-icon>done_all</mat-icon>
+      </button>
+    </div>
+    <mat-divider></mat-divider>
+    <button mat-menu-item class="notification-item">
+      <div class="notification-content">
+        <mat-icon class="notification-icon success">check_circle</mat-icon>
+        <div class="notification-text">
+          <p class="notification-title">Sales Goal Achieved</p>
+          <p class="notification-desc">You've reached 120% of your monthly target</p>
+          <span class="notification-time">2 minutes ago</span>
+        </div>
+      </div>
+    </button>
+    <button mat-menu-item class="notification-item">
+      <div class="notification-content">
+        <mat-icon class="notification-icon info">info</mat-icon>
+        <div class="notification-text">
+          <p class="notification-title">System Update</p>
+          <p class="notification-desc">New features are now available</p>
+          <span class="notification-time">1 hour ago</span>
+        </div>
+      </div>
+    </button>
+    <button mat-menu-item class="notification-item">
+      <div class="notification-content">
+        <mat-icon class="notification-icon warning">warning</mat-icon>
+        <div class="notification-text">
+          <p class="notification-title">Low Inventory Alert</p>
+          <p class="notification-desc">5 products need restocking</p>
+          <span class="notification-time">3 hours ago</span>
+        </div>
+      </div>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item class="view-all-btn">
+      <mat-icon>visibility</mat-icon>
+      <span>View All Notifications</span>
+    </button>
+  </mat-menu>
+  
+  <mat-menu #userMenu="matMenu" class="modern-user-menu">
+    <button mat-menu-item class="modern-menu-item">
+      <mat-icon>person</mat-icon>
+      <span>Profile</span>
+    </button>
+    <button mat-menu-item class="modern-menu-item">
+      <mat-icon>settings</mat-icon>
+      <span>Settings</span>
+    </button>
+    <mat-divider class="modern-divider"></mat-divider>
+    <button mat-menu-item class="modern-menu-item logout-item" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      <span>Logout</span>
+    </button>
+  </mat-menu>
+</header> 

@@ -1,0 +1,46 @@
+<aside class="sidebar" [class.collapsed]="isCollapsed()">
+  <div class="sidebar-header">
+    <div class="logo" [class.collapsed]="isCollapsed()">
+      <mat-icon>cloud</mat-icon>
+      <span *ngIf="!isCollapsed()">SAV Cloud</span>
+    </div>
+    <button 
+      mat-icon-button 
+      class="collapse-btn" 
+      (click)="toggleCollapse()"
+      [matTooltip]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+      matTooltipPosition="right">
+      <mat-icon>{{ isCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+    </button>
+  </div>
+
+  <!-- User Profile Section -->
+  <div class="user-profile-section" [class.collapsed]="isCollapsed()">
+    <div class="user-profile">
+      <img class="profile-avatar" src="/images/avatars/avatar-dreamcode.jpeg" alt="User Avatar" />
+      <div class="profile-info" *ngIf="!isCollapsed()">
+        <h4 class="profile-name">Brooklyn Alice</h4>
+        <p class="profile-role">Administrator</p>
+      </div>
+      <div class="profile-status">
+        <div class="status-indicator online"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div 
+        *ngFor="let item of sidebarItems" 
+        class="nav-item" 
+        [class.active]="item.active"
+        [class.collapsed]="isCollapsed()"
+        (click)="onItemClick(item)"
+        [matTooltip]="isCollapsed() ? item.label : ''"
+        matTooltipPosition="right">
+        <mat-icon>{{ item.icon }}</mat-icon>
+        <span *ngIf="!isCollapsed()">{{ item.label }}</span>
+      </div>
+    </div>
+  </nav>
+</aside> 

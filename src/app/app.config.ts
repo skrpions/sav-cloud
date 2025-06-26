@@ -15,7 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     provideHttpClient(),
     // Hexagonal Architecture providers
+    AuthApplication,
     AuthInfrastructure,
-    AuthApplication
   ]
 };

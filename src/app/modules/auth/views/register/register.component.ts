@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../../../shared/material.module';
 import { FormAuthComponent, AuthFormConfig } from '../shared/components/form-auth/form-auth.component';
+import { SupabaseService } from '../../../../shared/services/supabase.service';
 import { ROUTES } from '../../../../shared/constants/routes';
 import { toast } from 'ngx-sonner';
 
@@ -19,6 +20,8 @@ import { toast } from 'ngx-sonner';
   styleUrl: '../shared/components/form-auth/form-auth.component.scss'
 })
 export class RegisterComponent extends FormAuthComponent {
+  private _supabaseService = inject(SupabaseService);
+
   authForm: FormGroup;
   
   config: AuthFormConfig = {
@@ -43,13 +46,16 @@ export class RegisterComponent extends FormAuthComponent {
         const { email, password } = this.authForm.value;
         console.log('Register form submitted:', { email });
         
-        const response = await this.authService.signUp({ email, password });
-        
-        if (response.error) {
-          throw response.error;
+        const { data, error } = await this._supabaseService.supabaseClient.auth.signUp({
+          email,
+          password
+        });
+
+        if (error) {
+          throw error;
         }
         
-        console.log('Registration successful:', response.data);
+        console.log('Registration successful:', data);
         
         // Mostrar toast de éxito
         toast.success('Registration successful!', {
@@ -69,15 +75,18 @@ export class RegisterComponent extends FormAuthComponent {
         let errorMessage = 'An unexpected error occurred. Please try again.';
         
         if (error.message) {
-          switch (error.code) {
-            case 'VALIDATION_ERROR':
-              errorMessage = 'Please check your email and password format.';
+          switch (error.message) {
+            case 'User already registered':
+              errorMessage = 'An account with this email already exists. Please sign in instead.';
               break;
-            case 'RATE_LIMIT_EXCEEDED':
+            case 'Password should be at least 6 characters':
+              errorMessage = 'Password must be at least 6 characters long.';
+              break;
+            case 'signup_disabled':
+              errorMessage = 'Registration is currently disabled.';
+              break;
+            case 'Email rate limit exceeded':
               errorMessage = 'Too many registration attempts. Please wait a moment and try again.';
-              break;
-            case 'NETWORK_ERROR':
-              errorMessage = 'Network error. Please check your connection and try again.';
               break;
             default:
               errorMessage = error.message;

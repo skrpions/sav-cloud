@@ -1,6 +1,5 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { catchError, Observable, throwError, map } from 'rxjs';
+import { catchError, Observable, throwError, from, map } from 'rxjs';
 import { 
   AuthResponse, 
   UserEntity, 
@@ -9,121 +8,86 @@ import {
   RefreshTokenRequest 
 } from '../domain/entities/auth-entity';
 import { AuthRepository } from '../domain/repositories/auth-repository';
-import { environment } from '../../../environments/environment';
+import { SupabaseService } from '../../shared/services/supabase.service';
 
 @Injectable()
 export class AuthInfrastructure implements AuthRepository {
-  private readonly _http = inject(HttpClient);
-  
-  private readonly API_BASE_URL = environment.supabaseUrl;
-  private readonly API_KEY = environment.supabaseKey;
+  private readonly _supabaseService = inject(SupabaseService);
 
   signUp(request: SignUpRequest): Observable<AuthResponse> {
-    const url = `${this.API_BASE_URL}/auth/v1/signup`;
-    const headers = { 
-      'apikey': this.API_KEY, 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.API_KEY}`
-    };
-    const body = {
-      email: request.email,
-      password: request.password,
-      data: request.options?.data || {}
-    };
-
-    return this._http.post<any>(url, body, { headers })
-      .pipe(
-        map(response => this.mapSupabaseResponse(response)),
-        catchError(this.handleError.bind(this))
-      );
+    return from(
+      this._supabaseService.supabaseClient.auth.signUp({
+        email: request.email,
+        password: request.password,
+        options: request.options
+      })
+    ).pipe(
+      map(response => this.mapSupabaseResponse(response)),
+      catchError(this.handleError.bind(this))
+    );
   }
 
   signIn(request: SignInRequest): Observable<AuthResponse> {
-    const url = `${this.API_BASE_URL}/auth/v1/token?grant_type=password`;
-    const headers = { 
-      'apikey': this.API_KEY, 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.API_KEY}`
-    };
-    const body = {
-      email: request.email,
-      password: request.password
-    };
-
-    return this._http.post<any>(url, body, { headers })
-      .pipe(
-        map(response => this.mapSupabaseResponse(response)),
-        catchError(this.handleError.bind(this))
-      );
+    return from(
+      this._supabaseService.supabaseClient.auth.signInWithPassword({
+        email: request.email,
+        password: request.password
+      })
+    ).pipe(
+      map(response => this.mapSupabaseResponse(response)),
+      catchError(this.handleError.bind(this))
+    );
   }
 
   signOut(): Observable<AuthResponse> {
-    const url = `${this.API_BASE_URL}/auth/v1/logout`;
-    const headers = { 
-      'apikey': this.API_KEY, 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.API_KEY}`
-    };
-
-    return this._http.post<any>(url, {}, { headers })
-      .pipe(
-        map(response => this.mapSupabaseResponse(response)),
-        catchError(this.handleError.bind(this))
-      );
+    return from(
+      this._supabaseService.supabaseClient.auth.signOut()
+    ).pipe(
+      map(response => this.mapSupabaseSignOutResponse(response)),
+      catchError(this.handleError.bind(this))
+    );
   }
 
   getCurrentUser(): Observable<UserEntity | null> {
-    const url = `${this.API_BASE_URL}/auth/v1/user`;
-    const headers = { 
-      'apikey': this.API_KEY,
-      'Authorization': `Bearer ${this.API_KEY}`
-    };
-
-    return this._http.get<any>(url, { headers })
-      .pipe(
-        map(response => this.mapSupabaseUser(response)),
-        catchError(() => throwError(() => null))
-      );
+    return from(
+      this._supabaseService.supabaseClient.auth.getUser()
+    ).pipe(
+      map(response => {
+        if (response.error || !response.data?.user) {
+          return null;
+        }
+        return this.mapSupabaseUser(response.data.user);
+      }),
+      catchError(() => throwError(() => null))
+    );
   }
 
   refreshToken(request: RefreshTokenRequest): Observable<AuthResponse> {
-    const url = `${this.API_BASE_URL}/auth/v1/token?grant_type=refresh_token`;
-    const headers = { 
-      'apikey': this.API_KEY, 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.API_KEY}`
-    };
-    const body = { 
-      refresh_token: request.refreshToken 
-    };
-
-    return this._http.post<any>(url, body, { headers })
-      .pipe(
-        map(response => this.mapSupabaseResponse(response)),
-        catchError(this.handleError.bind(this))
-      );
+    return from(
+      this._supabaseService.supabaseClient.auth.refreshSession({
+        refresh_token: request.refreshToken
+      })
+    ).pipe(
+      map(response => this.mapSupabaseResponse(response)),
+      catchError(this.handleError.bind(this))
+    );
   }
 
   resetPassword(email: string): Observable<AuthResponse> {
-    const url = `${this.API_BASE_URL}/auth/v1/recover`;
-    const headers = { 
-      'apikey': this.API_KEY, 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.API_KEY}`
-    };
-    const body = { email };
-
-    return this._http.post<any>(url, body, { headers })
-      .pipe(
-        map(response => this.mapSupabaseResponse(response)),
-        catchError(this.handleError.bind(this))
-      );
+    return from(
+      this._supabaseService.supabaseClient.auth.resetPasswordForEmail(email)
+    ).pipe(
+      map(response => this.mapSupabaseResetResponse(response)),
+      catchError(this.handleError.bind(this))
+    );
   }
 
   /**
    * Mapea la respuesta de Supabase al formato de nuestra entidad AuthResponse
    */
   private mapSupabaseResponse(response: any): AuthResponse {
+    console.log('Supabase response:', response);
+    
     if (response.error) {
       return {
         data: undefined,
@@ -140,21 +104,61 @@ export class AuthInfrastructure implements AuthRepository {
     };
 
     // Mapear usuario si existe
-    if (response.user) {
-      result.data!.user = this.mapSupabaseUser(response.user);
+    if (response.data?.user) {
+      result.data!.user = this.mapSupabaseUser(response.data.user);
     }
 
     // Mapear sesión si existe
-    if (response.session || response.access_token) {
+    if (response.data?.session) {
       result.data!.session = {
-        accessToken: response.access_token || response.session?.access_token || '',
-        refreshToken: response.refresh_token || response.session?.refresh_token || '',
-        expiresAt: new Date(Date.now() + (response.expires_in || 3600) * 1000),
-        tokenType: response.token_type || 'bearer'
+        accessToken: response.data.session.access_token || '',
+        refreshToken: response.data.session.refresh_token || '',
+        expiresAt: new Date(response.data.session.expires_at * 1000),
+        tokenType: response.data.session.token_type || 'bearer'
       };
     }
 
     return result;
+  }
+
+  /**
+   * Mapea la respuesta de signOut de Supabase
+   */
+  private mapSupabaseSignOutResponse(response: any): AuthResponse {
+    if (response.error) {
+      return {
+        data: undefined,
+        error: {
+          message: response.error.message || 'Sign out failed',
+          code: response.error.code
+        }
+      };
+    }
+
+    return {
+      data: {},
+      error: undefined
+    };
+  }
+
+  /**
+   * Mapea la respuesta de resetPassword de Supabase
+   */
+  private mapSupabaseResetResponse(response: any): AuthResponse {
+    if (response.error) {
+      return {
+        data: undefined,
+        error: {
+          message: response.error.message || 'Reset password failed',
+          code: response.error.code
+        }
+      };
+    }
+
+    return {
+      data: {},
+      error: undefined
+    };
   }
 
   /**
@@ -175,62 +179,36 @@ export class AuthInfrastructure implements AuthRepository {
   private handleError(error: any): Observable<never> {
     console.error('AuthInfrastructure Error:', error);
 
-    if (error.error instanceof ErrorEvent) {
-      // Client-side error
-      return throwError(() => ({
-        message: 'Network error: ' + error.error.message,
-        code: 'NETWORK_ERROR'
-      }));
-    } else {
-      // Server-side error
-      let errorMessage = 'Unknown error occurred';
-      let errorCode = 'UNKNOWN_ERROR';
+    let errorMessage = 'Unknown error occurred';
+    let errorCode = 'UNKNOWN_ERROR';
 
-      // Manejar errores específicos de Supabase
-      if (error.error) {
-        if (error.error.error_description) {
-          errorMessage = error.error.error_description;
-        } else if (error.error.message) {
-          errorMessage = error.error.message;
-        }
-        
-        if (error.error.error) {
-          errorCode = error.error.error;
-        }
-      }
-
-      // Manejar códigos de estado HTTP específicos
-      switch (error.status) {
-        case 400:
-          errorMessage = error.error?.message || 'Invalid request data';
-          errorCode = 'INVALID_REQUEST';
-          break;
-        case 401:
-          errorMessage = 'Invalid email or password';
-          errorCode = 'INVALID_CREDENTIALS';
-          break;
-        case 403:
-          errorMessage = 'Access denied';
-          errorCode = 'ACCESS_DENIED';
-          break;
-        case 422:
-          errorMessage = error.error?.message || 'Validation failed';
-          errorCode = 'VALIDATION_ERROR';
-          break;
-        case 429:
-          errorMessage = 'Too many requests. Please try again later.';
-          errorCode = 'RATE_LIMIT_EXCEEDED';
-          break;
-        case 500:
-          errorMessage = 'Internal server error. Please try again later.';
-          errorCode = 'SERVER_ERROR';
-          break;
-      }
-
-      return throwError(() => ({
-        message: errorMessage,
-        code: errorCode
-      }));
+    if (error?.message) {
+      errorMessage = error.message;
     }
+
+    if (error?.code) {
+      errorCode = error.code;
+    }
+
+    // Manejar errores específicos de Supabase
+    switch (error?.message) {
+      case 'Invalid login credentials':
+        errorMessage = 'Invalid email or password';
+        errorCode = 'INVALID_CREDENTIALS';
+        break;
+      case 'Email rate limit exceeded':
+        errorMessage = 'Too many attempts. Please try again later.';
+        errorCode = 'RATE_LIMIT_EXCEEDED';
+        break;
+      case 'signup_disabled':
+        errorMessage = 'Sign up is currently disabled';
+        errorCode = 'SIGNUP_DISABLED';
+        break;
+    }
+
+    return throwError(() => ({
+      message: errorMessage,
+      code: errorCode
+    }));
   }
 } 

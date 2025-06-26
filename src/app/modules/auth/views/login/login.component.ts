@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../../../shared/material.module';
 import { FormAuthComponent, AuthFormConfig } from '../shared/components/form-auth/form-auth.component';
+import { SupabaseService } from '../../../../shared/services/supabase.service';
 import { ROUTES } from '../../../../shared/constants/routes';
 import { toast } from 'ngx-sonner';
 
@@ -19,6 +20,8 @@ import { toast } from 'ngx-sonner';
   styleUrl: '../shared/components/form-auth/form-auth.component.scss'
 })
 export class LoginComponent extends FormAuthComponent {
+  private _supabaseService = inject(SupabaseService);
+
   authForm: FormGroup;
   
   config: AuthFormConfig = {
@@ -43,13 +46,16 @@ export class LoginComponent extends FormAuthComponent {
         const { email, password } = this.authForm.value;
         console.log('Login form submitted:', { email });
         
-        const response = await this.authService.signIn({ email, password });
-        
-        if (response.error) {
-          throw response.error;
+        const { data, error } = await this._supabaseService.supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) {
+          throw error;
         }
         
-        console.log('Login successful:', response.data);
+        console.log('Login successful:', data);
         
         // Mostrar toast de éxito
         toast.success('Welcome back!', {
@@ -69,15 +75,15 @@ export class LoginComponent extends FormAuthComponent {
         let errorMessage = 'An unexpected error occurred. Please try again.';
         
         if (error.message) {
-          switch (error.code) {
-            case 'INVALID_CREDENTIALS':
+          switch (error.message) {
+            case 'Invalid login credentials':
               errorMessage = 'Invalid email or password. Please check your credentials and try again.';
               break;
-            case 'RATE_LIMIT_EXCEEDED':
+            case 'Email rate limit exceeded':
               errorMessage = 'Too many login attempts. Please wait a moment and try again.';
               break;
-            case 'NETWORK_ERROR':
-              errorMessage = 'Network error. Please check your connection and try again.';
+            case 'signup_disabled':
+              errorMessage = 'Authentication is currently disabled.';
               break;
             default:
               errorMessage = error.message;

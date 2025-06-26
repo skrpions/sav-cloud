@@ -1,0 +1,776 @@
+// SAV Cloud Color Palette
+:host {
+  --holiday-teal-dark: #024554;
+  --primary-green: #2e7d32;
+  --primary-green-light: #4caf50;
+  --primary-green-lighter: #e8f5e8;
+  --primary-green-lightest: #f1f8e9;
+  --text-primary: #333;
+  --text-secondary: #6c757d;
+  --background-light: #f8f9fa;
+  --white: #ffffff;
+  --border-light: #e9ecef;
+}
+
+.dashboard-header {
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  padding: 24px 32px;
+  border-bottom: 1px solid #e0f2f1;
+  box-shadow: 0 2px 12px rgba(46, 125, 50, 0.04);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--primary-green-lighter) 50%, transparent 100%);
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px 20px;
+  }
+
+  // Desktop layout - ocultar en móvil
+  .header-left {
+    @media (max-width: 768px) {
+      display: none;
+    }
+    flex: 1;
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: var(--text-secondary);
+
+      .breadcrumb-icon {
+        color: var(--text-primary);
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      .breadcrumb-separator {
+        color: var(--text-secondary);
+        opacity: 0.6;
+      }
+
+      .breadcrumb-current {
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+    }
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      background: linear-gradient(135deg, var(--holiday-teal-dark) 0%, var(--primary-green-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.5;
+      max-width: 500px;
+    }
+  }
+
+  .header-right {
+    @media (max-width: 768px) {
+      display: none;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      
+
+      .action-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+        position: relative;
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.04);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+      }
+
+      .user-menu {
+        .user-avatar-btn {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          padding: 0;
+          position: relative;
+          overflow: visible;
+          transition: all 0.3s ease;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(46, 125, 50, 0.2);
+          }
+
+          .user-avatar-img {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+          }
+
+          .user-status-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            background: #4caf50;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            animation: pulse 2s infinite;
+          }
+        }
+      }
+
+      // Estilos para search del desktop
+      .search-container {
+        .search-field {
+          width: 280px;
+
+          // Aplicar estilos exactos del login
+          ::ng-deep {
+            // Personalización específica para appearance="fill"
+            .mat-mdc-form-field {
+              background-color: transparent !important;
+            }
+
+            // Forzar transparencia en todos los elementos del fill
+            .mdc-text-field--filled {
+              background-color: transparent !important;
+              
+              .mdc-text-field__input {
+                background-color: transparent !important;
+              }
+
+              // Remover el fondo gris característico del fill
+              &::before {
+                background-color: transparent !important;
+              }
+
+              &:not(.mdc-text-field--disabled) {
+                background-color: transparent !important;
+                
+                &::before {
+                  background-color: transparent !important;
+                }
+              }
+
+              // Estados hover y focus sin fondo gris
+              &:hover:not(.mdc-text-field--disabled) {
+                background-color: transparent !important;
+                
+                &::before {
+                  background-color: transparent !important;
+                }
+              }
+
+              &.mdc-text-field--focused {
+                background-color: transparent !important;
+                
+                &::before {
+                  background-color: transparent !important;
+                }
+              }
+            }
+
+            // Personalizar la línea inferior del fill - control completo
+            .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+              .mdc-line-ripple::before {
+                border-bottom-color: rgba(46, 125, 50, 0.42);
+                border-bottom-width: 1px;
+              }
+
+              &:hover .mdc-line-ripple::before {
+                border-bottom-color: rgba(46, 125, 50, 0.87);
+              }
+
+              // Estado focused - verde
+              &.mdc-text-field--focused .mdc-line-ripple::after {
+                border-bottom-color: var(--primary-green) !important;
+                border-bottom-width: 2px;
+              }
+
+              // Estado unfocused - forzar transparencia para evitar parpadeo azul
+              &:not(.mdc-text-field--focused) .mdc-line-ripple::after {
+                border-bottom-color: transparent !important;
+                border-bottom-width: 0 !important;
+                opacity: 0 !important;
+              }
+
+              // Sobrescribir cualquier transición de Material Design
+              .mdc-line-ripple::after {
+                transition: border-bottom-color 0.3s ease, opacity 0.3s ease !important;
+              }
+            }
+
+            // Estilos para labels e inputs
+            .mat-mdc-form-field-label {
+              color: rgba(46, 125, 50, 0.6);
+              transition: color 0.3s ease;
+            }
+
+            // Label en estado focused con color verde
+            &.mat-focused .mat-mdc-form-field-label {
+              color: var(--primary-green) !important;
+            }
+
+            // Label flotante en estado focused
+            .mdc-floating-label--float-above {
+              &.mdc-floating-label--focused {
+                color: var(--primary-green) !important;
+              }
+            }
+
+            .mat-mdc-input-element {
+              color: var(--text-primary);
+              background-color: transparent !important;
+              font-size: 15px;
+              font-weight: 500;
+
+              &::placeholder {
+                color: var(--text-secondary);
+                opacity: 0.8;
+                font-weight: 400;
+              }
+            }
+
+            // Remover cualquier overlay o fondo adicional
+            .mat-mdc-form-field-focus-overlay,
+            .mat-mdc-form-field-subscript-wrapper {
+              background-color: transparent !important;
+            }
+
+            // Asegurar que no haya ripples con fondo
+            .mdc-line-ripple {
+              background-color: transparent !important;
+            }
+          }
+
+          .search-icon {
+            color: var(--text-secondary);
+            margin-right: 12px;
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+        }
+      }
+    }
+  }
+
+  // Mobile Layout Styles
+  .mobile-layout {
+    display: none;
+
+    @media (max-width: 768px) {
+      display: block;
+    }
+
+    .mobile-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+
+      .mobile-title {
+        flex: 1;
+        min-width: 0;
+
+        .breadcrumb {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 8px;
+          font-size: 12px;
+          color: var(--text-secondary);
+
+          .breadcrumb-icon {
+            color: var(--text-primary);
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+          }
+
+          .breadcrumb-separator {
+            color: var(--text-secondary);
+            opacity: 0.6;
+          }
+
+          .breadcrumb-current {
+            color: var(--text-primary);
+            font-weight: 500;
+          }
+        }
+
+        h1 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 700;
+          color: var(--text-primary);
+          background: linear-gradient(135deg, var(--holiday-teal-dark) 0%, var(--primary-green-light) 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          line-height: 1.2;
+        }
+      }
+
+      .mobile-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+
+        .mobile-search-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.02);
+          border: 1px solid rgba(0, 0, 0, 0.06);
+          color: var(--text-primary);
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: rgba(0, 0, 0, 0.04);
+            transform: translateY(-1px);
+          }
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+
+        .action-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+
+        .user-avatar-btn.mobile-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          padding: 0;
+          position: relative;
+          overflow: visible;
+
+          .user-avatar-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(0, 0, 0, 0.08);
+          }
+
+          .user-status-indicator {
+            width: 10px;
+            height: 10px;
+            bottom: 1px;
+            right: 1px;
+            background: #4caf50;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            position: absolute;
+          }
+        }
+      }
+    }
+
+    .mobile-search-container {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+
+      &.expanded {
+        max-height: 80px;
+        opacity: 1;
+        margin-bottom: 16px;
+      }
+
+      .mobile-search-field {
+        width: 100%;
+
+        ::ng-deep {
+          // Aplicar estilos exactos del login para móvil también
+          .mat-mdc-form-field {
+            background-color: transparent !important;
+          }
+
+          .mdc-text-field--filled {
+            background-color: transparent !important;
+            
+            .mdc-text-field__input {
+              background-color: transparent !important;
+            }
+
+            &::before {
+              background-color: transparent !important;
+            }
+
+            &:not(.mdc-text-field--disabled) {
+              background-color: transparent !important;
+              
+              &::before {
+                background-color: transparent !important;
+              }
+            }
+
+            &:hover:not(.mdc-text-field--disabled) {
+              background-color: transparent !important;
+              
+              &::before {
+                background-color: transparent !important;
+              }
+            }
+
+            &.mdc-text-field--focused {
+              background-color: transparent !important;
+              
+              &::before {
+                background-color: transparent !important;
+              }
+            }
+          }
+
+          .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+            .mdc-line-ripple::before {
+              border-bottom-color: rgba(46, 125, 50, 0.42);
+              border-bottom-width: 1px;
+            }
+
+            &:hover .mdc-line-ripple::before {
+              border-bottom-color: rgba(46, 125, 50, 0.87);
+            }
+
+            &.mdc-text-field--focused .mdc-line-ripple::after {
+              border-bottom-color: var(--primary-green) !important;
+              border-bottom-width: 2px;
+            }
+
+            &:not(.mdc-text-field--focused) .mdc-line-ripple::after {
+              border-bottom-color: transparent !important;
+              border-bottom-width: 0 !important;
+              opacity: 0 !important;
+            }
+
+            .mdc-line-ripple::after {
+              transition: border-bottom-color 0.3s ease, opacity 0.3s ease !important;
+            }
+          }
+
+          .mat-mdc-form-field-label {
+            color: rgba(46, 125, 50, 0.6);
+            transition: color 0.3s ease;
+          }
+
+          &.mat-focused .mat-mdc-form-field-label {
+            color: var(--primary-green) !important;
+          }
+
+          .mdc-floating-label--float-above {
+            &.mdc-floating-label--focused {
+              color: var(--primary-green) !important;
+            }
+          }
+
+          .mat-mdc-input-element {
+            color: var(--text-primary);
+            background-color: transparent !important;
+            font-size: 15px;
+            font-weight: 500;
+
+            &::placeholder {
+              color: var(--text-secondary);
+              opacity: 0.8;
+              font-weight: 400;
+            }
+          }
+
+          .mat-mdc-form-field-focus-overlay,
+          .mat-mdc-form-field-subscript-wrapper {
+            background-color: transparent !important;
+          }
+
+          .mdc-line-ripple {
+            background-color: transparent !important;
+          }
+        }
+
+        .search-icon {
+          color: var(--text-secondary);
+          margin-right: 12px;
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+
+        .close-search-btn {
+          color: var(--text-secondary);
+          
+          &:hover {
+            color: var(--text-primary);
+          }
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+      }
+    }
+  }
+
+
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+// Material Design Panel Override
+::ng-deep .mat-mdc-menu-panel {
+  background-color: #ffffff !important; // Fondo blanco sólido para mejor visibilidad
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10) !important;
+}
+
+// Modern Menu Styles
+::ng-deep .notification-menu {
+  background-color: #ffffff !important; // Fondo blanco sólido para mejor contraste
+  border-radius: 16px !important;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  max-width: 380px !important;
+  margin-top: 8px !important;
+
+  .menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid #f0f0f0;
+
+    h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .mark-read-btn {
+      width: 32px;
+      height: 32px;
+      color: var(--text-secondary);
+      
+      &:hover {
+        color: var(--text-primary);
+      }
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+
+  .notification-item {
+    height: auto !important;
+    padding: 16px 20px !important;
+    border-bottom: 1px solid #f8f9fa;
+    
+    &:hover {
+      background: rgba(46, 125, 50, 0.02) !important;
+    }
+
+    .notification-content {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+
+      .notification-icon {
+        flex-shrink: 0;
+        margin-top: 2px;
+        width: 20px;
+        height: 20px;
+        font-size: 20px;
+
+        &.success { color: #4caf50; }
+        &.info { color: #2196f3; }
+        &.warning { color: #ff9800; }
+      }
+
+      .notification-text {
+        flex: 1;
+        min-width: 0;
+
+        .notification-title {
+          margin: 0 0 4px 0;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--text-primary);
+          line-height: 1.4;
+        }
+
+        .notification-desc {
+          margin: 0 0 6px 0;
+          font-size: 13px;
+          color: var(--text-secondary);
+          line-height: 1.4;
+        }
+
+        .notification-time {
+          font-size: 12px;
+          color: var(--text-secondary);
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  .view-all-btn {
+    height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    color: var(--text-primary) !important;
+    font-weight: 500 !important;
+    border-top: 1px solid #f0f0f0 !important;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.02) !important;
+    }
+  }
+}
+
+::ng-deep .modern-user-menu {
+  background-color: #ffffff !important; // Fondo blanco sólido para mejor contraste
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  min-width: 180px !important;
+  max-width: 200px !important;
+  margin-top: 8px !important;
+  padding: 8px 0 !important;
+  overflow: hidden !important;
+
+  .modern-menu-item {
+    height: 48px !important;
+    padding: 0 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: var(--text-primary) !important;
+    transition: all 0.2s ease !important;
+    margin: 2px 4px !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.03) !important;
+      color: var(--text-primary) !important;
+      transform: translateX(2px) !important;
+    }
+
+    &.logout-item {
+      margin-top: 8px !important;
+      
+      &:hover {
+        background: rgba(244, 67, 54, 0.06) !important;
+        color: #f44336 !important;
+      }
+
+      mat-icon {
+        color: #f44336 !important;
+      }
+
+      span {
+        color: #f44336 !important;
+      }
+    }
+
+    mat-icon {
+      color: var(--text-secondary);
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      transition: color 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    span {
+      font-weight: 500;
+      transition: color 0.2s ease;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .modern-divider {
+    margin: 8px 4px !important;
+    background-color: rgba(0, 0, 0, 0.06) !important;
+  }
+} 
