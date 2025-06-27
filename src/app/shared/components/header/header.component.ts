@@ -5,11 +5,12 @@ import { MaterialModule } from '../../material.module';
 import { SupabaseService } from '../../services/supabase.service';
 import { ROUTES } from '../../constants/routes';
 import { toast } from 'ngx-sonner';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, MaterialModule, TranslateModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
@@ -18,6 +19,7 @@ export class HeaderComponent {
   
   private _supabaseService = inject(SupabaseService);
   private _router = inject(Router);
+  private _translateService = inject(TranslateService);
 
   isMobileSearchExpanded = false;
 
@@ -32,8 +34,8 @@ export class HeaderComponent {
       }
 
       // Show success toast
-      toast.success('Logged out successfully', {
-        description: 'You have been signed out of your account.',
+      toast.success(this._translateService.instant('toasts.logout.success.title'), {
+        description: this._translateService.instant('toasts.logout.success.description'),
         duration: 2000
       });
 
@@ -46,8 +48,8 @@ export class HeaderComponent {
       console.error('Logout error:', error);
       
       // Show error toast
-      toast.error('Logout failed', {
-        description: error.message || 'An error occurred during logout.',
+      toast.error(this._translateService.instant('toasts.logout.error.title'), {
+        description: error.message || this._translateService.instant('toasts.logout.error.description'),
         duration: 3000
       });
     }

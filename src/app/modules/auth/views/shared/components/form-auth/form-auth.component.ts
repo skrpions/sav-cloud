@@ -3,6 +3,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../../../core/application/services/auth.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { MaterialModule } from '../../../../../../shared/material.module';
 
 export interface AuthFormConfig {
   showRememberMe?: boolean;
@@ -17,7 +19,7 @@ export interface AuthFormConfig {
 
 @Component({
   template: '',
-  imports: [CommonModule]
+  imports: [CommonModule, TranslateModule, MaterialModule]
 })
 export abstract class FormAuthComponent {
   // * Injection

@@ -4,10 +4,10 @@
     <div class="breadcrumb">
       <mat-icon class="breadcrumb-icon">home</mat-icon>
       <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-current">Analytics</span>
+      <span class="breadcrumb-current">{{ 'header.analytics' | translate }}</span>
     </div>
-    <h1>Analytics Dashboard</h1>
-    <p>Monitor your sales performance, user engagement and business metrics in real-time.</p>
+    <h1>{{ 'header.analyticsDashboard' | translate }}</h1>
+    <p>{{ 'header.description' | translate }}</p>
   </div>
   <div class="header-right">
     <div class="header-actions">
@@ -16,7 +16,7 @@
           <mat-icon matPrefix class="search-icon">search</mat-icon>
           <input 
             matInput 
-            placeholder="Search..." 
+            [placeholder]="'header.searchPlaceholder' | translate" 
             (input)="onSearchChange($any($event.target).value)" />
         </mat-form-field>
       </div>
@@ -45,9 +45,9 @@
         <div class="breadcrumb">
           <mat-icon class="breadcrumb-icon">home</mat-icon>
           <span class="breadcrumb-separator">/</span>
-          <span class="breadcrumb-current">Analytics</span>
+          <span class="breadcrumb-current">{{ 'header.analytics' | translate }}</span>
         </div>
-        <h1>Analytics Dashboard</h1>
+        <h1>{{ 'header.analyticsDashboard' | translate }}</h1>
       </div>
       <div class="mobile-actions">
         <button mat-icon-button class="mobile-search-btn" (click)="toggleMobileSearch()">
@@ -70,7 +70,7 @@
         <mat-icon matPrefix class="search-icon">search</mat-icon>
         <input 
           matInput 
-          placeholder="Search..." 
+          [placeholder]="'header.searchPlaceholder' | translate"
           (input)="onSearchChange($any($event.target).value)"
           #mobileSearchInput />
         <button 
@@ -87,7 +87,7 @@
   <!-- Shared Menus -->
   <mat-menu #notificationMenu="matMenu" class="notification-menu">
     <div class="menu-header">
-      <h4>Notifications</h4>
+      <h4>{{ 'notifications.title' | translate }}</h4>
       <button mat-icon-button class="mark-read-btn">
         <mat-icon>done_all</mat-icon>
       </button>
@@ -97,9 +97,9 @@
       <div class="notification-content">
         <mat-icon class="notification-icon success">check_circle</mat-icon>
         <div class="notification-text">
-          <p class="notification-title">Sales Goal Achieved</p>
-          <p class="notification-desc">You've reached 120% of your monthly target</p>
-          <span class="notification-time">2 minutes ago</span>
+          <p class="notification-title">{{ 'notifications.salesGoal.title' | translate }}</p>
+          <p class="notification-desc">{{ 'notifications.salesGoal.description' | translate }}</p>
+          <span class="notification-time">{{ 'notifications.salesGoal.time' | translate }}</span>
         </div>
       </div>
     </button>
@@ -107,9 +107,9 @@
       <div class="notification-content">
         <mat-icon class="notification-icon info">info</mat-icon>
         <div class="notification-text">
-          <p class="notification-title">System Update</p>
-          <p class="notification-desc">New features are now available</p>
-          <span class="notification-time">1 hour ago</span>
+          <p class="notification-title">{{ 'notifications.systemUpdate.title' | translate }}</p>
+          <p class="notification-desc">{{ 'notifications.systemUpdate.description' | translate }}</p>
+          <span class="notification-time">{{ 'notifications.systemUpdate.time' | translate }}</span>
         </div>
       </div>
     </button>
@@ -117,32 +117,32 @@
       <div class="notification-content">
         <mat-icon class="notification-icon warning">warning</mat-icon>
         <div class="notification-text">
-          <p class="notification-title">Low Inventory Alert</p>
-          <p class="notification-desc">5 products need restocking</p>
-          <span class="notification-time">3 hours ago</span>
+          <p class="notification-title">{{ 'notifications.lowInventory.title' | translate }}</p>
+          <p class="notification-desc">{{ 'notifications.lowInventory.description' | translate }}</p>
+          <span class="notification-time">{{ 'notifications.lowInventory.time' | translate }}</span>
         </div>
       </div>
     </button>
     <mat-divider></mat-divider>
     <button mat-menu-item class="view-all-btn">
       <mat-icon>visibility</mat-icon>
-      <span>View All Notifications</span>
+      <span>{{ 'header.viewAllNotifications' | translate }}</span>
     </button>
   </mat-menu>
   
   <mat-menu #userMenu="matMenu" class="modern-user-menu">
     <button mat-menu-item class="modern-menu-item">
       <mat-icon>person</mat-icon>
-      <span>Profile</span>
+      <span>{{ 'common.profile' | translate }}</span>
     </button>
     <button mat-menu-item class="modern-menu-item">
       <mat-icon>settings</mat-icon>
-      <span>Settings</span>
+      <span>{{ 'common.settings' | translate }}</span>
     </button>
     <mat-divider class="modern-divider"></mat-divider>
     <button mat-menu-item class="modern-menu-item logout-item" (click)="logout()">
       <mat-icon>logout</mat-icon>
-      <span>Logout</span>
+      <span>{{ 'common.logout' | translate }}</span>
     </button>
   </mat-menu>
 </header> 

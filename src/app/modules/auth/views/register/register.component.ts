@@ -7,6 +7,7 @@ import { FormAuthComponent, AuthFormConfig } from '../shared/components/form-aut
 import { SupabaseService } from '../../../../shared/services/supabase.service';
 import { ROUTES } from '../../../../shared/constants/routes';
 import { toast } from 'ngx-sonner';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-register',
@@ -14,25 +15,27 @@ import { toast } from 'ngx-sonner';
     CommonModule,
     ReactiveFormsModule,
     MaterialModule,
-    RouterLink
+    RouterLink,
+    TranslateModule
   ],
   templateUrl: '../shared/components/form-auth/form-auth.component.html',
   styleUrl: '../shared/components/form-auth/form-auth.component.scss'
 })
 export class RegisterComponent extends FormAuthComponent {
   private _supabaseService = inject(SupabaseService);
+  private _translateService = inject(TranslateService);
 
   authForm: FormGroup;
   
   config: AuthFormConfig = {
     showRememberMe: false,
     showTermsCheckbox: true,
-    submitButtonText: 'Sign Up',
-    title: 'Sign Up',
-    subtitle: 'Enter your email and password to create your account',
-    linkText: "Already have an account?",
+    submitButtonText: this._translateService.instant('auth.register.submitButton'),
+    title: this._translateService.instant('auth.register.title'),
+    subtitle: this._translateService.instant('auth.register.subtitle'),
+    linkText: this._translateService.instant('auth.register.linkText'),
     linkRoute: ROUTES.AUTH.LOGIN,
-    linkLabel: 'Sign in'
+    linkLabel: this._translateService.instant('auth.register.linkLabel')
   };
 
   constructor() {
@@ -58,8 +61,8 @@ export class RegisterComponent extends FormAuthComponent {
         console.log('Registration successful:', data);
         
         // Mostrar toast de éxito
-        toast.success('Registration successful!', {
-          description: 'Please check your email to verify your account.',
+        toast.success(this._translateService.instant('toasts.register.success.title'), {
+          description: this._translateService.instant('toasts.register.success.description'),
           duration: 4000
         });
         
@@ -72,21 +75,21 @@ export class RegisterComponent extends FormAuthComponent {
         console.error('Registration error:', error);
         
         // Manejar diferentes tipos de error
-        let errorMessage = 'An unexpected error occurred. Please try again.';
+        let errorMessage = this._translateService.instant('toasts.register.error.defaultError');
         
         if (error.message) {
           switch (error.message) {
             case 'User already registered':
-              errorMessage = 'An account with this email already exists. Please sign in instead.';
+              errorMessage = this._translateService.instant('toasts.register.error.userAlreadyExists');
               break;
             case 'Password should be at least 6 characters':
-              errorMessage = 'Password must be at least 6 characters long.';
+              errorMessage = this._translateService.instant('toasts.register.error.passwordTooShort');
               break;
             case 'signup_disabled':
-              errorMessage = 'Registration is currently disabled.';
+              errorMessage = this._translateService.instant('toasts.register.error.signupDisabled');
               break;
             case 'Email rate limit exceeded':
-              errorMessage = 'Too many registration attempts. Please wait a moment and try again.';
+              errorMessage = this._translateService.instant('toasts.register.error.rateLimitExceeded');
               break;
             default:
               errorMessage = error.message;
@@ -96,7 +99,7 @@ export class RegisterComponent extends FormAuthComponent {
         console.error('Registration failed:', errorMessage);
         
         // Mostrar toast de error
-        toast.error('Registration failed', {
+        toast.error(this._translateService.instant('toasts.register.error.title'), {
           description: errorMessage,
           duration: 4000
         });

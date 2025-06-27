@@ -16,43 +16,43 @@
       <div class="charts-section">
         <div class="chart-card">
           <div class="chart-header">
-            <h3>Website Views</h3>
-            <p>Last Campaign Performance</p>
+            <h3>{{ 'dashboard.charts.websiteViews.title' | translate }}</h3>
+            <p>{{ 'dashboard.charts.websiteViews.subtitle' | translate }}</p>
           </div>
           <div class="chart-content">
             <canvas id="websiteViewsChart" #websiteViewsChart></canvas>
           </div>
           <div class="chart-footer">
             <mat-icon>access_time</mat-icon>
-            <span>campaign sent 2 days ago</span>
+            <span>{{ 'dashboard.charts.websiteViews.footer' | translate }}</span>
           </div>
         </div>
 
         <div class="chart-card">
           <div class="chart-header">
-            <h3>Daily Sales</h3>
-            <p>(+15%) increase in today sales.</p>
+            <h3>{{ 'dashboard.charts.dailySales.title' | translate }}</h3>
+            <p>{{ 'dashboard.charts.dailySales.subtitle' | translate }}</p>
           </div>
           <div class="chart-content">
             <canvas id="dailySalesChart" #dailySalesChart></canvas>
           </div>
           <div class="chart-footer">
             <mat-icon>access_time</mat-icon>
-            <span>updated 4 min ago</span>
+            <span>{{ 'dashboard.charts.dailySales.footer' | translate }}</span>
           </div>
         </div>
 
         <div class="chart-card">
           <div class="chart-header">
-            <h3>Completed Tasks</h3>
-            <p>Last Campaign Performance</p>
+            <h3>{{ 'dashboard.charts.completedTasks.title' | translate }}</h3>
+            <p>{{ 'dashboard.charts.completedTasks.subtitle' | translate }}</p>
           </div>
           <div class="chart-content">
             <canvas id="completedTasksChart" #completedTasksChart></canvas>
           </div>
           <div class="chart-footer">
             <mat-icon>access_time</mat-icon>
-            <span>just updated</span>
+            <span>{{ 'dashboard.charts.completedTasks.footer' | translate }}</span>
           </div>
         </div>
       </div>
@@ -62,9 +62,9 @@
         <div class="stat-card">
           <div class="stat-content">
             <div class="stat-info">
-              <h4>Bookings</h4>
-              <div class="stat-value">281</div>
-              <div class="stat-change positive">+55% than last week</div>
+              <h4>{{ 'dashboard.stats.bookings.title' | translate }}</h4>
+              <div class="stat-value">{{ 'dashboard.stats.bookings.value' | translate }}</div>
+              <div class="stat-change positive">{{ 'dashboard.stats.bookings.change' | translate }}</div>
             </div>
             <div class="stat-icon">
               <mat-icon>calendar_today</mat-icon>
@@ -75,9 +75,9 @@
         <div class="stat-card">
           <div class="stat-content">
             <div class="stat-info">
-              <h4>Today's Users</h4>
-              <div class="stat-value">2,300</div>
-              <div class="stat-change positive">+3% than last month</div>
+              <h4>{{ 'dashboard.stats.todaysUsers.title' | translate }}</h4>
+              <div class="stat-value">{{ 'dashboard.stats.todaysUsers.value' | translate }}</div>
+              <div class="stat-change positive">{{ 'dashboard.stats.todaysUsers.change' | translate }}</div>
             </div>
             <div class="stat-icon">
               <mat-icon>groups</mat-icon>
@@ -88,9 +88,9 @@
         <div class="stat-card">
           <div class="stat-content">
             <div class="stat-info">
-              <h4>Revenue</h4>
-              <div class="stat-value">$34,000</div>
-              <div class="stat-change positive">+35% than last month</div>
+              <h4>{{ 'dashboard.stats.revenue.title' | translate }}</h4>
+              <div class="stat-value">{{ 'dashboard.stats.revenue.value' | translate }}</div>
+              <div class="stat-change positive">{{ 'dashboard.stats.revenue.change' | translate }}</div>
             </div>
             <div class="stat-icon">
               <mat-icon>attach_money</mat-icon>
@@ -101,9 +101,9 @@
         <div class="stat-card">
           <div class="stat-content">
             <div class="stat-info">
-              <h4>Followers</h4>
-              <div class="stat-value">+2,910</div>
-              <div class="stat-change">Just updated</div>
+              <h4>{{ 'dashboard.stats.followers.title' | translate }}</h4>
+              <div class="stat-value">{{ 'dashboard.stats.followers.value' | translate }}</div>
+              <div class="stat-change">{{ 'dashboard.stats.followers.change' | translate }}</div>
             </div>
             <div class="stat-icon">
               <mat-icon>people</mat-icon>
@@ -115,13 +115,13 @@
       <!-- Gallery Section -->
       <div class="gallery-section">
         <div class="gallery-item">
-          <img src="/images/background.jpg" alt="Gallery Image 1" />
+          <img src="/images/background.jpg" [alt]="'dashboard.gallery.altText' | translate" />
         </div>
         <div class="gallery-item">
-          <img src="/images/background.jpg" alt="Gallery Image 2" />
+          <img src="/images/background.jpg" [alt]="'dashboard.gallery.altText' | translate" />
         </div>
         <div class="gallery-item">
-          <img src="/images/background.jpg" alt="Gallery Image 3" />
+          <img src="/images/background.jpg" [alt]="'dashboard.gallery.altText' | translate" />
         </div>
       </div>
     </div>

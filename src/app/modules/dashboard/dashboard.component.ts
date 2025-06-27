@@ -7,12 +7,14 @@ import { ROUTES } from '../../shared/constants/routes';
 import { toast } from 'ngx-sonner';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { HeaderComponent } from '../../shared/components/header/header.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-dashboard',
   imports: [
     CommonModule,
     MaterialModule,
+    TranslateModule,
     SidebarComponent,
     HeaderComponent
   ],

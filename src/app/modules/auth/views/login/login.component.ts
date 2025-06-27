@@ -7,6 +7,7 @@ import { FormAuthComponent, AuthFormConfig } from '../shared/components/form-aut
 import { SupabaseService } from '../../../../shared/services/supabase.service';
 import { ROUTES } from '../../../../shared/constants/routes';
 import { toast } from 'ngx-sonner';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-login',
@@ -14,25 +15,27 @@ import { toast } from 'ngx-sonner';
     CommonModule,
     ReactiveFormsModule,
     MaterialModule,
-    RouterLink
+    RouterLink,
+    TranslateModule
   ],
   templateUrl: '../shared/components/form-auth/form-auth.component.html',
   styleUrl: '../shared/components/form-auth/form-auth.component.scss'
 })
 export class LoginComponent extends FormAuthComponent {
   private _supabaseService = inject(SupabaseService);
+  private _translateService = inject(TranslateService);
 
   authForm: FormGroup;
   
   config: AuthFormConfig = {
     showRememberMe: true,
     showTermsCheckbox: false,
-    submitButtonText: 'Sign In',
-    title: 'Sign In',
-    subtitle: 'Enter your email and password to Sign In',
-    linkText: "Don't have an account?",
+    submitButtonText: this._translateService.instant('auth.login.submitButton'),
+    title: this._translateService.instant('auth.login.title'),
+    subtitle: this._translateService.instant('auth.login.subtitle'),
+    linkText: this._translateService.instant('auth.login.linkText'),
     linkRoute: ROUTES.AUTH.REGISTER,
-    linkLabel: 'Sign up'
+    linkLabel: this._translateService.instant('auth.login.linkLabel')
   };
 
   constructor() {
@@ -58,8 +61,8 @@ export class LoginComponent extends FormAuthComponent {
         console.log('Login successful:', data);
         
         // Mostrar toast de éxito
-        toast.success('Welcome back!', {
-          description: 'You have been successfully signed in.',
+        toast.success(this._translateService.instant('toasts.login.success.title'), {
+          description: this._translateService.instant('toasts.login.success.description'),
           duration: 3000
         });
         
@@ -72,18 +75,18 @@ export class LoginComponent extends FormAuthComponent {
         console.error('Login error:', error);
         
         // Manejar diferentes tipos de error
-        let errorMessage = 'An unexpected error occurred. Please try again.';
+        let errorMessage = this._translateService.instant('toasts.login.error.defaultError');
         
         if (error.message) {
           switch (error.message) {
             case 'Invalid login credentials':
-              errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+              errorMessage = this._translateService.instant('toasts.login.error.invalidCredentials');
               break;
             case 'Email rate limit exceeded':
-              errorMessage = 'Too many login attempts. Please wait a moment and try again.';
+              errorMessage = this._translateService.instant('toasts.login.error.rateLimitExceeded');
               break;
             case 'signup_disabled':
-              errorMessage = 'Authentication is currently disabled.';
+              errorMessage = this._translateService.instant('toasts.login.error.signupDisabled');
               break;
             default:
               errorMessage = error.message;
@@ -93,7 +96,7 @@ export class LoginComponent extends FormAuthComponent {
         console.error('Login failed:', errorMessage);
         
         // Mostrar toast de error
-        toast.error('Login failed', {
+        toast.error(this._translateService.instant('toasts.login.error.title'), {
           description: errorMessage,
           duration: 4000
         });

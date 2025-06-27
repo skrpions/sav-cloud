@@ -2,13 +2,13 @@
   <div class="sidebar-header">
     <div class="logo" [class.collapsed]="isCollapsed()">
       <mat-icon>cloud</mat-icon>
-      <span *ngIf="!isCollapsed()">SAV Cloud</span>
+      <span *ngIf="!isCollapsed()">{{ 'sidebar.appName' | translate }}</span>
     </div>
     <button 
       mat-icon-button 
       class="collapse-btn" 
       (click)="toggleCollapse()"
-      [matTooltip]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+      [matTooltip]="isCollapsed() ? ('header.expandSidebar' | translate) : ('header.collapseSidebar' | translate)"
       matTooltipPosition="right">
       <mat-icon>{{ isCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
     </button>
@@ -19,8 +19,8 @@
     <div class="user-profile">
       <img class="profile-avatar" src="/images/avatars/avatar-dreamcode.jpeg" alt="User Avatar" />
       <div class="profile-info" *ngIf="!isCollapsed()">
-        <h4 class="profile-name">Brooklyn Alice</h4>
-        <p class="profile-role">Administrator</p>
+        <h4 class="profile-name">{{ 'sidebar.userProfile.name' | translate }}</h4>
+        <p class="profile-role">{{ 'sidebar.userProfile.role' | translate }}</p>
       </div>
       <div class="profile-status">
         <div class="status-indicator online"></div>

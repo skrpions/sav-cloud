@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Output, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../material.module';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export interface SidebarItem {
   icon: string;
@@ -12,7 +13,7 @@ export interface SidebarItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, MaterialModule, TranslateModule],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
@@ -20,17 +21,18 @@ export class SidebarComponent {
   @Output() itemClicked = new EventEmitter<SidebarItem>();
   @Output() collapseChanged = new EventEmitter<boolean>();
 
+  private _translateService = inject(TranslateService);
   isCollapsed = signal(false);
 
   sidebarItems: SidebarItem[] = [
-    { icon: 'dashboard', label: 'Dashboard', active: true },
-    { icon: 'assignment', label: 'Activities' },
-    { icon: 'people', label: 'Collaborators' },
-    { icon: 'agriculture', label: 'Harvest' },
-    { icon: 'shopping_cart', label: 'Purchases' },
-    { icon: 'trending_up', label: 'Sales' },
-    { icon: 'assessment', label: 'Reports' },
-    { icon: 'settings', label: 'Settings' }
+    { icon: 'dashboard', label: this._translateService.instant('sidebar.navigation.dashboard'), active: true },
+    { icon: 'assignment', label: this._translateService.instant('sidebar.navigation.activities') },
+    { icon: 'people', label: this._translateService.instant('sidebar.navigation.collaborators') },
+    { icon: 'agriculture', label: this._translateService.instant('sidebar.navigation.harvest') },
+    { icon: 'shopping_cart', label: this._translateService.instant('sidebar.navigation.purchases') },
+    { icon: 'trending_up', label: this._translateService.instant('sidebar.navigation.sales') },
+    { icon: 'assessment', label: this._translateService.instant('sidebar.navigation.reports') },
+    { icon: 'settings', label: this._translateService.instant('sidebar.navigation.settings') }
   ];
 
   toggleCollapse(): void {
