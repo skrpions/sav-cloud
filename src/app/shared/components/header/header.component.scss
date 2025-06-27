@@ -38,10 +38,11 @@
 
   // Desktop layout - ocultar en móvil
   .header-left {
+    flex: 1;
+    
     @media (max-width: 768px) {
       display: none;
     }
-    flex: 1;
 
     .breadcrumb {
       display: flex;

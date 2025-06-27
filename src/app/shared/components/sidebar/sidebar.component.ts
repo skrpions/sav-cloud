@@ -1,9 +1,9 @@
-import { Component, EventEmitter, Output, signal, inject } from '@angular/core';
+import { Component, EventEmitter, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 
-import { MaterialModule } from '@shared/material.module';
-import { SidebarItem } from '@shared/models';
+import { MaterialModule } from '@/app/shared/material.module';
+import { SidebarItem } from '@/app/shared/models/ui.models';
 
 @Component({
   selector: 'app-sidebar',

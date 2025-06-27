@@ -7,9 +7,9 @@ import {
   SignUpRequest, 
   SignInRequest,
   RefreshTokenRequest 
-} from '@core/domain/entities/auth-entity';
-import { AuthRepository } from '@core/domain/repositories/auth-repository';
-import { SupabaseService } from '@shared/services/supabase.service';
+} from '@/app/core/domain/entities/auth-entity';
+import { AuthRepository } from '@/app/core/domain/repositories/auth-repository';
+import { SupabaseService } from '@/app/shared/services/supabase.service';
 
 @Injectable()
 export class AuthInfrastructure implements AuthRepository {

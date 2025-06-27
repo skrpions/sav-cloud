@@ -5,12 +5,12 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { toast } from 'ngx-sonner';
 
-import { MaterialModule } from '@shared/material.module';
-import { SupabaseService } from '@shared/services/supabase.service';
-import { ROUTES } from '@shared/constants/routes';
-import { FORM_CONSTRAINTS } from '@shared/constants/form-constrains';
+import { MaterialModule } from '@/app/shared/material.module';
+import { SupabaseService } from '@/app/shared/services/supabase.service';
+import { ROUTES } from '@/app/shared/constants/routes';
+import { FORM_CONSTRAINTS } from '@/app/shared/constants/form-constrains';
 import { FormAuthComponent } from '../shared/components/form-auth/form-auth.component';
-import { AuthFormConfig } from '@shared/models';
+import { AuthFormConfig } from '@/app/shared/models/ui.models';
 
 @Component({
   selector: 'app-login',

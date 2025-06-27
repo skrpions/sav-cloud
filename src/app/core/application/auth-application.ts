@@ -1,15 +1,15 @@
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { AuthInfrastructure } from '@core/infrastructure/auth-infrastructure';
-import { AuthRepository } from '@core/domain/repositories/auth-repository';
+import { AuthInfrastructure } from '@/app/core/infrastructure/auth-infrastructure';
+import { AuthRepository } from '@/app/core/domain/repositories/auth-repository';
 import { 
   AuthResponse, 
   UserEntity, 
   SignUpRequest, 
   SignInRequest,
   RefreshTokenRequest 
-} from '@core/domain/entities/auth-entity';
+} from '@/app/core/domain/entities/auth-entity';
 
 @Injectable()
 export class AuthApplication {

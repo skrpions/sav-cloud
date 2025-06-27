@@ -1,12 +1,12 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { toast } from 'ngx-sonner';
 
-import { MaterialModule } from '@shared/material.module';
-import { SupabaseService } from '@shared/services/supabase.service';
-import { ROUTES } from '@shared/constants/routes';
+import { MaterialModule } from '@/app/shared/material.module';
+import { SupabaseService } from '@/app/shared/services/supabase.service';
+import { ROUTES } from '@/app/shared/constants/routes';
 
 @Component({
   selector: 'app-header',

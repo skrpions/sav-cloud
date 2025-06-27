@@ -1,11 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, firstValueFrom } from 'rxjs';
-import { AuthApplication } from '@core/application/auth-application';
+import { AuthApplication } from '@/app/core/application/auth-application';
 import {
   AuthCredentials,
   AuthResponse,
   UserEntity
-} from '@core/domain/entities/auth-entity';
+} from '@/app/core/domain/entities/auth-entity';
 
 @Injectable({
   providedIn: 'root'

@@ -4,13 +4,13 @@ import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { toast } from 'ngx-sonner';
 
-import { MaterialModule } from '@shared/material.module';
-import { SupabaseService } from '@shared/services/supabase.service';
-import { ROUTES } from '@shared/constants/routes';
-import { FORM_CONSTRAINTS } from '@shared/constants/form-constrains';
-import { SidebarComponent } from '@shared/components/sidebar/sidebar.component';
-import { HeaderComponent } from '@shared/components/header/header.component';
-import { SidebarItem } from '@shared/models';
+import { MaterialModule } from '@/app/shared/material.module';
+import { SupabaseService } from '@/app/shared/services/supabase.service';
+import { ROUTES } from '@/app/shared/constants/routes';
+import { FORM_CONSTRAINTS } from '@/app/shared/constants/form-constrains';
+import { SidebarComponent } from '@/app/shared/components/sidebar/sidebar.component';
+import { HeaderComponent } from '@/app/shared/components/header/header.component';
+import { SidebarItem } from '@/app/shared/models/ui.models';
 
 @Component({
   selector: 'app-dashboard',

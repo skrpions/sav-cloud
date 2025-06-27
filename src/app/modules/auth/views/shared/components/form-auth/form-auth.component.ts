@@ -1,13 +1,13 @@
 import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 
-import { AuthService } from '@core/application/services/auth.service';
-import { MaterialModule } from '@shared/material.module';
-import { createEmailValidators, createPasswordValidators } from '@shared/utils/validators';
-import { AuthFormConfig } from '@shared/models';
+import { AuthService } from '@/app/core/application/services/auth.service';
+import { MaterialModule } from '@/app/shared/material.module';
+import { createEmailValidators, createPasswordValidators } from '@/app/shared/utils/validators';
+import { AuthFormConfig } from '@/app/shared/models/ui.models';
 
 @Component({
   template: '',
