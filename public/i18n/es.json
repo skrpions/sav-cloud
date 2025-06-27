@@ -1,80 +1,78 @@
 {
-    "slogan": "¡Fácil, rápido y seguro!",
-    
     "common": {
-      "search": "Buscar",
-      "close": "Cerrar",
-      "profile": "Perfil",
-      "settings": "Configuración",
-      "logout": "Cerrar sesión",
-      "email": "Correo electrónico",
-      "password": "Contraseña",
-      "rememberMe": "Recordarme",
-      "home": "Inicio",
-      "send": "Enviar",
-      "visibility": "Mostrar",
-      "hidePassword": "Ocultar contraseña"
+        "search": "Buscar",
+        "close": "Cerrar",
+        "profile": "Perfil",
+        "settings": "Configuración",
+        "logout": "Cerrar sesión",
+        "email": "Correo electrónico",
+        "password": "Contraseña",
+        "rememberMe": "Recordarme",
+        "home": "Inicio",
+        "send": "Enviar",
+        "visibility": "Mostrar",
+        "hidePassword": "Ocultar contraseña"
     },
 
     "toasts": {
-      "logout": {
+        "logout": {
         "success": {
-          "title": "Sesión cerrada exitosamente",
-          "description": "Has cerrado sesión de tu cuenta."
+            "title": "Sesión cerrada exitosamente",
+            "description": "Has cerrado sesión de tu cuenta."
         },
         "error": {
-          "title": "Error al cerrar sesión",
-          "description": "Ocurrió un error durante el cierre de sesión."
+            "title": "Error al cerrar sesión",
+            "description": "Ocurrió un error durante el cierre de sesión."
         }
-      },
-      "login": {
+        },
+        "login": {
         "success": {
-          "title": "¡Bienvenido de vuelta!",
-          "description": "Has iniciado sesión exitosamente."
+            "title": "¡Bienvenido de vuelta!",
+            "description": "Has iniciado sesión exitosamente."
         },
         "error": {
-          "title": "Error al iniciar sesión",
-          "invalidCredentials": "Correo electrónico o contraseña inválidos. Por favor verifica tus credenciales e intenta de nuevo.",
-          "rateLimitExceeded": "Demasiados intentos de inicio de sesión. Por favor espera un momento e intenta de nuevo.",
-          "signupDisabled": "La autenticación está actualmente deshabilitada.",
-          "defaultError": "Ocurrió un error inesperado. Por favor intenta de nuevo."
+            "title": "Error al iniciar sesión",
+            "invalidCredentials": "Correo electrónico o contraseña inválidos. Por favor verifica tus credenciales e intenta de nuevo.",
+            "rateLimitExceeded": "Demasiados intentos de inicio de sesión. Por favor espera un momento e intenta de nuevo.",
+            "signupDisabled": "La autenticación está actualmente deshabilitada.",
+            "defaultError": "Ocurrió un error inesperado. Por favor intenta de nuevo."
         }
-      },
-      "register": {
+        },
+        "register": {
         "success": {
-          "title": "¡Registro exitoso!",
-          "description": "Por favor revisa tu correo electrónico para verificar tu cuenta."
+            "title": "¡Registro exitoso!",
+            "description": "Por favor revisa tu correo electrónico para verificar tu cuenta."
         },
         "error": {
-          "title": "Error en el registro",
-          "userAlreadyExists": "Ya existe una cuenta con este correo electrónico. Por favor inicia sesión en su lugar.",
-          "passwordTooShort": "La contraseña debe tener al menos 6 caracteres.",
-          "signupDisabled": "El registro está actualmente deshabilitado.",
-          "rateLimitExceeded": "Demasiados intentos de registro. Por favor espera un momento e intenta de nuevo.",
-          "defaultError": "Ocurrió un error inesperado. Por favor intenta de nuevo."
+            "title": "Error en el registro",
+            "userAlreadyExists": "Ya existe una cuenta con este correo electrónico. Por favor inicia sesión en su lugar.",
+            "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
+            "signupDisabled": "El registro está actualmente deshabilitado.",
+            "rateLimitExceeded": "Demasiados intentos de registro. Por favor espera un momento e intenta de nuevo.",
+            "defaultError": "Ocurrió un error inesperado. Por favor intenta de nuevo."
         }
-      }
+        }
     },
 
     "header": {
-      "analytics": "Analytics",
-      "analyticsDashboard": "Analytics Dashboard",
-      "description": "Monitorea tu rendimiento de ventas, participación de usuarios y métricas de negocio en tiempo real.",
-      "searchPlaceholder": "Buscar...",
-      "notifications": "Notificaciones",
-      "markAllRead": "Marcar todo como leído",
-      "viewAllNotifications": "Ver todas las notificaciones",
-      "expandSidebar": "Expandir barra lateral",
-      "collapseSidebar": "Contraer barra lateral"
+        "analytics": "Analytics",
+        "analyticsDashboard": "Analytics Dashboard",
+        "description": "Monitorea tu rendimiento de ventas, participación de usuarios y métricas de negocio en tiempo real.",
+        "searchPlaceholder": "Buscar...",
+        "notifications": "Notificaciones",
+        "markAllRead": "Marcar todo como leído",
+        "viewAllNotifications": "Ver todas las notificaciones",
+        "expandSidebar": "Expandir barra lateral",
+        "collapseSidebar": "Contraer barra lateral"
     },
 
     "sidebar": {
-      "appName": "SAV Cloud",
-      "userProfile": {
+        "appName": "SAV Cloud",
+        "userProfile": {
         "name": "Brooklyn Alice",
         "role": "Administrador"
-      },
-      "navigation": {
+        },
+        "navigation": {
         "dashboard": "Dashboard",
         "activities": "Actividades",
         "collaborators": "Colaboradores",
@@ -83,113 +81,114 @@
         "sales": "Ventas",
         "reports": "Reportes",
         "settings": "Configuración"
-      }
+        }
     },
 
     "notifications": {
-      "title": "Notificaciones",
-      "salesGoal": {
+        "title": "Notificaciones",
+        "salesGoal": {
         "title": "Meta de Ventas Alcanzada",
         "description": "Has alcanzado el 120% de tu objetivo mensual",
         "time": "hace 2 minutos"
-      },
-      "systemUpdate": {
+        },
+        "systemUpdate": {
         "title": "Actualización del Sistema",
         "description": "Nuevas funciones están disponibles",
         "time": "hace 1 hora"
-      },
-      "lowInventory": {
+        },
+        "lowInventory": {
         "title": "Alerta de Inventario Bajo",
         "description": "5 productos necesitan reabastecimiento",
         "time": "hace 3 horas"
-      }
+        }
     },
 
     "dashboard": {
-      "charts": {
+        "charts": {
         "websiteViews": {
-          "title": "Vistas del Sitio Web",
-          "subtitle": "Rendimiento de la Última Campaña",
-          "footer": "campaña enviada hace 2 días"
+            "title": "Vistas del Sitio Web",
+            "subtitle": "Rendimiento de la Última Campaña",
+            "footer": "campaña enviada hace 2 días"
         },
         "dailySales": {
-          "title": "Ventas Diarias",
-          "subtitle": "(+15%) aumento en las ventas de hoy.",
-          "footer": "actualizado hace 4 min"
+            "title": "Ventas Diarias",
+            "subtitle": "(+15%) aumento en las ventas de hoy.",
+            "footer": "actualizado hace 4 min"
         },
         "completedTasks": {
-          "title": "Tareas Completadas",
-          "subtitle": "Rendimiento de la Última Campaña",
-          "footer": "recién actualizado"
+            "title": "Tareas Completadas",
+            "subtitle": "Rendimiento de la Última Campaña",
+            "footer": "recién actualizado"
         }
-      },
-      "stats": {
+        },
+        "stats": {
         "bookings": {
-          "title": "Reservas",
-          "value": "281",
-          "change": "+55% que la semana pasada"
+            "title": "Reservas",
+            "value": "281",
+            "change": "+55% que la semana pasada"
         },
         "todaysUsers": {
-          "title": "Usuarios de Hoy",
-          "value": "2,300",
-          "change": "+3% que el mes pasado"
+            "title": "Usuarios de Hoy",
+            "value": "2,300",
+            "change": "+3% que el mes pasado"
         },
         "revenue": {
-          "title": "Ingresos",
-          "value": "$34,000",
-          "change": "+35% que el mes pasado"
+            "title": "Ingresos",
+            "value": "$34,000",
+            "change": "+35% que el mes pasado"
         },
         "followers": {
-          "title": "Seguidores",
-          "value": "+2,910",
-          "change": "Recién actualizado"
+            "title": "Seguidores",
+            "value": "+2,910",
+            "change": "Recién actualizado"
         }
-      },
-      "gallery": {
+        },
+        "gallery": {
         "altText": "Imagen de Galería"
-      }
+        }
     },
 
     "auth": {
-      "brandName": "SAV PRO",
-      "form": {
+        "brandName": "SAV PRO",
+        "form": {
         "emailPlaceholder": "john@email.com",
         "passwordPlaceholder": "••••••••••",
         "rememberMe": "Recordarme",
         "termsText": "Acepto los",
         "termsLink": "Términos y Condiciones"
-      },
-      "validation": {
+        },
+        "validation": {
         "emailRequired": "El correo electrónico es requerido",
         "emailInvalid": "Por favor ingresa un correo electrónico válido",
         "passwordRequired": "La contraseña es requerida",
-        "passwordMinLength": "La contraseña debe tener al menos 6 caracteres"
-      },
-      "login": {
+        "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
+        "passwordPattern": "La contraseña debe incluir al menos: una mayúscula, una minúscula, un número y un carácter especial (+.*/?#¡!_-$%&)"
+        },
+        "login": {
         "title": "Iniciar Sesión",
         "subtitle": "Accede a tu cuenta",
         "submitButton": "Iniciar Sesión",
         "linkText": "¿No tienes una cuenta?",
         "linkLabel": "Regístrate"
-      },
-      "register": {
+        },
+        "register": {
         "title": "Registrarse",
         "subtitle": "Crea tu nueva cuenta",
         "submitButton": "Registrarse",
         "linkText": "¿Ya tienes una cuenta?",
         "linkLabel": "Inicia Sesión"
-      }
+        }
     },
 
     "footer": {
-      "copyright": "© 2025, hecho con ❤️ por",
-      "author": "Ing. Nestor Martínez C.",
-      "forBetter": "para una mejor web.",
-      "links": {
+        "copyright": "© 2025, hecho con ❤️ por",
+        "author": "Ing. Nestor Martínez C.",
+        "forBetter": "para una mejor web.",
+        "links": {
         "creativeTime": "Creative Tim",
         "aboutUs": "Acerca de Nosotros",
         "blog": "Blog",
         "license": "Licencia"
-      }
+        }
     }
 }

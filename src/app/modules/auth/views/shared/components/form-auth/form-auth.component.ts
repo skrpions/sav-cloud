@@ -1,21 +1,13 @@
 import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../../../../../core/application/services/auth.service';
 import { TranslateModule } from '@ngx-translate/core';
-import { MaterialModule } from '../../../../../../shared/material.module';
 
-export interface AuthFormConfig {
-  showRememberMe?: boolean;
-  showTermsCheckbox?: boolean;
-  submitButtonText: string;
-  title: string;
-  subtitle: string;
-  linkText: string;
-  linkRoute: string;
-  linkLabel: string;
-}
+import { AuthService } from '@core/application/services/auth.service';
+import { MaterialModule } from '@shared/material.module';
+import { createEmailValidators, createPasswordValidators } from '@shared/utils/validators';
+import { AuthFormConfig } from '@shared/models';
 
 @Component({
   template: '',
@@ -33,8 +25,8 @@ export abstract class FormAuthComponent {
 
   protected createBaseForm(): FormGroup {
     const baseControls: any = {
-      email: ['sksmartinez@gmail.com', [Validators.required, Validators.email]],
-      password: ['123456', [Validators.required, Validators.minLength(6)]]
+      email: ['sksmartinez@gmail.com', createEmailValidators()],
+      password: ['Pa$$w0rd!', createPasswordValidators()]
     };
 
     if (this.config.showRememberMe) {
@@ -75,6 +67,11 @@ export abstract class FormAuthComponent {
   isPasswordMinLengthInvalid(form: FormGroup): boolean {
     const passwordControl = form.get('password');
     return !!(passwordControl?.invalid && passwordControl?.touched && passwordControl?.errors?.['minlength']);
+  }
+
+  isPasswordPatternInvalid(form: FormGroup): boolean {
+    const passwordControl = form.get('password');
+    return !!(passwordControl?.invalid && passwordControl?.touched && passwordControl?.errors?.['pattern']);
   }
 
   // Getters para acceder a servicios desde clases hijas

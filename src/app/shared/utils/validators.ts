@@ -1,4 +1,5 @@
-import { FormGroup } from '@angular/forms';
+import { FormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { FORM_CONSTRAINTS } from '../constants/form-constrains';
 
 /**
  * Verifica si un campo es requerido y tiene errores
@@ -29,6 +30,16 @@ export function isEmail(form: FormGroup): boolean {
 export function isPasswordMinLength(form: FormGroup): boolean {
   const passwordControl = form.get('password');
   return !!(passwordControl?.invalid && passwordControl?.touched && passwordControl?.errors?.['minlength']);
+}
+
+/**
+ * Verifica si la contraseña no cumple con el patrón requerido
+ * @param form - FormGroup que contiene el campo password
+ * @returns boolean - true si la contraseña no cumple el patrón
+ */
+export function isPasswordPattern(form: FormGroup): boolean {
+  const passwordControl = form.get('password');
+  return !!(passwordControl?.invalid && passwordControl?.touched && passwordControl?.errors?.['pattern']);
 }
 
 /**
@@ -63,6 +74,51 @@ export function getFieldError(field: string, form: FormGroup): string {
     const requiredLength = errors['maxlength'].requiredLength;
     return `${field} must not exceed ${requiredLength} characters`;
   }
+
+  if (errors['pattern']) {
+    if (field === 'password') {
+      return 'Password must include uppercase, lowercase, number and special character';
+    }
+    return 'Invalid format';
+  }
   
   return 'Invalid input';
+}
+
+/**
+ * Crea validadores para email usando las constantes definidas
+ * @returns Array de validadores para email
+ */
+export function createEmailValidators(): ValidatorFn[] {
+  return [
+    Validators.required,
+    Validators.email,
+    Validators.maxLength(FORM_CONSTRAINTS.maxLength.email)
+  ];
+}
+
+/**
+ * Crea validadores para contraseña usando las constantes definidas
+ * @returns Array de validadores para contraseña
+ */
+export function createPasswordValidators(): ValidatorFn[] {
+  return [
+    Validators.required,
+    Validators.minLength(FORM_CONSTRAINTS.minLength.password),
+    Validators.maxLength(FORM_CONSTRAINTS.maxLength.password),
+    Validators.pattern(FORM_CONSTRAINTS.patterns.password)
+  ];
+}
+
+/**
+ * Crea validadores para username usando las constantes definidas
+ * @returns Array de validadores para username
+ */
+export function createUsernameValidators(): ValidatorFn[] {
+  return [
+    Validators.required,
+    Validators.minLength(FORM_CONSTRAINTS.minLength.username),
+    Validators.maxLength(FORM_CONSTRAINTS.maxLength.username),
+    Validators.pattern(FORM_CONSTRAINTS.patterns.username)
+  ];
 } 

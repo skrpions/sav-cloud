@@ -2,12 +2,15 @@ import { Component, inject } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { MaterialModule } from '../../../../shared/material.module';
-import { FormAuthComponent, AuthFormConfig } from '../shared/components/form-auth/form-auth.component';
-import { SupabaseService } from '../../../../shared/services/supabase.service';
-import { ROUTES } from '../../../../shared/constants/routes';
-import { toast } from 'ngx-sonner';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { toast } from 'ngx-sonner';
+
+import { MaterialModule } from '@shared/material.module';
+import { SupabaseService } from '@shared/services/supabase.service';
+import { ROUTES } from '@shared/constants/routes';
+import { FORM_CONSTRAINTS } from '@shared/constants/form-constrains';
+import { FormAuthComponent } from '../shared/components/form-auth/form-auth.component';
+import { AuthFormConfig } from '@shared/models';
 
 @Component({
   selector: 'app-register',
@@ -63,13 +66,13 @@ export class RegisterComponent extends FormAuthComponent {
         // Mostrar toast de éxito
         toast.success(this._translateService.instant('toasts.register.success.title'), {
           description: this._translateService.instant('toasts.register.success.description'),
-          duration: 4000
+          duration: FORM_CONSTRAINTS.timing.toastDuration
         });
         
         // Redirigir al login después del registro exitoso
         setTimeout(() => {
           this.router.navigate([ROUTES.AUTH.LOGIN]);
-        }, 1500);
+        }, FORM_CONSTRAINTS.timing.redirectDelay);
         
       } catch (error: any) {
         console.error('Registration error:', error);
@@ -101,7 +104,7 @@ export class RegisterComponent extends FormAuthComponent {
         // Mostrar toast de error
         toast.error(this._translateService.instant('toasts.register.error.title'), {
           description: errorMessage,
-          duration: 4000
+          duration: FORM_CONSTRAINTS.timing.toastDuration
         });
       }
     } else {

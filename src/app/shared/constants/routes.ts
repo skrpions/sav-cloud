@@ -1,15 +1,10 @@
 export const ROUTES = {
-  // Authentication routes
   AUTH: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
     FORGOT_PASSWORD: '/auth/forgot-password',
   },
-  
-  // Dashboard and main application routes
   DASHBOARD: '/dashboard',
-  
-  // Main modules
   ACTIVITIES: '/activities',
   COLLABORATORS: '/collaborators',
   HARVEST: '/harvest',
@@ -17,8 +12,6 @@ export const ROUTES = {
   REPORTS: '/reports',
   SALES: '/sales',
   SETTINGS: '/settings',
-  
-  // Common routes
   HOME: '/',
   PROFILE: '/profile',
 } as const;

@@ -2,12 +2,15 @@ import { Component, inject } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { MaterialModule } from '../../../../shared/material.module';
-import { FormAuthComponent, AuthFormConfig } from '../shared/components/form-auth/form-auth.component';
-import { SupabaseService } from '../../../../shared/services/supabase.service';
-import { ROUTES } from '../../../../shared/constants/routes';
-import { toast } from 'ngx-sonner';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { toast } from 'ngx-sonner';
+
+import { MaterialModule } from '@shared/material.module';
+import { SupabaseService } from '@shared/services/supabase.service';
+import { ROUTES } from '@shared/constants/routes';
+import { FORM_CONSTRAINTS } from '@shared/constants/form-constrains';
+import { FormAuthComponent } from '../shared/components/form-auth/form-auth.component';
+import { AuthFormConfig } from '@shared/models';
 
 @Component({
   selector: 'app-login',
@@ -63,13 +66,13 @@ export class LoginComponent extends FormAuthComponent {
         // Mostrar toast de éxito
         toast.success(this._translateService.instant('toasts.login.success.title'), {
           description: this._translateService.instant('toasts.login.success.description'),
-          duration: 3000
+          duration: FORM_CONSTRAINTS.timing.toastDuration
         });
         
         // Redirigir después del login exitoso
         setTimeout(() => {
           this.router.navigate([ROUTES.DASHBOARD]);
-        }, 1000);
+        }, FORM_CONSTRAINTS.timing.redirectDelay);
         
       } catch (error: any) {
         console.error('Login error:', error);
@@ -98,7 +101,7 @@ export class LoginComponent extends FormAuthComponent {
         // Mostrar toast de error
         toast.error(this._translateService.instant('toasts.login.error.title'), {
           description: errorMessage,
-          duration: 4000
+          duration: FORM_CONSTRAINTS.timing.toastDuration
         });
       }
     } else {

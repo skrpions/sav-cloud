@@ -1,13 +1,16 @@
 import { Component, inject, OnInit, AfterViewInit, ViewChild, ElementRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { MaterialModule } from '../../shared/material.module';
-import { SupabaseService } from '../../shared/services/supabase.service';
-import { ROUTES } from '../../shared/constants/routes';
-import { toast } from 'ngx-sonner';
-import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
-import { HeaderComponent } from '../../shared/components/header/header.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { toast } from 'ngx-sonner';
+
+import { MaterialModule } from '@shared/material.module';
+import { SupabaseService } from '@shared/services/supabase.service';
+import { ROUTES } from '@shared/constants/routes';
+import { FORM_CONSTRAINTS } from '@shared/constants/form-constrains';
+import { SidebarComponent } from '@shared/components/sidebar/sidebar.component';
+import { HeaderComponent } from '@shared/components/header/header.component';
+import { SidebarItem } from '@shared/models';
 
 @Component({
   selector: 'app-dashboard',
@@ -40,7 +43,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     // Initialize charts after view init
     setTimeout(() => {
       this.initializeCharts();
-    }, 100);
+    }, FORM_CONSTRAINTS.timing.chartInitDelay);
   }
 
   onSearchChanged(searchTerm: string): void {

@@ -36,10 +36,10 @@
         [class.active]="item.active"
         [class.collapsed]="isCollapsed()"
         (click)="onItemClick(item)"
-        [matTooltip]="isCollapsed() ? item.label : ''"
+        [matTooltip]="isCollapsed() ? (item.labelKey | translate) : ''"
         matTooltipPosition="right">
         <mat-icon>{{ item.icon }}</mat-icon>
-        <span *ngIf="!isCollapsed()">{{ item.label }}</span>
+        <span *ngIf="!isCollapsed()">{{ item.labelKey | translate }}</span>
       </div>
     </div>
   </nav>

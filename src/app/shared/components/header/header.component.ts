@@ -1,18 +1,19 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { MaterialModule } from '../../material.module';
-import { SupabaseService } from '../../services/supabase.service';
-import { ROUTES } from '../../constants/routes';
-import { toast } from 'ngx-sonner';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { toast } from 'ngx-sonner';
+
+import { MaterialModule } from '@shared/material.module';
+import { SupabaseService } from '@shared/services/supabase.service';
+import { ROUTES } from '@shared/constants/routes';
 
 @Component({
   selector: 'app-header',
   standalone: true,
   imports: [CommonModule, MaterialModule, TranslateModule],
   templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss']
+  styleUrl: './header.component.scss'
 })
 export class HeaderComponent {
   @Output() searchChanged = new EventEmitter<string>();
