@@ -121,4 +121,163 @@ export function createUsernameValidators(): ValidatorFn[] {
     Validators.maxLength(FORM_CONSTRAINTS.maxLength.username),
     Validators.pattern(FORM_CONSTRAINTS.patterns.username)
   ];
-} 
+}
+
+/**
+ * Crea validadores para nombres usando las constantes definidas
+ * @returns Array de validadores para nombres
+ */
+export function createNameValidators(): ValidatorFn[] {
+  return [
+    Validators.required,
+    Validators.minLength(FORM_CONSTRAINTS.minLength.firstName),
+    Validators.maxLength(FORM_CONSTRAINTS.maxLength.firstName),
+    Validators.pattern(FORM_CONSTRAINTS.patterns.onlyLetters)
+  ];
+}
+
+/**
+ * Crea validadores para identificación usando las constantes definidas
+ * @returns Array de validadores para identificación
+ */
+export function createIdentificationValidators(): ValidatorFn[] {
+  return [
+    Validators.required,
+    Validators.minLength(FORM_CONSTRAINTS.minLength.identification),
+    Validators.maxLength(FORM_CONSTRAINTS.maxLength.identification),
+    Validators.pattern(FORM_CONSTRAINTS.patterns.identification)
+  ];
+}
+
+/**
+ * Crea validadores para teléfono usando las constantes definidas
+ * @returns Array de validadores para teléfono
+ */
+export function createPhoneValidators(): ValidatorFn[] {
+  return [
+    Validators.required,
+    Validators.minLength(FORM_CONSTRAINTS.minLength.phone),
+    Validators.maxLength(FORM_CONSTRAINTS.maxLength.phone),
+    Validators.pattern(FORM_CONSTRAINTS.patterns.phone)
+  ];
+}
+
+/**
+ * Crea validadores para dirección usando las constantes definidas
+ * @returns Array de validadores para dirección
+ */
+export function createAddressValidators(): ValidatorFn[] {
+  return [
+    Validators.required,
+    Validators.maxLength(FORM_CONSTRAINTS.maxLength.address)
+  ];
+}
+
+/**
+ * Crea validadores para cuenta bancaria usando las constantes definidas
+ * @returns Array de validadores para cuenta bancaria
+ */
+export function createBankAccountValidators(): ValidatorFn[] {
+  return [
+    Validators.required,
+    Validators.maxLength(FORM_CONSTRAINTS.maxLength.bankAccount),
+    Validators.pattern(FORM_CONSTRAINTS.patterns.bankAccount)
+  ];
+}
+
+/**
+ * Crea validadores para notas usando las constantes definidas
+ * @returns Array de validadores para notas
+ */
+export function createNotesValidators(): ValidatorFn[] {
+  return [
+    Validators.maxLength(FORM_CONSTRAINTS.maxLength.notes)
+  ];
+}
+
+// Utilidades para manejo de fechas sin problemas de zona horaria
+export const DateUtils = {
+  /**
+   * Convierte una fecha string YYYY-MM-DD a un objeto Date local
+   * sin aplicar conversiones de zona horaria
+   */
+  parseLocalDate(dateString: string): Date | null {
+    if (!dateString || typeof dateString !== 'string') return null;
+    
+    // Si viene en formato ISO completo, extraer solo la fecha
+    const dateOnly = dateString.split('T')[0];
+    const parts = dateOnly.split('-');
+    
+    if (parts.length !== 3) return null;
+    
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // Los meses en JS van de 0-11
+    const day = parseInt(parts[2], 10);
+    
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+    
+    return new Date(year, month, day);
+  },
+
+  /**
+   * Convierte un objeto Date a string en formato YYYY-MM-DD
+   * sin aplicar conversiones de zona horaria
+   */
+  formatToLocalDate(date: Date): string {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+    
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  },
+
+  /**
+   * Formatea una fecha string a formato DD/MM/YYYY para mostrar al usuario
+   */
+  formatToDisplay(dateString: string): string {
+    const date = this.parseLocalDate(dateString);
+    if (!date) return '';
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+  },
+
+  /**
+   * Convierte fecha de formulario (puede ser Date o string) a string YYYY-MM-DD
+   * para enviar al backend
+   */
+  formatForBackend(formValue: Date | string): string {
+    if (!formValue) return '';
+    
+    if (formValue instanceof Date) {
+      return this.formatToLocalDate(formValue);
+    }
+    
+    if (typeof formValue === 'string') {
+      // Si ya está en formato YYYY-MM-DD, devolverlo tal como está
+      if (/^\d{4}-\d{2}-\d{2}$/.test(formValue)) {
+        return formValue;
+      }
+      
+      // Si está en otro formato, intentar parsearlo
+      const date = this.parseLocalDate(formValue);
+      return date ? this.formatToLocalDate(date) : '';
+    }
+    
+    return '';
+  },
+
+  /**
+   * Convierte fecha del backend a Date object para el datepicker
+   * Específicamente para evitar problemas de zona horaria en el formulario
+   */
+  formatForDatepicker(dateString: string): Date | null {
+    const localDate = this.parseLocalDate(dateString);
+    return localDate;
+  }
+}; 

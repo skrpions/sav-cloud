@@ -2,12 +2,12 @@
   <!-- Desktop Layout - Restaurado al original -->
   <div class="header-left">
     <div class="breadcrumb">
-      <mat-icon class="breadcrumb-icon">home</mat-icon>
+      <mat-icon class="breadcrumb-icon">{{ currentPageMetadata.icon }}</mat-icon>
       <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-current">{{ 'header.analytics' | translate }}</span>
+      <span class="breadcrumb-current">{{ currentPageMetadata.breadcrumbKey | translate }}</span>
     </div>
-    <h1>{{ 'header.analyticsDashboard' | translate }}</h1>
-    <p>{{ 'header.description' | translate }}</p>
+    <h1>{{ currentPageMetadata.titleKey | translate }}</h1>
+    <p>{{ currentPageMetadata.subtitleKey | translate }}</p>
   </div>
   <div class="header-right">
     <div class="header-actions">
@@ -43,11 +43,11 @@
     <div class="mobile-header-top">
       <div class="mobile-title">
         <div class="breadcrumb">
-          <mat-icon class="breadcrumb-icon">home</mat-icon>
+          <mat-icon class="breadcrumb-icon">{{ currentPageMetadata.icon }}</mat-icon>
           <span class="breadcrumb-separator">/</span>
-          <span class="breadcrumb-current">{{ 'header.analytics' | translate }}</span>
+          <span class="breadcrumb-current">{{ currentPageMetadata.breadcrumbKey | translate }}</span>
         </div>
-        <h1>{{ 'header.analyticsDashboard' | translate }}</h1>
+        <h1>{{ currentPageMetadata.titleKey | translate }}</h1>
       </div>
       <div class="mobile-actions">
         <button mat-icon-button class="mobile-search-btn" (click)="toggleMobileSearch()">

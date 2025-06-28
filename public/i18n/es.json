@@ -35,6 +35,7 @@
             "invalidCredentials": "Correo electrónico o contraseña inválidos. Por favor verifica tus credenciales e intenta de nuevo.",
             "rateLimitExceeded": "Demasiados intentos de inicio de sesión. Por favor espera un momento e intenta de nuevo.",
             "signupDisabled": "La autenticación está actualmente deshabilitada.",
+            "lockTimeout": "Error de conexión temporal. Por favor cierra otras pestañas e intenta de nuevo.",
             "defaultError": "Ocurrió un error inesperado. Por favor intenta de nuevo."
         }
         },
@@ -49,6 +50,7 @@
             "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
             "signupDisabled": "El registro está actualmente deshabilitado.",
             "rateLimitExceeded": "Demasiados intentos de registro. Por favor espera un momento e intenta de nuevo.",
+            "lockTimeout": "Error de conexión temporal. Por favor cierra otras pestañas e intenta de nuevo.",
             "defaultError": "Ocurrió un error inesperado. Por favor intenta de nuevo."
         }
         }
@@ -63,7 +65,25 @@
         "markAllRead": "Marcar todo como leído",
         "viewAllNotifications": "Ver todas las notificaciones",
         "expandSidebar": "Expandir barra lateral",
-        "collapseSidebar": "Contraer barra lateral"
+        "collapseSidebar": "Contraer barra lateral",
+        "activities": {
+            "description": "Gestiona y monitorea todas las actividades de la finca"
+        },
+        "harvest": {
+            "description": "Controla y registra las cosechas y producción"
+        },
+        "purchases": {
+            "description": "Administra las compras y proveedores"
+        },
+        "sales": {
+            "description": "Gestiona las ventas y clientes"
+        },
+        "reports": {
+            "description": "Genera reportes e informes detallados"
+        },
+        "settings": {
+            "description": "Configura las preferencias del sistema"
+        }
     },
 
     "sidebar": {
@@ -177,6 +197,100 @@
         "submitButton": "Registrarse",
         "linkText": "¿Ya tienes una cuenta?",
         "linkLabel": "Inicia Sesión"
+        }
+    },
+
+    "collaborators": {
+        "title": "Colaboradores",
+        "subtitle": "Gestiona la información de los colaboradores",
+        "addNew": "Nuevo Colaborador",
+        "editCollaborator": "Editar Colaborador",
+        "viewCollaborator": "Ver Colaborador",
+        "list": "Lista de Colaboradores",
+        "search": "Buscar colaboradores...",
+        "noResults": "No se encontraron colaboradores",
+        "deleteConfirm": "¿Estás seguro de eliminar este colaborador?",
+        
+        "form": {
+            "personalInfo": "Información Personal",
+            "firstName": "Nombres",
+            "lastName": "Apellidos",
+            "identification": "Identificación",
+            "email": "Correo Electrónico",
+            "phone": "Teléfono",
+            "address": "Dirección",
+            "birthDate": "Fecha de Nacimiento",
+            
+            "employmentInfo": "Información Laboral",
+            "hireDate": "Fecha de Contratación",
+            "contractType": "Tipo de Contrato",
+            "isActive": "Activo",
+            
+            "emergencyContact": "Contacto de Emergencia",
+            "emergencyContactName": "Nombre de Contacto",
+            "emergencyContactPhone": "Teléfono de Contacto",
+            
+            "bankingInfo": "Información Bancaria",
+            "bankAccount": "Cuenta Bancaria",
+            
+            "additionalInfo": "Información Adicional",
+            "notes": "Notas",
+            
+            "save": "Guardar",
+            "cancel": "Cancelar",
+            "update": "Actualizar"
+        },
+        
+        "contractTypes": {
+            "fullTime": "Grabado (Solo pago)",
+            "contract": "Libre (Incluye comida)"
+        },
+        
+        "validation": {
+            "firstNameRequired": "Los nombres son requeridos",
+            "firstNameInvalid": "Los nombres solo pueden contener letras",
+            "lastNameRequired": "Los apellidos son requeridos",
+            "lastNameInvalid": "Los apellidos solo pueden contener letras",
+            "identificationRequired": "La identificación es requerida",
+            "identificationInvalid": "Formato de identificación inválido",
+            "phoneRequired": "El teléfono es requerido",
+            "phoneInvalid": "Formato de teléfono inválido",
+            "addressRequired": "La dirección es requerida",
+            "birthDateRequired": "La fecha de nacimiento es requerida",
+            "hireDateRequired": "La fecha de contratación es requerida",
+            "contractTypeRequired": "El tipo de contrato es requerido",
+            "emergencyContactNameRequired": "El nombre de contacto de emergencia es requerido",
+            "emergencyContactPhoneRequired": "El teléfono de contacto de emergencia es requerido",
+            "emergencyContactPhoneInvalid": "Formato de teléfono de emergencia inválido",
+            "bankAccountRequired": "La cuenta bancaria es requerida",
+            "bankAccountInvalid": "Formato de cuenta bancaria inválido"
+        },
+        
+        "actions": {
+            "view": "Ver",
+            "edit": "Editar",
+            "delete": "Eliminar",
+            "activate": "Activar",
+            "deactivate": "Desactivar"
+        },
+        
+        "toasts": {
+            "createSuccess": {
+                "title": "Colaborador creado",
+                "description": "El colaborador ha sido registrado exitosamente"
+            },
+            "updateSuccess": {
+                "title": "Colaborador actualizado",
+                "description": "La información del colaborador ha sido actualizada"
+            },
+            "deleteSuccess": {
+                "title": "Colaborador eliminado",
+                "description": "El colaborador ha sido eliminado del sistema"
+            },
+            "error": {
+                "title": "Error",
+                "description": "Ocurrió un error inesperado. Por favor intenta de nuevo"
+            }
         }
     },
 

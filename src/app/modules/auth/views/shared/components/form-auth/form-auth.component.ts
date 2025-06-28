@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '@/app/core/application/services/auth.service';
 import { MaterialModule } from '@/app/shared/material.module';
@@ -18,6 +18,7 @@ export abstract class FormAuthComponent {
   private _fb = inject(FormBuilder);
   private _router = inject(Router);
   private _authSrv = inject(AuthService);
+  protected _translateService = inject(TranslateService);
 
   abstract config: AuthFormConfig;
   
@@ -72,6 +73,17 @@ export abstract class FormAuthComponent {
   isPasswordPatternInvalid(form: FormGroup): boolean {
     const passwordControl = form.get('password');
     return !!(passwordControl?.invalid && passwordControl?.touched && passwordControl?.errors?.['pattern']);
+  }
+
+  // Método auxiliar para obtener traducciones de forma segura
+  protected safeTranslate(key: string, fallback: string): string {
+    try {
+      const translation = this._translateService.instant(key);
+      return translation && translation !== key ? translation : fallback;
+    } catch (error) {
+      console.warn(`Translation error for key: ${key}`, error);
+      return fallback;
+    }
   }
 
   // Getters para acceder a servicios desde clases hijas

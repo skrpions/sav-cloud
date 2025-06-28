@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -24,26 +24,42 @@ import { AuthFormConfig } from '@/app/shared/models/ui.models';
   templateUrl: '../shared/components/form-auth/form-auth.component.html',
   styleUrl: '../shared/components/form-auth/form-auth.component.scss'
 })
-export class LoginComponent extends FormAuthComponent {
+export class LoginComponent extends FormAuthComponent implements OnInit {
   private _supabaseService = inject(SupabaseService);
-  private _translateService = inject(TranslateService);
+  private _cdr = inject(ChangeDetectorRef);
 
   authForm: FormGroup;
-  
-  config: AuthFormConfig = {
-    showRememberMe: true,
-    showTermsCheckbox: false,
-    submitButtonText: this._translateService.instant('auth.login.submitButton'),
-    title: this._translateService.instant('auth.login.title'),
-    subtitle: this._translateService.instant('auth.login.subtitle'),
-    linkText: this._translateService.instant('auth.login.linkText'),
-    linkRoute: ROUTES.AUTH.REGISTER,
-    linkLabel: this._translateService.instant('auth.login.linkLabel')
-  };
+  config: AuthFormConfig = {} as AuthFormConfig;
 
   constructor() {
     super();
+    
+    // Inicializar configuración con traducciones seguras
+    this.initializeConfig();
+    
+    // Crear el formulario después de inicializar config
     this.authForm = this.createBaseForm();
+  }
+
+  ngOnInit(): void {
+    // Actualizar traducciones cuando estén disponibles
+    this.initializeConfig();
+    
+    // Forzar detección de cambios para evitar NG0100
+    this._cdr.detectChanges();
+  }
+
+  private initializeConfig(): void {
+    this.config = {
+      showRememberMe: true,
+      showTermsCheckbox: false,
+      submitButtonText: this.safeTranslate('auth.login.submitButton', 'Iniciar Sesión'),
+      title: this.safeTranslate('auth.login.title', 'Iniciar Sesión'),
+      subtitle: this.safeTranslate('auth.login.subtitle', 'Accede a tu cuenta'),
+      linkText: this.safeTranslate('auth.login.linkText', '¿No tienes una cuenta?'),
+      linkRoute: ROUTES.AUTH.REGISTER,
+      linkLabel: this.safeTranslate('auth.login.linkLabel', 'Regístrate')
+    };
   }
 
   async onSubmit(): Promise<void> {
@@ -52,9 +68,11 @@ export class LoginComponent extends FormAuthComponent {
         const { email, password } = this.authForm.value;
         console.log('Login form submitted:', { email });
         
-        const { data, error } = await this._supabaseService.supabaseClient.auth.signInWithPassword({
-          email,
-          password
+        const { data, error } = await this._supabaseService.handleAuthOperation(async () => {
+          return await this._supabaseService.supabaseClient.auth.signInWithPassword({
+            email,
+            password
+          });
         });
 
         if (error) {
@@ -64,8 +82,8 @@ export class LoginComponent extends FormAuthComponent {
         console.log('Login successful:', data);
         
         // Mostrar toast de éxito
-        toast.success(this._translateService.instant('toasts.login.success.title'), {
-          description: this._translateService.instant('toasts.login.success.description'),
+        toast.success(this.safeTranslate('toasts.login.success.title', 'Bienvenido de vuelta'), {
+          description: this.safeTranslate('toasts.login.success.description', 'Has iniciado sesión exitosamente'),
           duration: FORM_CONSTRAINTS.timing.toastDuration
         });
         
@@ -78,28 +96,34 @@ export class LoginComponent extends FormAuthComponent {
         console.error('Login error:', error);
         
         // Manejar diferentes tipos de error
-        let errorMessage = this._translateService.instant('toasts.login.error.defaultError');
+        let errorMessage = this.safeTranslate('toasts.login.error.defaultError', 'Error inesperado');
         
-        if (error.message) {
-          switch (error.message) {
-            case 'Invalid login credentials':
-              errorMessage = this._translateService.instant('toasts.login.error.invalidCredentials');
-              break;
-            case 'Email rate limit exceeded':
-              errorMessage = this._translateService.instant('toasts.login.error.rateLimitExceeded');
-              break;
-            case 'signup_disabled':
-              errorMessage = this._translateService.instant('toasts.login.error.signupDisabled');
-              break;
-            default:
-              errorMessage = error.message;
+        if (error.message || error.name) {
+          if (error.message?.includes('NavigatorLockAcquireTimeoutError') || 
+              error.message?.includes('lock') ||
+              error.name === 'NavigatorLockAcquireTimeoutError') {
+            errorMessage = this.safeTranslate('toasts.login.error.lockTimeout', 'Error temporal de conexión');
+          } else {
+            switch (error.message) {
+              case 'Invalid login credentials':
+                errorMessage = this.safeTranslate('toasts.login.error.invalidCredentials', 'Credenciales inválidas');
+                break;
+              case 'Email rate limit exceeded':
+                errorMessage = this.safeTranslate('toasts.login.error.rateLimitExceeded', 'Demasiados intentos');
+                break;
+              case 'signup_disabled':
+                errorMessage = this.safeTranslate('toasts.login.error.signupDisabled', 'Autenticación deshabilitada');
+                break;
+              default:
+                errorMessage = error.message;
+            }
           }
         }
         
         console.error('Login failed:', errorMessage);
         
         // Mostrar toast de error
-        toast.error(this._translateService.instant('toasts.login.error.title'), {
+        toast.error(this.safeTranslate('toasts.login.error.title', 'Error al iniciar sesión'), {
           description: errorMessage,
           duration: FORM_CONSTRAINTS.timing.toastDuration
         });

@@ -1,7 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 
-// Importar tema base de Material Design - Azure Blue
-@import '@angular/material/prebuilt-themes/azure-blue.css';
+// Importar tema base de Material Design - Deeppurple Amber
+@import '@angular/material/prebuilt-themes/deeppurple-amber.css';
 
 // Paleta de colores "Holiday Cheer" personalizada
 :root {
@@ -56,29 +56,30 @@ app-root {
 
 /* BOTONES - Estilos globales */
 .mat-mdc-raised-button.mat-primary:not(:disabled) {
-  color: var(--holiday-green-medium) !important;
+  background-color: var(--holiday-green-medium) !important;
+  color: white !important;
   
   &:hover {
-    background-color: rgba(0, 119, 1, 0.08) !important;
-    color: var(--holiday-green-medium) !important;
+    background-color: #005500 !important;
+    color: white !important;
   }
   
   &:focus {
-    background-color: rgba(0, 119, 1, 0.12) !important;
-    color: var(--holiday-green-medium) !important;
+    background-color: var(--holiday-green-medium) !important;
+    color: white !important;
   }
   
   &:active {
-    background-color: rgba(0, 119, 1, 0.16) !important;
-    color: var(--holiday-green-medium) !important;
+    background-color: #005500 !important;
+    color: white !important;
   }
   
   .mdc-button__label {
-    color: var(--holiday-green-medium) !important;
+    color: white !important;
   }
   
   .mat-ripple-element {
-    background-color: rgba(0, 119, 1, 0.1) !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
   }
 }
 
@@ -182,22 +183,22 @@ app-root {
 
 /* TRANSPARENCIA DE INPUTS FILL - Estilos globales */
 .mat-mdc-form-field .mdc-text-field--filled {
-  background-color: transparent !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
   
   .mdc-text-field__input {
     background-color: transparent !important;
   }
 
-  // Remover el fondo gris característico del fill
+  // Fondo sutil para mejor legibilidad
   &::before {
-    background-color: transparent !important;
+    background-color: rgba(0, 0, 0, 0.04) !important;
   }
 
   &:not(.mdc-text-field--disabled) {
-    background-color: transparent !important;
+    background-color: rgba(0, 0, 0, 0.04) !important;
     
     &::before {
-      background-color: transparent !important;
+      background-color: rgba(0, 0, 0, 0.04) !important;
     }
   }
 
@@ -391,4 +392,35 @@ a {
       margin: 0 0 8px 0;
     }
   }
+}
+
+/* DATEPICKER - Estilos específicos */
+.mat-datepicker-popup {
+  background-color: white !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.mat-calendar {
+  background-color: white !important;
+}
+
+.mat-calendar-table {
+  background-color: white !important;
+}
+
+.mat-calendar-body-cell {
+  background-color: transparent !important;
+}
+
+.mat-calendar-body-selected {
+  background-color: var(--holiday-green-medium) !important;
+  color: white !important;
+}
+
+.mat-calendar-body-today:not(.mat-calendar-body-selected) {
+  border-color: var(--holiday-green-medium) !important;
+}
+
+.mat-datepicker-toggle {
+  color: var(--holiday-green-medium) !important;
 }

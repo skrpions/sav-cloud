@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -24,26 +24,42 @@ import { AuthFormConfig } from '@/app/shared/models/ui.models';
   templateUrl: '../shared/components/form-auth/form-auth.component.html',
   styleUrl: '../shared/components/form-auth/form-auth.component.scss'
 })
-export class RegisterComponent extends FormAuthComponent {
+export class RegisterComponent extends FormAuthComponent implements OnInit {
   private _supabaseService = inject(SupabaseService);
-  private _translateService = inject(TranslateService);
+  private _cdr = inject(ChangeDetectorRef);
 
   authForm: FormGroup;
-  
-  config: AuthFormConfig = {
-    showRememberMe: false,
-    showTermsCheckbox: true,
-    submitButtonText: this._translateService.instant('auth.register.submitButton'),
-    title: this._translateService.instant('auth.register.title'),
-    subtitle: this._translateService.instant('auth.register.subtitle'),
-    linkText: this._translateService.instant('auth.register.linkText'),
-    linkRoute: ROUTES.AUTH.LOGIN,
-    linkLabel: this._translateService.instant('auth.register.linkLabel')
-  };
+  config: AuthFormConfig = {} as AuthFormConfig;
 
   constructor() {
     super();
+    
+    // Inicializar configuración con traducciones seguras
+    this.initializeConfig();
+    
+    // Crear el formulario después de inicializar config
     this.authForm = this.createBaseForm();
+  }
+
+  ngOnInit(): void {
+    // Actualizar traducciones cuando estén disponibles
+    this.initializeConfig();
+    
+    // Forzar detección de cambios para evitar NG0100
+    this._cdr.detectChanges();
+  }
+
+  private initializeConfig(): void {
+    this.config = {
+      showRememberMe: false,
+      showTermsCheckbox: true,
+      submitButtonText: this.safeTranslate('auth.register.submitButton', 'Registrarse'),
+      title: this.safeTranslate('auth.register.title', 'Registrarse'),
+      subtitle: this.safeTranslate('auth.register.subtitle', 'Crea tu nueva cuenta'),
+      linkText: this.safeTranslate('auth.register.linkText', '¿Ya tienes una cuenta?'),
+      linkRoute: ROUTES.AUTH.LOGIN,
+      linkLabel: this.safeTranslate('auth.register.linkLabel', 'Inicia Sesión')
+    };
   }
 
   async onSubmit(): Promise<void> {
@@ -52,9 +68,11 @@ export class RegisterComponent extends FormAuthComponent {
         const { email, password } = this.authForm.value;
         console.log('Register form submitted:', { email });
         
-        const { data, error } = await this._supabaseService.supabaseClient.auth.signUp({
-          email,
-          password
+        const { data, error } = await this._supabaseService.handleAuthOperation(async () => {
+          return await this._supabaseService.supabaseClient.auth.signUp({
+            email,
+            password
+          });
         });
 
         if (error) {
@@ -64,8 +82,8 @@ export class RegisterComponent extends FormAuthComponent {
         console.log('Registration successful:', data);
         
         // Mostrar toast de éxito
-        toast.success(this._translateService.instant('toasts.register.success.title'), {
-          description: this._translateService.instant('toasts.register.success.description'),
+        toast.success(this.safeTranslate('toasts.register.success.title', 'Registro exitoso'), {
+          description: this.safeTranslate('toasts.register.success.description', 'Revisa tu correo para verificar tu cuenta'),
           duration: FORM_CONSTRAINTS.timing.toastDuration
         });
         
@@ -78,31 +96,37 @@ export class RegisterComponent extends FormAuthComponent {
         console.error('Registration error:', error);
         
         // Manejar diferentes tipos de error
-        let errorMessage = this._translateService.instant('toasts.register.error.defaultError');
+        let errorMessage = this.safeTranslate('toasts.register.error.defaultError', 'Error inesperado');
         
-        if (error.message) {
-          switch (error.message) {
-            case 'User already registered':
-              errorMessage = this._translateService.instant('toasts.register.error.userAlreadyExists');
-              break;
-            case 'Password should be at least 6 characters':
-              errorMessage = this._translateService.instant('toasts.register.error.passwordTooShort');
-              break;
-            case 'signup_disabled':
-              errorMessage = this._translateService.instant('toasts.register.error.signupDisabled');
-              break;
-            case 'Email rate limit exceeded':
-              errorMessage = this._translateService.instant('toasts.register.error.rateLimitExceeded');
-              break;
-            default:
-              errorMessage = error.message;
+        if (error.message || error.name) {
+          if (error.message?.includes('NavigatorLockAcquireTimeoutError') || 
+              error.message?.includes('lock') ||
+              error.name === 'NavigatorLockAcquireTimeoutError') {
+            errorMessage = this.safeTranslate('toasts.register.error.lockTimeout', 'Error temporal de conexión');
+          } else {
+            switch (error.message) {
+              case 'User already registered':
+                errorMessage = this.safeTranslate('toasts.register.error.userAlreadyExists', 'Usuario ya existe');
+                break;
+              case 'Password should be at least 6 characters':
+                errorMessage = this.safeTranslate('toasts.register.error.passwordTooShort', 'Contraseña muy corta');
+                break;
+              case 'signup_disabled':
+                errorMessage = this.safeTranslate('toasts.register.error.signupDisabled', 'Registro deshabilitado');
+                break;
+              case 'Email rate limit exceeded':
+                errorMessage = this.safeTranslate('toasts.register.error.rateLimitExceeded', 'Demasiados intentos');
+                break;
+              default:
+                errorMessage = error.message;
+            }
           }
         }
         
         console.error('Registration failed:', errorMessage);
         
         // Mostrar toast de error
-        toast.error(this._translateService.instant('toasts.register.error.title'), {
+        toast.error(this.safeTranslate('toasts.register.error.title', 'Error en el registro'), {
           description: errorMessage,
           duration: FORM_CONSTRAINTS.timing.toastDuration
         });

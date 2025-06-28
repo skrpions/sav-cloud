@@ -1,0 +1,230 @@
+<div class="collaborator-form-container">
+  <form [formGroup]="collaboratorForm" (ngSubmit)="onSubmit()" class="collaborator-form">
+    
+    <!-- Layout en dos columnas principales -->
+    <div class="form-columns">
+      <!-- Columna Izquierda -->
+      <div class="form-column">
+        <!-- Información Personal -->
+        <div class="form-section">
+          <h3 class="section-title">{{ 'collaborators.form.personalInfo' | translate }}</h3>
+          
+          <div class="form-row">
+            <!-- Nombres -->
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>{{ 'collaborators.form.firstName' | translate }}</mat-label>
+              <input matInput formControlName="first_name" type="text">
+              @if (isFieldRequired('first_name')) {
+                <mat-error>{{ 'collaborators.validation.firstNameRequired' | translate }}</mat-error>
+              }
+              @if (isPatternInvalid('first_name')) {
+                <mat-error>{{ 'collaborators.validation.firstNameInvalid' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Apellidos -->
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>{{ 'collaborators.form.lastName' | translate }}</mat-label>
+              <input matInput formControlName="last_name" type="text">
+              @if (isFieldRequired('last_name')) {
+                <mat-error>{{ 'collaborators.validation.lastNameRequired' | translate }}</mat-error>
+              }
+              @if (isPatternInvalid('last_name')) {
+                <mat-error>{{ 'collaborators.validation.lastNameInvalid' | translate }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <!-- Identificación -->
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>{{ 'collaborators.form.identification' | translate }}</mat-label>
+              <input matInput formControlName="identification" type="text">
+              @if (isFieldRequired('identification')) {
+                <mat-error>{{ 'collaborators.validation.identificationRequired' | translate }}</mat-error>
+              }
+              @if (isPatternInvalid('identification')) {
+                <mat-error>{{ 'collaborators.validation.identificationInvalid' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Email -->
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>{{ 'collaborators.form.email' | translate }}</mat-label>
+              <input matInput formControlName="email" type="email">
+              @if (isFieldRequired('email')) {
+                <mat-error>{{ 'auth.validation.emailRequired' | translate }}</mat-error>
+              }
+              @if (isEmailInvalid()) {
+                <mat-error>{{ 'auth.validation.emailInvalid' | translate }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <!-- Teléfono -->
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>{{ 'collaborators.form.phone' | translate }}</mat-label>
+              <input matInput formControlName="phone" type="tel">
+              @if (isFieldRequired('phone')) {
+                <mat-error>{{ 'collaborators.validation.phoneRequired' | translate }}</mat-error>
+              }
+              @if (isPatternInvalid('phone')) {
+                <mat-error>{{ 'collaborators.validation.phoneInvalid' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Fecha de Nacimiento -->
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>{{ 'collaborators.form.birthDate' | translate }}</mat-label>
+              <input matInput [matDatepicker]="birthDatePicker" formControlName="birth_date" readonly>
+              <mat-hint>DD/MM/AAAA</mat-hint>
+              <mat-datepicker-toggle matSuffix [for]="birthDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #birthDatePicker></mat-datepicker>
+              @if (isFieldRequired('birth_date')) {
+                <mat-error>{{ 'collaborators.validation.birthDateRequired' | translate }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- Dirección -->
+          <mat-form-field appearance="fill" class="form-field full-width">
+            <mat-label>{{ 'collaborators.form.address' | translate }}</mat-label>
+            <textarea matInput formControlName="address" rows="2"></textarea>
+            @if (isFieldRequired('address')) {
+              <mat-error>{{ 'collaborators.validation.addressRequired' | translate }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <!-- Información Laboral -->
+        <div class="form-section">
+          <h3 class="section-title">{{ 'collaborators.form.employmentInfo' | translate }}</h3>
+          
+          <div class="form-row">
+            <!-- Fecha de Contratación -->
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>{{ 'collaborators.form.hireDate' | translate }}</mat-label>
+              <input matInput [matDatepicker]="hireDatePicker" formControlName="hire_date" readonly>
+              <mat-hint>DD/MM/AAAA</mat-hint>
+              <mat-datepicker-toggle matSuffix [for]="hireDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #hireDatePicker></mat-datepicker>
+              @if (isFieldRequired('hire_date')) {
+                <mat-error>{{ 'collaborators.validation.hireDateRequired' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Tipo de Contrato -->
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>{{ 'collaborators.form.contractType' | translate }}</mat-label>
+              <mat-select formControlName="contract_type">
+                @for (option of contractTypeOptions; track option.value) {
+                  <mat-option [value]="option.value">
+                    {{ option.labelKey | translate }}
+                  </mat-option>
+                }
+              </mat-select>
+              @if (isFieldRequired('contract_type')) {
+                <mat-error>{{ 'collaborators.validation.contractTypeRequired' | translate }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          @if (isEditMode) {
+            <!-- Estado Activo (solo en modo edición) -->
+            <div class="form-row">
+              <mat-slide-toggle formControlName="is_active" color="primary" class="status-toggle">
+                {{ 'collaborators.form.isActive' | translate }}
+              </mat-slide-toggle>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Columna Derecha -->
+      <div class="form-column">
+        <!-- Contacto de Emergencia -->
+        <div class="form-section">
+          <h3 class="section-title">{{ 'collaborators.form.emergencyContact' | translate }}</h3>
+          
+          <div class="form-row">
+            <!-- Nombre de Contacto -->
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>{{ 'collaborators.form.emergencyContactName' | translate }}</mat-label>
+              <input matInput formControlName="emergency_contact_name" type="text">
+              @if (isFieldRequired('emergency_contact_name')) {
+                <mat-error>{{ 'collaborators.validation.emergencyContactNameRequired' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Teléfono de Contacto -->
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>{{ 'collaborators.form.emergencyContactPhone' | translate }}</mat-label>
+              <input matInput formControlName="emergency_contact_phone" type="tel">
+              @if (isFieldRequired('emergency_contact_phone')) {
+                <mat-error>{{ 'collaborators.validation.emergencyContactPhoneRequired' | translate }}</mat-error>
+              }
+              @if (isPatternInvalid('emergency_contact_phone')) {
+                <mat-error>{{ 'collaborators.validation.emergencyContactPhoneInvalid' | translate }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Información Bancaria -->
+        <div class="form-section">
+          <h3 class="section-title">{{ 'collaborators.form.bankingInfo' | translate }}</h3>
+          
+          <!-- Cuenta Bancaria -->
+          <mat-form-field appearance="fill" class="form-field full-width">
+            <mat-label>{{ 'collaborators.form.bankAccount' | translate }}</mat-label>
+            <input matInput formControlName="bank_account" type="text">
+            @if (isFieldRequired('bank_account')) {
+              <mat-error>{{ 'collaborators.validation.bankAccountRequired' | translate }}</mat-error>
+            }
+            @if (isPatternInvalid('bank_account')) {
+              <mat-error>{{ 'collaborators.validation.bankAccountInvalid' | translate }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <!-- Información Adicional -->
+        <div class="form-section">
+          <h3 class="section-title">{{ 'collaborators.form.additionalInfo' | translate }}</h3>
+          
+          <!-- Notas -->
+          <mat-form-field appearance="fill" class="form-field full-width">
+            <mat-label>{{ 'collaborators.form.notes' | translate }}</mat-label>
+            <textarea matInput formControlName="notes" rows="4" placeholder="Información adicional sobre el colaborador..."></textarea>
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="form-actions">
+      <button 
+        type="button" 
+        mat-stroked-button 
+        class="cancel-button"
+        (click)="onCancel()"
+        [disabled]="isLoading">
+        {{ 'collaborators.form.cancel' | translate }}
+      </button>
+      
+      <button 
+        type="submit" 
+        mat-raised-button 
+        color="primary" 
+        class="submit-button"
+        [disabled]="collaboratorForm.invalid || isLoading">
+        @if (isLoading) {
+          <mat-spinner diameter="20"></mat-spinner>
+        } @else {
+          <span>{{ isEditMode ? ('collaborators.form.update' | translate) : ('collaborators.form.save' | translate) }}</span>
+        }
+      </button>
+    </div>
+
+  </form>
+</div> 
