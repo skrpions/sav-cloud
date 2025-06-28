@@ -19,8 +19,8 @@
     <div class="user-profile">
       <img class="profile-avatar" src="/images/avatars/avatar-dreamcode.jpeg" alt="User Avatar" />
       <div class="profile-info" *ngIf="!isCollapsed()">
-        <h4 class="profile-name">{{ 'sidebar.userProfile.name' | translate }}</h4>
-        <p class="profile-role">{{ 'sidebar.userProfile.role' | translate }}</p>
+        <h4 class="profile-name">{{ userName() }}</h4>
+        <p class="profile-role">{{ userRole() }}</p>
       </div>
       <div class="profile-status">
         <div class="status-indicator online"></div>

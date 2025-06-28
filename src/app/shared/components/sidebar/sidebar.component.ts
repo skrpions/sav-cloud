@@ -6,6 +6,7 @@ import { filter } from 'rxjs/operators';
 
 import { MaterialModule } from '@/app/shared/material.module';
 import { SidebarItem } from '@/app/shared/models/ui.models';
+import { UserService } from '@/app/shared/services/user.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -19,7 +20,13 @@ export class SidebarComponent implements OnInit {
   @Output() collapseChanged = new EventEmitter<boolean>();
 
   private _router = inject(Router);
+  private _userService = inject(UserService);
+  
   isCollapsed = signal(false);
+  
+  // Usar signals del servicio global
+  userName = this._userService.userName;
+  userRole = this._userService.userRole;
 
   sidebarItems: SidebarItem[] = [
     { icon: 'dashboard', labelKey: 'sidebar.navigation.dashboard', route: '/dashboard', active: true },
@@ -42,7 +49,12 @@ export class SidebarComponent implements OnInit {
       .subscribe(() => {
         this.updateActiveItemFromRoute();
       });
+
+    // Load current user information through service
+    this._userService.loadCurrentUser();
   }
+
+
 
   private updateActiveItemFromRoute(): void {
     const currentUrl = this._router.url;

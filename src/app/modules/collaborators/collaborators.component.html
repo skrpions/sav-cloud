@@ -78,68 +78,52 @@
               <!-- Collaborators Grid -->
               <div class="collaborators-grid">
                 @for (collaborator of filteredCollaborators(); track collaborator.id) {
-                  <mat-card class="collaborator-card">
-                    <mat-card-header>
-                      <div mat-card-avatar class="collaborator-avatar">
+                  <div class="collaborator-card-modern">
+                    <!-- Card Header with Avatar and Basic Info -->
+                    <div class="card-header">
+                      <div class="collaborator-avatar">
                         <mat-icon>person</mat-icon>
                       </div>
-                      <mat-card-title class="collaborator-name">
-                        {{ getFullName(collaborator) }}
-                      </mat-card-title>
-                      <mat-card-subtitle class="collaborator-role">
-                        {{ getContractTypeLabel(collaborator.contract_type) }}
-                      </mat-card-subtitle>
-                    </mat-card-header>
+                      <div class="collaborator-basic-info">
+                        <div class="name-with-status">
+                          <h3 class="collaborator-name">{{ getFullName(collaborator) }}</h3>
+                          <div class="status-indicator" 
+                               [class.active]="collaborator.is_active"
+                               [class.inactive]="!collaborator.is_active">
+                          </div>
+                        </div>
+                        <div class="collaborator-phone">
+                          <mat-icon class="phone-icon">phone</mat-icon>
+                          <span>{{ collaborator.phone }}</span>
+                        </div>
+                      </div>
+                    </div>
 
-                    <mat-card-content class="collaborator-info">
-                      <div class="info-row">
-                        <mat-icon class="info-icon">badge</mat-icon>
-                        <span>{{ collaborator.identification }}</span>
-                      </div>
-                      <div class="info-row">
-                        <mat-icon class="info-icon">email</mat-icon>
-                        <span>{{ collaborator.email }}</span>
-                      </div>
-                      <div class="info-row">
-                        <mat-icon class="info-icon">phone</mat-icon>
-                        <span>{{ collaborator.phone }}</span>
-                      </div>
-                      <div class="info-row">
-                        <mat-icon class="info-icon">event</mat-icon>
-                        <span>{{ formatDate(collaborator.hire_date) }}</span>
-                      </div>
-                      <div class="status-row">
-                        <mat-chip 
-                          [class.active]="collaborator.is_active"
-                          [class.inactive]="!collaborator.is_active">
-                          {{ collaborator.is_active ? 'Activo' : 'Inactivo' }}
-                        </mat-chip>
-                      </div>
-                    </mat-card-content>
-
-                    <mat-card-actions class="card-actions">
+                    <!-- Card Actions -->
+                    <div class="card-actions">
                       <button 
                         mat-icon-button 
                         matTooltip="Ver detalles"
-                        class="action-button view-button">
+                        class="action-btn view-btn"
+                        (click)="onViewCollaborator(collaborator)">
                         <mat-icon>visibility</mat-icon>
                       </button>
                       <button 
                         mat-icon-button 
                         matTooltip="Editar"
-                        class="action-button edit-button"
+                        class="action-btn edit-btn"
                         (click)="onEditCollaborator(collaborator)">
                         <mat-icon>edit</mat-icon>
                       </button>
                       <button 
                         mat-icon-button 
                         matTooltip="Eliminar"
-                        class="action-button delete-button"
+                        class="action-btn delete-btn"
                         (click)="onDeleteCollaborator(collaborator)">
                         <mat-icon>delete</mat-icon>
                       </button>
-                    </mat-card-actions>
-                  </mat-card>
+                    </div>
+                  </div>
                 }
               </div>
             }

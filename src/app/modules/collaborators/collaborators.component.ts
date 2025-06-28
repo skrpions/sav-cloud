@@ -162,6 +162,13 @@ export class CollaboratorsComponent implements OnInit {
     this.showForm.set(true);
   }
 
+  onViewCollaborator(collaborator: CollaboratorEntity): void {
+    // TODO: Implementar vista de detalles del colaborador
+    console.log('Ver detalles de:', collaborator);
+    // Por ahora, simplemente editamos
+    this.onEditCollaborator(collaborator);
+  }
+
   async onDeleteCollaborator(collaborator: CollaboratorEntity): Promise<void> {
     if (!collaborator.id) return;
 

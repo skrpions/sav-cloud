@@ -5,9 +5,12 @@ import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { routes } from './app.routes';
 import { AuthInfrastructure } from './core/infrastructure/auth-infrastructure';
 import { AuthApplication } from './core/application/auth-application';
+import { UserInfrastructure } from './core/infrastructure/user-infrastructure';
+import { UserApplication } from './core/application/user-application';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE, NativeDateAdapter } from '@angular/material/core';
+import { UserService } from './shared/services/user.service';
 
 function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './i18n/', '.json');
@@ -28,10 +31,11 @@ function initializeApp(): () => Promise<void> {
   return () => {
     return new Promise<void>((resolve) => {
       try {
-        // Lista específica de keys problemáticos de Supabase
+        // Lista específica de keys problemáticos de Supabase + cache de usuario
         const problematicKeys = [
           'sb-wprmvvkrtizngssfcpii-auth-token',
           'sav-cloud-auth-token',
+          'sav-cloud-user', // Caché de usuario
           'supabase.auth.token',
           'supabase.session'
         ];
@@ -45,7 +49,7 @@ function initializeApp(): () => Promise<void> {
           }
         });
 
-        // Mismo proceso para sessionStorage
+        // Mismo proceso para sessionStorage (incluye el caché de usuario)
         Object.keys(sessionStorage).forEach(key => {
           if (problematicKeys.some(problematicKey => key.includes(problematicKey)) ||
               (key.startsWith('sb-') && key.includes('auth-token'))) {
@@ -54,7 +58,7 @@ function initializeApp(): () => Promise<void> {
           }
         });
 
-        console.log('Specific auth storage cleanup completed - translations preserved');
+        console.log('Specific auth and user cache cleanup completed - translations preserved');
       } catch (error) {
         console.warn('Could not clear problematic auth storage:', error);
       }
@@ -78,6 +82,17 @@ function initializeTranslations(translateService: TranslateService): () => Promi
           resolve(); // Continue anyway with default values
         }
       });
+    });
+  };
+}
+
+// Función para inicializar el servicio de usuario
+function initializeUserService(userService: UserService): () => Promise<void> {
+  return () => {
+    return userService.loadCurrentUser().then(() => {
+      console.log('✅ User service initialized');
+    }).catch((error) => {
+      console.warn('⚠️ Error loading user service:', error);
     });
   };
 }
@@ -149,8 +164,17 @@ export const appConfig: ApplicationConfig = {
       deps: [TranslateService],
       multi: true
     },
+    // Inicializar servicio de usuario para cargar datos inmediatamente
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeUserService,
+      deps: [UserService],
+      multi: true
+    },
     // Hexagonal Architecture providers
     AuthApplication,
     AuthInfrastructure,
+    UserApplication,
+    UserInfrastructure,
   ]
 };
