@@ -132,10 +132,10 @@ export class UserInfrastructure extends UserRepository {
   private extractFirstName(authUser: any): string {
     const metadata = authUser.user_metadata;
     return metadata?.['first_name'] || 
-           metadata?.['name']?.split(' ')[0] || 
-           metadata?.['full_name']?.split(' ')[0] || 
-           authUser.email?.split('@')[0]?.charAt(0).toUpperCase() + authUser.email?.split('@')[0]?.slice(1) ||
-           'Usuario';
+      metadata?.['name']?.split(' ')[0] || 
+      metadata?.['full_name']?.split(' ')[0] || 
+      authUser.email?.split('@')[0]?.charAt(0).toUpperCase() + authUser.email?.split('@')[0]?.slice(1) ||
+      'Usuario';
   }
 
   private extractLastName(authUser: any): string {
@@ -151,11 +151,11 @@ export class UserInfrastructure extends UserRepository {
 
   private isValidUserData(data: any): boolean {
     return data && 
-           typeof data.id === 'string' &&
-           typeof data.email === 'string' &&
-           typeof data.firstName === 'string' &&
-           typeof data.lastName === 'string' &&
-           typeof data.role === 'string' &&
-           typeof data.isActive === 'boolean';
+      typeof data.id === 'string' &&
+      typeof data.email === 'string' &&
+      typeof data.firstName === 'string' &&
+      typeof data.lastName === 'string' &&
+      typeof data.role === 'string' &&
+      typeof data.isActive === 'boolean';
   }
 } 

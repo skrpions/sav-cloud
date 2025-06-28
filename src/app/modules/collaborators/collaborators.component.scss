@@ -90,20 +90,55 @@
   .add-button {
     height: 48px;
     padding: 0 24px;
-    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-light) 100%);
-    border-radius: 8px;
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%); // Degradado elegante
+    color: #ffffff;
+    border-radius: 12px;
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
-    transition: all 0.3s ease;
+    // Efectos de mat-raised-button
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(31, 41, 55, 0.23);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); // Transición Material
+    border: none;
+    position: relative;
+    overflow: hidden;
+    
+    // Efecto ripple personalizado
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
     
     &:hover {
-      background: linear-gradient(135deg, var(--holiday-teal-dark) 0%, var(--primary-green) 100%);
-      box-shadow: 0 6px 16px rgba(46, 125, 50, 0.4);
+      background: linear-gradient(135deg, #374151 0%, #4b5563 100%); // Degradado más claro
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(31, 41, 55, 0.28); // Sombra elevated
       transform: translateY(-2px);
+      
+      &::before {
+        opacity: 1;
+      }
+    }
+    
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.14), 0 3px 4px rgba(31, 41, 55, 0.20);
     }
     
     mat-icon {
       margin-right: 8px;
+      z-index: 1;
+      position: relative;
+    }
+    
+    // Texto también con z-index para estar sobre el overlay
+    .mdc-button__label {
+      z-index: 1;
+      position: relative;
     }
   }
 }
@@ -197,28 +232,57 @@
   }
 }
 
-// Collaborator Card
-.collaborator-card {
-  background: var(--white);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
-  border: 1px solid var(--border-light);
+// Collaborator Card - Diseño neutro y sofisticado
+.collaborator-card,
+.collaborator-card-modern {
+  background: #ffffff;
+  border-radius: 16px; // Bordes más redondeados para modernidad
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); // Sombra más sutil
+  transition: all 0.2s ease;
+  border: 1px solid #f1f5f9; // Borde muy sutil
   
   &:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    transform: translateY(-4px);
-    border-color: var(--primary-green-lighter);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); // Sombra neutra
+    transform: translateY(-2px); // Elevación más sutil
+    border-color: #e2e8f0; // Borde ligeramente más visible
   }
   
+  // Nuevo diseño del header de tarjeta
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    
+    .collaborator-avatar {
+      background: #f8fafc;
+      color: #6b7280;
+      border: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+
   ::ng-deep {
     .mat-mdc-card-header {
       padding: 20px 20px 16px 20px;
       
       .mat-mdc-card-avatar {
         .collaborator-avatar {
-          background: linear-gradient(135deg, var(--primary-green-lighter) 0%, var(--primary-green-lightest) 100%);
-          color: var(--primary-green);
+          background: #f8fafc; // Fondo gris muy claro
+          color: #6b7280; // Icono gris neutro
+          border: 2px solid #e2e8f0; // Borde sutil
           display: flex;
           align-items: center;
           justify-content: center;
@@ -416,11 +480,11 @@
         margin-bottom: 8px;
         
         .collaborator-name {
-          font-size: 18px;
+          font-size: 16px; // Tamaño más moderado
           font-weight: 600;
-          color: var(--text-primary);
+          color: #1f2937; // Gris oscuro neutro
           margin: 0;
-          line-height: 1.3;
+          line-height: 1.4;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -428,20 +492,20 @@
         }
         
         .status-indicator {
-          width: 12px;
-          height: 12px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
           flex-shrink: 0;
           
           &.active {
-            background: var(--success);
-            animation: pulse-green 2s infinite;
-            box-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
+            background: #10b981; // Verde más sutil
+            animation: pulse-subtle 3s infinite; // Animación más sutil
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
           }
           
           &.inactive {
-            background: var(--text-secondary);
-            opacity: 0.6;
+            background: #9ca3af; // Gris neutro
+            opacity: 0.7;
           }
         }
       }
@@ -450,14 +514,14 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        color: var(--text-secondary);
+        color: #6b7280; // Gris medio consistente
         font-size: 14px;
         
         .phone-icon {
           font-size: 16px;
           width: 16px;
           height: 16px;
-          color: var(--primary-green);
+          color: #6b7280; // Gris neutro consistente
         }
         
         span {
@@ -470,52 +534,85 @@
   .card-actions {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    gap: 8px; // Espaciado más compacto
+    padding: 16px; // Padding uniforme
+    border-top: 1px solid #f1f5f9; // Borde más sutil
+    background: #fafbfc; // Fondo ligeramente diferente para sección de acciones
+    border-radius: 0 0 16px 16px; // Bordes redondeados solo abajo
     
     .action-btn {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 12px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); // Transición Material más suave
       position: relative;
-      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 40px;
+      min-width: 44px;
+      padding: 0;
+      border: none;
       
-      &.view-btn {
-        color: var(--primary-green);
-        background: rgba(46, 125, 50, 0.08);
+      // Estado de reposo con más definición
+      &:not(:hover):not(:focus) {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+      }
+      
+      // Estilo con más presencia visual pero neutro
+      color: #4b5563; // Gris medio con más contraste
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); // Degradado sutil
+      border: 1px solid #d1d5db; // Borde más visible
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08); // Sombra definida
+      
+      &:hover, &:focus {
+        color: #374151; // Gris más oscuro en hover
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); // Degradado más notable
+        border-color: #9ca3af; // Borde más definido
+        transform: translateY(-2px); // Elevación más notable
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12); // Sombra más prominente
         
-        &:hover {
-          background: rgba(46, 125, 50, 0.15);
-          transform: translateY(-2px) scale(1.05);
-          box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
+        // Mantener tamaño del icono en hover
+        mat-icon {
+          font-size: 20px !important;
+          width: 20px !important;
+          height: 20px !important;
+        }
+      }
+      
+      // Estados específicos con toques sutiles de identidad
+      &.view-btn {
+        // Toque sutil de identidad en reposo
+        border-left: 2px solid transparent;
+        
+        &:hover, &:focus {
+          color: #059669; // Verde sutil solo en hover
+          border-color: #9ca3af;
+          border-left-color: #10b981; // Accent verde en el borde izquierdo
+          background: linear-gradient(135deg, #f0fdf4 0%, #f3f4f6 100%); // Toque verdoso muy sutil
         }
       }
       
       &.edit-btn {
-        color: #f57c00;
-        background: rgba(245, 124, 0, 0.08);
+        // Toque sutil de identidad en reposo
+        border-left: 2px solid transparent;
         
-        &:hover {
-          background: rgba(245, 124, 0, 0.15);
-          transform: translateY(-2px) scale(1.05);
-          box-shadow: 0 4px 12px rgba(245, 124, 0, 0.25);
+        &:hover, &:focus {
+          color: #d97706; // Naranja sutil solo en hover
+          border-color: #9ca3af;
+          border-left-color: #f59e0b; // Accent naranja en el borde izquierdo
+          background: linear-gradient(135deg, #fffbeb 0%, #f3f4f6 100%); // Toque amarillento muy sutil
         }
       }
       
       &.delete-btn {
-        color: var(--danger);
-        background: rgba(244, 67, 54, 0.08);
+        // Toque sutil de identidad en reposo
+        border-left: 2px solid transparent;
         
-        &:hover {
-          background: rgba(244, 67, 54, 0.15);
-          transform: translateY(-2px) scale(1.05);
-          box-shadow: 0 4px 12px rgba(244, 67, 54, 0.25);
+        &:hover, &:focus {
+          color: #dc2626; // Rojo sutil solo en hover
+          border-color: #9ca3af;
+          border-left-color: #ef4444; // Accent rojo en el borde izquierdo
+          background: linear-gradient(135deg, #fef2f2 0%, #f3f4f6 100%); // Toque rojizo muy sutil
         }
       }
       
@@ -523,6 +620,9 @@
         font-size: 20px;
         width: 20px;
         height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     }
   }
@@ -566,6 +666,19 @@
       }
     }
   }
+  
+  // Botones de acción más grandes en móviles
+  .collaborators-grid .collaborator-card .card-actions .action-btn {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    
+    mat-icon {
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+    }
+  }
 }
 
 // Animation classes
@@ -600,8 +713,37 @@
   }
 }
 
-// Global button styles for white text
+// Global button styles
 ::ng-deep {
+  // Estilos para el botón principal (Agregar colaborador)
+  .add-button.mat-mdc-raised-button {
+    // Override completo para mantener nuestro diseño
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(31, 41, 55, 0.23) !important;
+    
+    .mdc-button__label {
+      color: #ffffff !important;
+      z-index: 1;
+      position: relative;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, #374151 0%, #4b5563 100%) !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(31, 41, 55, 0.28) !important;
+    }
+    
+    &:focus {
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(31, 41, 55, 0.23), 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+    }
+    
+    // Efecto ripple de Material
+    .mat-ripple-element {
+      background-color: rgba(255, 255, 255, 0.2) !important;
+    }
+  }
+  
+  // Estilos generales para botones primarios
   .mat-mdc-raised-button.mat-primary:not(:disabled) .mdc-button__label {
     color: #ffffff !important;
   }
@@ -611,20 +753,84 @@
       color: #ffffff !important;
     }
   }
+  
+  // Estilos específicos para los action buttons para evitar recorte de iconos
+  .card-actions .action-btn {
+    // Overrides para mat-icon-button
+    &.mat-mdc-icon-button {
+      width: 44px !important;
+      height: 44px !important;
+      line-height: 44px !important;
+      padding: 0 !important;
+      
+      .mat-mdc-button-touch-target {
+        width: 44px !important;
+        height: 44px !important;
+      }
+      
+      .mdc-icon-button__ripple {
+        width: 44px !important;
+        height: 44px !important;
+      }
+      
+      // En móviles, hacer los botones más grandes
+      @media (max-width: 768px) {
+        width: 48px !important;
+        height: 48px !important;
+        line-height: 48px !important;
+        
+        .mat-mdc-button-touch-target,
+        .mdc-icon-button__ripple {
+          width: 48px !important;
+          height: 48px !important;
+        }
+      }
+    }
+    
+    .mat-mdc-button-touch-target {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    
+    .mdc-button__label {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 100% !important;
+      height: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    
+    .mat-mdc-button-touch-target,
+    .mdc-button__ripple,
+    .mdc-icon-button__ripple {
+      border-radius: 12px !important;
+    }
+    
+    // Asegurar que los iconos no se recorten
+    mat-icon {
+      overflow: visible !important;
+      line-height: 1 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+  }
 }
 
-// Animación para el indicador de estado activo
-@keyframes pulse-green {
+// Animación sutil para el indicador de estado activo
+@keyframes pulse-subtle {
   0% {
-    box-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
-    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
   }
   50% {
-    box-shadow: 0 0 12px rgba(76, 175, 80, 0.8);
-    transform: scale(1.1);
+    opacity: 0.8;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
   }
   100% {
-    box-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
-    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
   }
 } 
