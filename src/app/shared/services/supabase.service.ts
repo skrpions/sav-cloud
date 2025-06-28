@@ -10,7 +10,7 @@ import { environment } from '@/environments/environment';
  * 2. Sin persistSession: Evita conflictos de storage entre pestañas
  * 3. Sin autoRefreshToken: Previene locks automáticos
  * 4. Sin storage: Elimina completamente el uso de localStorage para auth
- * 5. Limpieza agresiva: Elimina tokens problemáticos al inicializar
+ * 5. Limpieza selectiva: Elimina tokens problemáticos pero PRESERVA caché del usuario
  * 
  * MÉTODO DE EMERGENCIA:
  * Si persisten problemas, ejecuta en consola: emergencyClearAuth()
@@ -22,41 +22,44 @@ export class SupabaseService {
   private _supabaseClient: SupabaseClient | null = null;
 
   constructor() {
-    // Solo limpiar el estado, NO inicializar Supabase inmediatamente
     this.aggressiveClearAuthState();
-    console.log('SupabaseService initialized - client will be created on first use');
-    
-    // Hacer el método de emergencia accesible globalmente
-    (window as any).emergencyClearAuth = () => this.emergencyClearAll();
-    console.log('💡 Emergency clear available: call emergencyClearAuth() in console if needed');
   }
 
-  // Limpieza agresiva de todo el estado de autenticación
+  // Limpieza selectiva del estado de autenticación (PRESERVA caché de usuario)
   private aggressiveClearAuthState(): void {
     try {
-      // Limpiar localStorage completo de Supabase
+      // Limpiar localStorage - solo tokens de auth, NO el caché del usuario
       const localStorageKeys = Object.keys(localStorage);
       localStorageKeys.forEach(key => {
+        // PRESERVAR sav-cloud-user (caché del usuario)
+        if (key === 'sav-cloud-user') {
+          return;
+        }
+        
         if (key.includes('supabase') || 
             key.includes('sb-') || 
             key.includes('auth') ||
-            key.includes('sav-cloud')) {
+            key.includes('sav-cloud-auth')) {
           localStorage.removeItem(key);
         }
       });
       
-      // Limpiar sessionStorage completo de Supabase
+      // Limpiar sessionStorage - solo tokens de auth
       const sessionStorageKeys = Object.keys(sessionStorage);
       sessionStorageKeys.forEach(key => {
+        // PRESERVAR sav-cloud-user (caché del usuario)
+        if (key === 'sav-cloud-user') {
+          return;
+        }
+        
         if (key.includes('supabase') || 
             key.includes('sb-') || 
-            key.includes('auth') ||
-            key.includes('sav-cloud')) {
+            key.includes('auth')) {
           sessionStorage.removeItem(key);
         }
       });
 
-      // Limpiar también cookies relacionadas
+      // Limpiar también cookies relacionadas con autenticación
       document.cookie.split(";").forEach(cookie => {
         const eqPos = cookie.indexOf("=");
         const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
@@ -65,18 +68,14 @@ export class SupabaseService {
         }
       });
 
-      console.log('Aggressive auth state cleanup completed');
     } catch (error) {
-      console.warn('Could not perform aggressive auth cleanup:', error);
+      console.warn('Could not perform auth cleanup:', error);
     }
   }
 
   // Crear el cliente Supabase solo cuando se necesite (lazy initialization)
   private createSupabaseClient(): SupabaseClient {
     if (!this._supabaseClient) {
-      console.log('Creating Supabase client with lock-free configuration');
-      
-      // Limpieza adicional antes de crear el cliente
       this.aggressiveClearAuthState();
       
       this._supabaseClient = createClient(
@@ -88,7 +87,7 @@ export class SupabaseService {
             persistSession: false,
             detectSessionInUrl: false,
             flowType: 'implicit',
-            storage: undefined, // Sin storage para evitar locks completamente
+            storage: undefined,
             debug: false
           },
           global: {
@@ -98,8 +97,6 @@ export class SupabaseService {
           }
         }
       );
-      
-      console.log('Supabase client created successfully without locks');
     }
     return this._supabaseClient;
   }
@@ -108,12 +105,12 @@ export class SupabaseService {
     return this.createSupabaseClient();
   }
 
-  // Limpiar almacenamiento de autenticación para evitar conflictos (mantenido para compatibilidad)
+  // Limpiar almacenamiento de autenticación para evitar conflictos (preserva caché del usuario)
   private clearAuthStorage(): void {
     this.aggressiveClearAuthState();
   }
 
-  // Método auxiliar para manejar errores de lock con mejor retry logic
+  // Método auxiliar para manejar errores de lock con retry logic
   async handleAuthOperation(operation: () => Promise<any>): Promise<any> {
     const maxRetries = 3;
     const retryDelay = 1000;
@@ -127,9 +124,6 @@ export class SupabaseService {
                            error.name === 'NavigatorLockAcquireTimeoutError';
 
         if (isLockError && attempt < maxRetries) {
-          console.warn(`Lock timeout detected (attempt ${attempt}/${maxRetries}), retrying...`);
-          
-          // Limpiar storage en el segundo intento
           if (attempt === 2) {
             this.clearAuthStorage();
           }
@@ -152,7 +146,6 @@ export class SupabaseService {
       this.clearAuthStorage();
     } catch (error) {
       console.warn('Error clearing session:', error);
-      // Forzar limpieza de storage aunque signOut falle
       this.clearAuthStorage();
     }
   }
@@ -160,11 +153,12 @@ export class SupabaseService {
   // Método de emergencia para limpiar completamente el navegador
   emergencyClearAll(): void {
     console.warn('🚨 EMERGENCY CLEAR: Clearing all browser storage');
+    console.warn('⚠️ WARNING: This will also remove user cache - you will need to login again');
     
     try {
-      // Limpiar localStorage completo
+      // Limpiar localStorage completo (incluyendo caché del usuario)
       localStorage.clear();
-      console.log('✅ localStorage cleared');
+      console.log('✅ localStorage cleared (including user cache)');
       
       // Limpiar sessionStorage completo
       sessionStorage.clear();
@@ -182,7 +176,7 @@ export class SupabaseService {
       this._supabaseClient = null;
       console.log('✅ Supabase client reset');
       
-      console.warn('🔄 Please refresh the page to complete the emergency clear');
+      console.warn('🔄 Please refresh the page and login again to complete the emergency clear');
       
     } catch (error) {
       console.error('❌ Emergency clear failed:', error);

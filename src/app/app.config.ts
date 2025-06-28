@@ -26,44 +26,10 @@ export const provideTranslation = () => ({
   },
 });
 
-// Función para limpiar SOLO storage de autenticación problemático, preservando traducciones
+// Función de inicialización simple
 function initializeApp(): () => Promise<void> {
   return () => {
-    return new Promise<void>((resolve) => {
-      try {
-        // Lista específica de keys problemáticos de Supabase + cache de usuario
-        const problematicKeys = [
-          'sb-wprmvvkrtizngssfcpii-auth-token',
-          'sav-cloud-auth-token',
-          'sav-cloud-user', // Caché de usuario
-          'supabase.auth.token',
-          'supabase.session'
-        ];
-        
-        // Solo remover keys específicos de Supabase que causan locks
-        Object.keys(localStorage).forEach(key => {
-          if (problematicKeys.some(problematicKey => key.includes(problematicKey)) ||
-              (key.startsWith('sb-') && key.includes('auth-token'))) {
-            localStorage.removeItem(key);
-            console.log(`Removed problematic auth key: ${key}`);
-          }
-        });
-
-        // Mismo proceso para sessionStorage (incluye el caché de usuario)
-        Object.keys(sessionStorage).forEach(key => {
-          if (problematicKeys.some(problematicKey => key.includes(problematicKey)) ||
-              (key.startsWith('sb-') && key.includes('auth-token'))) {
-            sessionStorage.removeItem(key);
-            console.log(`Removed problematic session key: ${key}`);
-          }
-        });
-
-        console.log('Specific auth and user cache cleanup completed - translations preserved');
-      } catch (error) {
-        console.warn('Could not clear problematic auth storage:', error);
-      }
-      resolve();
-    });
+    return Promise.resolve();
   };
 }
 
@@ -73,14 +39,8 @@ function initializeTranslations(translateService: TranslateService): () => Promi
     return new Promise<void>((resolve) => {
       translateService.setDefaultLang('es');
       translateService.use('es').subscribe({
-        next: () => {
-          console.log('✅ Translations loaded successfully');
-          resolve();
-        },
-        error: (error) => {
-          console.warn('⚠️ Error loading translations:', error);
-          resolve(); // Continue anyway with default values
-        }
+        next: () => resolve(),
+        error: () => resolve() // Continue anyway with default values
       });
     });
   };
@@ -89,10 +49,8 @@ function initializeTranslations(translateService: TranslateService): () => Promi
 // Función para inicializar el servicio de usuario
 function initializeUserService(userService: UserService): () => Promise<void> {
   return () => {
-    return userService.loadCurrentUser().then(() => {
-      console.log('✅ User service initialized');
-    }).catch((error) => {
-      console.warn('⚠️ Error loading user service:', error);
+    return userService.loadCurrentUser().catch(() => {
+      // Silent fail - let the app continue
     });
   };
 }
@@ -151,20 +109,20 @@ export const appConfig: ApplicationConfig = {
     { provide: DateAdapter, useClass: SpanishDateAdapter, deps: [MAT_DATE_LOCALE] },
     { provide: MAT_DATE_FORMATS, useValue: CUSTOM_DATE_FORMATS },
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' },
-    // Limpiar storage de autenticación al inicializar la aplicación
+    // Inicialización de la aplicación
     {
       provide: APP_INITIALIZER,
       useFactory: initializeApp,
       multi: true
     },
-    // Inicializar traducciones antes de mostrar componentes
+    // Inicializar traducciones
     {
       provide: APP_INITIALIZER,
       useFactory: initializeTranslations,
       deps: [TranslateService],
       multi: true
     },
-    // Inicializar servicio de usuario para cargar datos inmediatamente
+    // Inicializar servicio de usuario
     {
       provide: APP_INITIALIZER,
       useFactory: initializeUserService,

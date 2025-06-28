@@ -15,7 +15,6 @@ export class UserInfrastructure extends UserRepository {
       // Primero verificar si tenemos datos en caché
       const cachedUser = this.getUserFromCache();
       if (cachedUser) {
-        console.log('✅ User loaded from cache');
         return cachedUser;
       }
 
@@ -34,8 +33,6 @@ export class UserInfrastructure extends UserRepository {
         .single();
 
       if (error || !userData) {
-        console.warn('Could not load user profile from database:', error);
-        
         // Fallback: crear usuario básico desde auth
         const fallbackUser: User = {
           id: authUser.id,
@@ -48,7 +45,6 @@ export class UserInfrastructure extends UserRepository {
           updatedAt: new Date()
         };
         
-        // Guardar fallback en caché
         this.saveUserToCache(fallbackUser);
         return fallbackUser;
       }
@@ -65,10 +61,7 @@ export class UserInfrastructure extends UserRepository {
         updatedAt: new Date(userData.updated_at)
       };
 
-      // Guardar en caché
       this.saveUserToCache(user);
-      console.log('✅ User loaded from Supabase and cached');
-      
       return user;
 
     } catch (error) {
@@ -88,20 +81,20 @@ export class UserInfrastructure extends UserRepository {
       
       // Validar que los datos tienen la estructura correcta
       if (!this.isValidUserData(userData)) {
-        console.warn('Invalid user data in cache, clearing...');
         this.clearUserCache();
         return null;
       }
 
       // Convertir fechas string a Date objects
-      return {
+      const user = {
         ...userData,
         createdAt: new Date(userData.createdAt),
         updatedAt: new Date(userData.updatedAt)
       };
+      
+      return user;
 
     } catch (error) {
-      console.warn('Error reading user cache:', error);
       this.clearUserCache();
       return null;
     }
@@ -110,7 +103,6 @@ export class UserInfrastructure extends UserRepository {
   saveUserToCache(user: User): void {
     try {
       sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
-      console.log('✅ User saved to cache');
     } catch (error) {
       console.warn('Error saving user to cache:', error);
     }
@@ -119,7 +111,6 @@ export class UserInfrastructure extends UserRepository {
   clearUserCache(): void {
     try {
       sessionStorage.removeItem(this.STORAGE_KEY);
-      console.log('✅ User cache cleared');
     } catch (error) {
       console.warn('Error clearing user cache:', error);
     }

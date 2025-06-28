@@ -18,39 +18,46 @@ export class UserService {
   private currentUser: User | null = null;
   
   async loadCurrentUser(): Promise<void> {
-    // Si ya se cargó, no cargar de nuevo
+    // Si ya se cargó y tenemos datos válidos, no cargar de nuevo
     if (this.userDataLoaded && this.currentUser) {
       return;
-    }
-    
-    // Primero verificar si hay datos en caché
-    if (this._userApplication.isUserCached()) {
-      const cachedUser = this._userApplication.getCachedUser();
-      if (cachedUser) {
-        this.updateUserSignals(cachedUser);
-        this.userDataLoaded = true;
-        console.log('✅ User loaded from sessionStorage cache');
-        return;
-      }
     }
     
     this.isLoading.set(true);
     
     try {
+      // Primero intentar desde caché (más rápido)
+      if (this._userApplication.isUserCached()) {
+        const cachedUser = this._userApplication.getCachedUser();
+        if (cachedUser) {
+          this.updateUserSignals(cachedUser);
+          this.userDataLoaded = true;
+          this.isLoading.set(false);
+          return;
+        }
+      }
+      
+      // Si no hay caché válido, cargar desde Supabase
       const user = await this._userApplication.getCurrentUser();
       
       if (user) {
         this.updateUserSignals(user);
         this.userDataLoaded = true;
-        console.log('✅ User loaded from Supabase');
       } else {
-        console.warn('No user found');
         this.setDefaultValues();
       }
       
     } catch (error) {
-      console.warn('Could not load user information:', error);
-      this.setDefaultValues();
+      console.error('Error loading user information:', error);
+      
+      // En caso de error, intentar mantener datos del caché si existen
+      const cachedUser = this._userApplication.getCachedUser();
+      if (cachedUser) {
+        this.updateUserSignals(cachedUser);
+        this.userDataLoaded = true;
+      } else {
+        this.setDefaultValues();
+      }
     } finally {
       this.isLoading.set(false);
     }
@@ -94,5 +101,36 @@ export class UserService {
 
   isCollaborator(): boolean {
     return this._userApplication.isCollaborator(this.currentUser);
+  }
+
+  // Método para limpiar manualmente datos problemáticos sin afectar el usuario
+  static cleanupProblematicAuthData(): void {
+    try {
+      const problematicKeys = [
+        'sb-wprmvvkrtizngssfcpii-auth-token',
+        'sav-cloud-auth-token', 
+        'supabase.auth.token',
+        'supabase.session'
+      ];
+
+      // Limpiar localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (problematicKeys.some(problematicKey => key.includes(problematicKey)) ||
+            (key.startsWith('sb-') && key.includes('auth-token'))) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      // Limpiar sessionStorage (pero preservar traducciones)
+      Object.keys(sessionStorage).forEach(key => {
+        if (problematicKeys.some(problematicKey => key.includes(problematicKey)) ||
+            (key.startsWith('sb-') && key.includes('auth-token'))) {
+          sessionStorage.removeItem(key);
+        }
+      });
+
+    } catch (error) {
+      console.warn('Error during manual auth cleanup:', error);
+    }
   }
 } 

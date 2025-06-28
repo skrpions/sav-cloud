@@ -51,10 +51,10 @@ export class SidebarComponent implements OnInit {
       });
 
     // Load current user information through service
-    this._userService.loadCurrentUser();
+    if (this._userService.userName() === 'Usuario') {
+      this._userService.loadCurrentUser();
+    }
   }
-
-
 
   private updateActiveItemFromRoute(): void {
     const currentUrl = this._router.url;
