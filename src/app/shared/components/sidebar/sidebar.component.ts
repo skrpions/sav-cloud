@@ -23,6 +23,7 @@ export class SidebarComponent implements OnInit {
   private _userService = inject(UserService);
   
   isCollapsed = signal(false);
+  isHovering = signal(false);
   
   // Usar signals del servicio global
   userName = this._userService.userName;
@@ -65,6 +66,8 @@ export class SidebarComponent implements OnInit {
 
   toggleCollapse(): void {
     this.isCollapsed.update(collapsed => !collapsed);
+    // Reset hover state when manually toggling
+    this.isHovering.set(false);
     this.collapseChanged.emit(this.isCollapsed());
   }
 
@@ -79,5 +82,21 @@ export class SidebarComponent implements OnInit {
     }
     
     this.itemClicked.emit(item);
+  }
+
+  // Métodos para manejar el hover cuando está colapsado
+  onSidebarMouseEnter(): void {
+    if (this.isCollapsed()) {
+      this.isHovering.set(true);
+    }
+  }
+
+  onSidebarMouseLeave(): void {
+    this.isHovering.set(false);
+  }
+
+  // Computed property para determinar si debe mostrar contenido expandido
+  shouldShowExpandedContent(): boolean {
+    return !this.isCollapsed() || (this.isCollapsed() && this.isHovering());
   }
 } 

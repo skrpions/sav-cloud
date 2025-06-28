@@ -1,8 +1,12 @@
-<aside class="sidebar" [class.collapsed]="isCollapsed()">
+<aside class="sidebar" 
+       [class.collapsed]="isCollapsed()" 
+       [class.hovering]="isHovering()"
+       (mouseenter)="onSidebarMouseEnter()"
+       (mouseleave)="onSidebarMouseLeave()">
   <div class="sidebar-header">
     <div class="logo" [class.collapsed]="isCollapsed()">
       <mat-icon>cloud</mat-icon>
-      <span *ngIf="!isCollapsed()">{{ 'sidebar.appName' | translate }}</span>
+      <span *ngIf="shouldShowExpandedContent()">{{ 'sidebar.appName' | translate }}</span>
     </div>
     <button 
       mat-icon-button 
@@ -18,7 +22,7 @@
   <div class="user-profile-section" [class.collapsed]="isCollapsed()">
     <div class="user-profile">
       <img class="profile-avatar" src="/images/avatars/avatar-dreamcode.jpeg" alt="User Avatar" />
-      <div class="profile-info" *ngIf="!isCollapsed()">
+      <div class="profile-info" *ngIf="shouldShowExpandedContent()">
         <h4 class="profile-name">{{ userName() }}</h4>
         <p class="profile-role">{{ userRole() }}</p>
       </div>
@@ -36,10 +40,10 @@
         [class.active]="item.active"
         [class.collapsed]="isCollapsed()"
         (click)="onItemClick(item)"
-        [matTooltip]="isCollapsed() ? (item.labelKey | translate) : ''"
+        [matTooltip]="isCollapsed() && !isHovering() ? (item.labelKey | translate) : ''"
         matTooltipPosition="right">
         <mat-icon>{{ item.icon }}</mat-icon>
-        <span *ngIf="!isCollapsed()">{{ item.labelKey | translate }}</span>
+        <span *ngIf="shouldShowExpandedContent()">{{ item.labelKey | translate }}</span>
       </div>
     </div>
   </nav>

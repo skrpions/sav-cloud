@@ -22,6 +22,7 @@
   position: relative;
   overflow: hidden;
   transition: width 0.3s ease-in-out;
+  z-index: 1000;
 
   &::before {
     content: '';
@@ -49,6 +50,65 @@
     .nav-item span {
       opacity: 0;
       width: 0;
+    }
+
+    &.hovering {
+      width: 300px;
+      box-shadow: 8px 0 32px rgba(46, 125, 50, 0.15);
+      
+      .sidebar-header .logo span {
+        opacity: 1;
+        width: auto;
+        transition: opacity 0.2s ease 0.1s, width 0.2s ease 0.1s;
+      }
+
+      .user-profile-section .user-profile {
+        justify-content: flex-start;
+        padding: 16px;
+        
+        .profile-info {
+          display: block;
+          opacity: 1;
+          transition: opacity 0.2s ease 0.1s;
+        }
+        
+        .profile-status {
+          position: relative;
+          
+          .status-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            border: none;
+          }
+        }
+      }
+
+      .nav-item {
+        justify-content: flex-start;
+        padding: 14px 20px;
+        margin: 6px 0;
+        
+        span {
+          opacity: 1;
+          width: auto;
+          transition: opacity 0.2s ease 0.1s, width 0.2s ease 0.1s;
+        }
+
+        &:hover {
+          transform: translateX(4px);
+        }
+
+        &.active {
+          transform: translateX(6px);
+          
+          &::before {
+            display: block;
+          }
+        }
+      }
     }
   }
 
@@ -149,7 +209,7 @@
     padding: 20px 12px;
   }
 
-      .user-profile {
+  .user-profile {
     display: flex;
     align-items: center;
     gap: 16px;
@@ -165,8 +225,6 @@
       transform: translateY(-2px);
       box-shadow: 0 8px 32px rgba(46, 125, 50, 0.12);
     }
-
-
 
     .profile-avatar {
       width: 48px;
@@ -239,8 +297,6 @@
           }
         }
       }
-
-
     }
   }
 }
@@ -311,7 +367,7 @@
 
     &.collapsed {
       justify-content: center;
-      padding: 14px;
+      padding: 14px 10px; // Ajuste sutil hacia la izquierda
       margin: 6px 12px;
       
       span {
