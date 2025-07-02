@@ -40,16 +40,15 @@
 
 // Form View Styles
 .form-view {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 8px;
+  width: 100%;
   
   .form-header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
     border-bottom: 1px solid var(--border-light);
     
     .back-button {
@@ -59,11 +58,38 @@
       width: 40px;
       height: 40px;
       border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       
       &:hover {
         color: var(--white);
         background: var(--primary-green);
         transform: translateX(-2px);
+      }
+      
+      ::ng-deep {
+        .mat-mdc-button-touch-target {
+          width: 40px !important;
+          height: 40px !important;
+        }
+        
+        .mdc-button__label {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+        
+        mat-icon {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 24px !important;
+          height: 24px !important;
+          font-size: 24px !important;
+        }
       }
     }
     
@@ -78,14 +104,14 @@
 
 // List View Styles
 .list-view {
-  padding: 24px;
+  padding: 12px;
 }
 
 .action-header {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
   
   .add-button {
     height: 48px;
@@ -631,17 +657,19 @@
 // Responsive Adjustments
 @media (max-width: 768px) {
   .form-view {
-    padding: 16px;
+    padding: 12px;
     
     .form-header {
+      margin-bottom: 6px;
+      
       .form-title {
-        font-size: 20px;
+        font-size: 18px;
       }
     }
   }
   
   .list-view {
-    padding: 16px;
+    padding: 12px;
   }
   
   .page-header {

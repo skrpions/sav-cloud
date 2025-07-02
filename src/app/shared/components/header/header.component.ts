@@ -84,8 +84,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
       icon: 'assessment'
     },
     [ROUTES.SETTINGS]: {
-      titleKey: 'sidebar.navigation.settings',
-      subtitleKey: 'header.settings.description',
+      titleKey: 'settings.title',
+      subtitleKey: 'settings.description',
       breadcrumbKey: 'sidebar.navigation.settings',
       icon: 'settings'
     }

@@ -13,62 +13,61 @@
 }
 
 .collaborator-form-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px;
+  width: 100%;
+  padding: 8px;
   background: var(--white);
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .collaborator-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 8px;
 }
 
 .form-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  gap: 12px;
   
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 8px;
   }
 }
 
 .form-column {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 8px;
 }
 
 .form-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 6px;
   background: var(--background-light);
-  padding: 20px;
-  border-radius: 12px;
+  padding: 8px;
+  border-radius: 6px;
   border: 1px solid var(--border-light);
   
   .section-title {
-    margin: 0 0 16px 0;
-    font-size: 16px;
-    font-weight: 600;
+    margin: 0 0 6px 0;
+    font-size: 0.875rem;
+    font-weight: 500;
     color: var(--text-primary);
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--primary-green-lighter);
+    padding-bottom: 3px;
+    border-bottom: 1px solid var(--primary-green);
     position: relative;
     
     &::after {
       content: '';
       position: absolute;
-      bottom: -2px;
+      bottom: -1px;
       left: 0;
-      width: 50px;
-      height: 2px;
+      width: 30px;
+      height: 1px;
       background: var(--primary-green);
     }
   }
@@ -77,26 +76,28 @@
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 6px;
   
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 4px;
   }
 }
 
 .form-field {
   width: 100%;
+  margin-bottom: 4px !important;
   
   &.full-width {
     grid-column: 1 / -1;
   }
 
-  // Aplicar estilos exactos del login/register
+  // Aplicar estilos exactos del login/register (compactos)
   ::ng-deep {
     // Personalización específica para appearance="fill"
     .mat-mdc-form-field {
       background-color: transparent !important;
+      font-size: 0.875rem;
     }
 
     // Forzar transparencia en todos los elementos del fill
@@ -105,6 +106,8 @@
       
       .mdc-text-field__input {
         background-color: transparent !important;
+        padding-top: 10px;
+        padding-bottom: 4px;
       }
 
       // Remover el fondo gris característico del fill
@@ -138,43 +141,43 @@
       }
     }
 
-    // Personalizar la línea inferior del fill - control completo
+    // Personalizar la línea inferior del fill
     .mdc-text-field--filled:not(.mdc-text-field--disabled) {
       .mdc-line-ripple::before {
-        border-bottom-color: rgba(46, 125, 50, 0.42);
+        border-bottom-color: rgba(0, 0, 0, 0.42);
         border-bottom-width: 1px;
       }
 
       &:hover .mdc-line-ripple::before {
-        border-bottom-color: rgba(46, 125, 50, 0.87);
+        border-bottom-color: rgba(0, 0, 0, 0.87);
       }
 
-      // Estado focused - verde
+      // Estado focused - color primario
       &.mdc-text-field--focused .mdc-line-ripple::after {
         border-bottom-color: var(--primary-green) !important;
         border-bottom-width: 2px;
       }
 
-      // Estado unfocused - forzar transparencia para evitar parpadeo azul
+      // Estado unfocused
       &:not(.mdc-text-field--focused) .mdc-line-ripple::after {
         border-bottom-color: transparent !important;
         border-bottom-width: 0 !important;
         opacity: 0 !important;
       }
 
-      // Sobrescribir cualquier transición de Material Design
       .mdc-line-ripple::after {
         transition: border-bottom-color 0.3s ease, opacity 0.3s ease !important;
       }
     }
 
-    // Estilos para labels e inputs
+    // Estilos para labels
     .mat-mdc-form-field-label {
-      color: rgba(46, 125, 50, 0.6);
+      color: rgba(0, 0, 0, 0.6);
       transition: color 0.3s ease;
+      font-size: 0.875rem;
     }
 
-    // Label en estado focused con color verde
+    // Label en estado focused
     &.mat-focused .mat-mdc-form-field-label {
       color: var(--primary-green) !important;
     }
@@ -187,10 +190,9 @@
     }
 
     .mat-mdc-input-element {
-      color: var(--text-primary);
+      color: rgba(0, 0, 0, 0.87);
       background-color: transparent !important;
-      font-size: 15px;
-      font-weight: 500;
+      font-size: 0.875rem;
 
       &::placeholder {
         color: var(--text-secondary);
@@ -199,20 +201,29 @@
       }
     }
 
-    // Remover cualquier overlay o fondo adicional
+    // Remover overlays
     .mat-mdc-form-field-focus-overlay,
     .mat-mdc-form-field-subscript-wrapper {
       background-color: transparent !important;
     }
 
-    // Asegurar que no haya ripples con fondo
     .mdc-line-ripple {
       background-color: transparent !important;
     }
 
+    // Hints y errores más compactos
+    .mat-mdc-form-field-hint-wrapper {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .mat-mdc-form-field-error-wrapper {
+      font-size: 0.75rem;
+    }
+
     // Estilos para textarea
     .mat-mdc-input-element[type="textarea"] {
-      min-height: 60px;
+      min-height: 50px;
       resize: vertical;
     }
 
@@ -232,7 +243,7 @@
     // Error styles
     .mat-mdc-form-field-error {
       color: #f44336;
-      font-size: 12px;
+      font-size: 0.75rem;
     }
   }
 }
@@ -267,19 +278,19 @@
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 16px;
-  margin-top: 24px;
-  padding-top: 24px;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid var(--border-light);
 
   @media (max-width: 768px) {
     flex-direction: column-reverse;
-    gap: 12px;
+    gap: 8px;
   }
 
   .cancel-button {
     min-width: 120px;
-    height: 48px;
+    height: 44px;
     border: 2px solid var(--text-secondary);
     color: var(--white) !important;
     background: var(--text-secondary);
@@ -313,7 +324,7 @@
 
   .submit-button {
     min-width: 140px;
-    height: 48px;
+    height: 44px;
     background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-light) 100%);
     color: var(--white) !important;
     font-weight: 600;
@@ -363,41 +374,43 @@
 // Responsive design
 @media (max-width: 768px) {
   .collaborator-form-container {
-    margin: 16px;
-    padding: 16px;
-    border-radius: 12px;
+    padding: 6px;
+    border-radius: 6px;
   }
 
   .collaborator-form {
-    gap: 20px;
+    gap: 6px;
   }
 
   .form-columns {
-    gap: 20px;
+    gap: 6px;
   }
 
   .form-column {
-    gap: 20px;
+    gap: 6px;
   }
 
   .form-section {
-    gap: 12px;
-    padding: 16px;
+    gap: 4px;
+    padding: 6px;
     
     .section-title {
-      font-size: 14px;
-      margin-bottom: 12px;
+      font-size: 0.75rem;
+      margin-bottom: 4px;
     }
   }
 
   .form-actions {
     flex-direction: column-reverse;
-    gap: 12px;
+    gap: 6px;
+    margin-top: 6px;
+    padding-top: 6px;
     
     .cancel-button,
     .submit-button {
       width: 100%;
-      height: 44px;
+      height: 40px;
+      font-size: 0.875rem;
     }
   }
 }

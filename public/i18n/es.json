@@ -294,6 +294,87 @@
         }
     },
 
+    "settings": {
+        "title": "Configuración del Sistema",
+        "description": "Administra las tarifas, precios y configuraciones generales del sistema",
+        "loading": "Cargando configuración...",
+        
+        "sections": {
+            "basic": "Configuración Básica",
+            "harvest": "Configuración de Cosecha",
+            "dailyRates": "Tarifas Diarias",
+            "activityRates": "Tarifas por Actividad"
+        },
+        
+        "form": {
+            "title": "Configuración",
+            "editMode": "Editando configuración existente",
+            "createMode": "Creando nueva configuración",
+            "year": "Año",
+            "currency": "Moneda",
+            "taxPercentage": "Porcentaje de Impuesto",
+            "harvestPricePerKg": "Precio por Kilogramo de Cosecha",
+            "harvestPriceHint": "Precio base que se paga por kilogramo de café cosechado",
+            "dailyRateLibre": "Tarifa Diaria Libre",
+            "dailyRateLibreHint": "Incluye comida + pago en efectivo (menor)",
+            "dailyRateGrabado": "Tarifa Diaria Grabado", 
+            "dailyRateGrabadoHint": "Solo pago en efectivo (mayor, sin comida)",
+            "activityRatesHint": "Tarifas opcionales para actividades específicas. Si no se especifica, se usará la tarifa diaria.",
+            "create": "Crear Configuración",
+            "update": "Actualizar Configuración",
+            "reset": "Restablecer"
+        },
+        
+        "activities": {
+            "fertilization": "Fertilización",
+            "fumigation": "Fumigación",
+            "pruning": "Poda",
+            "weeding": "Deshierbe",
+            "planting": "Siembra",
+            "maintenance": "Mantenimiento",
+            "other": "Otras Actividades"
+        },
+        
+        "summary": {
+            "title": "Resumen de Configuración",
+            "harvestPrice": "Precio de Cosecha",
+            "dailyRateLibre": "Tarifa Libre",
+            "dailyRateGrabado": "Tarifa Grabado",
+            "tax": "Impuesto"
+        },
+        
+        "toasts": {
+            "createSuccess": {
+                "title": "Configuración creada",
+                "description": "La configuración se ha creado exitosamente."
+            },
+            "updateSuccess": {
+                "title": "Configuración actualizada",
+                "description": "La configuración se ha actualizada exitosamente."
+            },
+            "error": {
+                "title": "Error en configuración",
+                "description": "Ocurrió un error al procesar la configuración."
+            },
+            "validation": {
+                "title": "Datos inválidos",
+                "description": "Por favor revisa los campos marcados en rojo."
+            },
+            "reset": {
+                "title": "Formulario restablecido",
+                "description": "Los valores han sido restaurados."
+            }
+        }
+    },
+
+    "validators": {
+        "required": "Este campo es requerido",
+        "min": "El valor mínimo permitido es {{value}}",
+        "max": "El valor máximo permitido es {{value}}",
+        "email": "Por favor ingresa un correo electrónico válido",
+        "pattern": "El formato no es válido"
+    },
+
     "footer": {
         "copyright": "© 2025, hecho con ❤️ por",
         "author": "Ing. Nestor Martínez C.",

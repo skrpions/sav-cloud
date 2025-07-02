@@ -17,5 +17,9 @@ export const routes: Routes = [
   {
     path: 'collaborators',
     loadComponent: () => import('./modules/collaborators/collaborators.component').then(c => c.CollaboratorsComponent)
+  },
+  {
+    path: 'settings',
+    loadComponent: () => import('./modules/settings/settings.component').then(c => c.SettingsComponent)
   }
 ];

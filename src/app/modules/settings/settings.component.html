@@ -1,0 +1,236 @@
+<div class="settings-page">
+  <!-- Sidebar -->
+  <app-sidebar 
+    (itemClicked)="onSidebarItemClicked($event)"
+    (collapseChanged)="onSidebarCollapseChanged($event)">
+  </app-sidebar>
+
+  <!-- Main Content -->
+  <div class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed()">
+    <!-- Header -->
+    <app-header></app-header>
+
+    <!-- Content Area -->
+    <div class="content-area">
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading()" class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>{{ 'settings.loading' | translate }}</p>
+      </div>
+
+      <!-- Settings Form -->
+      <div *ngIf="!isLoading()" class="settings-content">
+        <mat-card class="settings-card">
+          <mat-card-content>
+            <form [formGroup]="settingsForm" (ngSubmit)="onSaveSettings()" class="settings-form">
+              
+              <!-- Basic Configuration -->
+              <div class="form-section">
+                <h3 class="section-title">
+                  <mat-icon>calendar_today</mat-icon>
+                  {{ 'settings.sections.basic' | translate }}
+                </h3>
+                
+                <div class="form-row">
+                  <!-- Year -->
+                  <mat-form-field appearance="fill" class="form-field settings-field">
+                    <mat-label>{{ 'settings.form.year' | translate }}</mat-label>
+                    <input matInput 
+                           type="number" 
+                           formControlName="year"
+                           [class.is-invalid]="isFieldInvalid('year')">
+                    <mat-icon matSuffix>calendar_today</mat-icon>
+                    <mat-error *ngIf="isFieldInvalid('year')">
+                      {{ getFieldError('year') }}
+                    </mat-error>
+                  </mat-form-field>
+
+                  <!-- Currency -->
+                  <mat-form-field appearance="fill" class="form-field settings-field">
+                    <mat-label>{{ 'settings.form.currency' | translate }}</mat-label>
+                    <mat-select formControlName="currency">
+                      <mat-option *ngFor="let currency of currencyOptions" [value]="currency.value">
+                        {{ currency.label }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-icon matSuffix>attach_money</mat-icon>
+                  </mat-form-field>
+
+                  <!-- Tax Percentage -->
+                  <mat-form-field appearance="fill" class="form-field settings-field">
+                    <mat-label>{{ 'settings.form.taxPercentage' | translate }}</mat-label>
+                    <input matInput 
+                           type="number" 
+                           formControlName="tax_percentage"
+                           step="0.01"
+                           [class.is-invalid]="isFieldInvalid('tax_percentage')">
+                    <span matSuffix>%</span>
+                    <mat-error *ngIf="isFieldInvalid('tax_percentage')">
+                      {{ getFieldError('tax_percentage') }}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <!-- Harvest Configuration -->
+              <div class="form-section">
+                <h3 class="section-title">
+                  <mat-icon>agriculture</mat-icon>
+                  {{ 'settings.sections.harvest' | translate }}
+                </h3>
+                
+                <div class="form-row">
+                  <!-- Harvest Price per Kilogram -->
+                  <mat-form-field appearance="fill" class="form-field-full settings-field">
+                    <mat-label>{{ 'settings.form.harvestPricePerKg' | translate }}</mat-label>
+                    <input matInput 
+                           type="number" 
+                           formControlName="harvest_price_per_kilogram"
+                           step="0.01"
+                           [class.is-invalid]="isFieldInvalid('harvest_price_per_kilogram')">
+                    <span matSuffix>{{ settingsForm.get('currency')?.value }}</span>
+                    <mat-icon matSuffix>scale</mat-icon>
+                    <mat-error *ngIf="isFieldInvalid('harvest_price_per_kilogram')">
+                      {{ getFieldError('harvest_price_per_kilogram') }}
+                    </mat-error>
+                    <mat-hint>
+                      {{ 'settings.form.harvestPriceHint' | translate }}
+                    </mat-hint>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <!-- Daily Rates Configuration -->
+              <div class="form-section">
+                <h3 class="section-title">
+                  <mat-icon>today</mat-icon>
+                  {{ 'settings.sections.dailyRates' | translate }}
+                </h3>
+                
+                <div class="form-row">
+                  <!-- Daily Rate Libre -->
+                  <mat-form-field appearance="fill" class="form-field settings-field">
+                    <mat-label>{{ 'settings.form.dailyRateLibre' | translate }}</mat-label>
+                    <input matInput 
+                           type="number" 
+                           formControlName="daily_rate_libre"
+                           step="0.01"
+                           [class.is-invalid]="isFieldInvalid('daily_rate_libre')">
+                    <span matSuffix>{{ settingsForm.get('currency')?.value }}</span>
+                    <mat-error *ngIf="isFieldInvalid('daily_rate_libre')">
+                      {{ getFieldError('daily_rate_libre') }}
+                    </mat-error>
+                    <mat-hint>
+                      {{ 'settings.form.dailyRateLibreHint' | translate }}
+                    </mat-hint>
+                  </mat-form-field>
+
+                  <!-- Daily Rate Grabado -->
+                  <mat-form-field appearance="fill" class="form-field settings-field">
+                    <mat-label>{{ 'settings.form.dailyRateGrabado' | translate }}</mat-label>
+                    <input matInput 
+                           type="number" 
+                           formControlName="daily_rate_grabado"
+                           step="0.01"
+                           [class.is-invalid]="isFieldInvalid('daily_rate_grabado')">
+                    <span matSuffix>{{ settingsForm.get('currency')?.value }}</span>
+                    <mat-error *ngIf="isFieldInvalid('daily_rate_grabado')">
+                      {{ getFieldError('daily_rate_grabado') }}
+                    </mat-error>
+                    <mat-hint>
+                      {{ 'settings.form.dailyRateGrabadoHint' | translate }}
+                    </mat-hint>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <!-- Activity Rates Configuration -->
+              <div class="form-section">
+                <h3 class="section-title">
+                  <mat-icon>work</mat-icon>
+                  {{ 'settings.sections.activityRates' | translate }}
+                </h3>
+                
+                <div class="activity-rates-grid">
+                  <mat-form-field 
+                    *ngFor="let activity of activityRatesConfig" 
+                    appearance="fill" 
+                    class="activity-field settings-field">
+                    <mat-label>{{ activity.labelKey | translate }}</mat-label>
+                    <input matInput 
+                           type="number" 
+                           [formControlName]="activity.key"
+                           step="0.01"
+                           min="0">
+                    <mat-icon matSuffix>{{ activity.icon }}</mat-icon>
+                    <span matSuffix>{{ settingsForm.get('currency')?.value }}</span>
+                  </mat-form-field>
+                </div>
+                
+                <mat-hint class="activity-rates-hint">
+                  {{ 'settings.form.activityRatesHint' | translate }}
+                </mat-hint>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="form-actions">
+                <button 
+                  mat-raised-button 
+                  color="primary" 
+                  type="submit"
+                  [disabled]="isLoading()">
+                  <mat-icon>save</mat-icon>
+                  {{ isEditMode() ? ('settings.form.update' | translate) : ('settings.form.create' | translate) }}
+                </button>
+
+                <button 
+                  mat-stroked-button 
+                  type="button"
+                  (click)="onResetForm()"
+                  [disabled]="isLoading()">
+                  <mat-icon>refresh</mat-icon>
+                  {{ 'settings.form.reset' | translate }}
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Settings Summary Card -->
+        <mat-card class="summary-card" *ngIf="!settingsForm.pristine">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>summarize</mat-icon>
+              {{ 'settings.summary.title' | translate }}
+            </mat-card-title>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="summary-grid">
+              <div class="summary-item">
+                <span class="summary-label">{{ 'settings.summary.harvestPrice' | translate }}:</span>
+                <span class="summary-value">{{ formatCurrency(settingsForm.get('harvest_price_per_kilogram')?.value || 0) }}/kg</span>
+              </div>
+              
+              <div class="summary-item">
+                <span class="summary-label">{{ 'settings.summary.dailyRateLibre' | translate }}:</span>
+                <span class="summary-value">{{ formatCurrency(settingsForm.get('daily_rate_libre')?.value || 0) }}/día</span>
+              </div>
+              
+              <div class="summary-item">
+                <span class="summary-label">{{ 'settings.summary.dailyRateGrabado' | translate }}:</span>
+                <span class="summary-value">{{ formatCurrency(settingsForm.get('daily_rate_grabado')?.value || 0) }}/día</span>
+              </div>
+              
+              <div class="summary-item">
+                <span class="summary-label">{{ 'settings.summary.tax' | translate }}:</span>
+                <span class="summary-value">{{ settingsForm.get('tax_percentage')?.value || 0 }}%</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</div>
