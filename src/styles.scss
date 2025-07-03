@@ -60,7 +60,7 @@ app-root {
   color: white !important;
   
   &:hover {
-    background-color: #005500 !important;
+    background-color: var(--holiday-green-medium) !important;
     color: white !important;
   }
   
@@ -70,7 +70,7 @@ app-root {
   }
   
   &:active {
-    background-color: #005500 !important;
+    background-color: var(--holiday-green-medium) !important;
     color: white !important;
   }
   
@@ -81,6 +81,12 @@ app-root {
   .mat-ripple-element {
     background-color: rgba(255, 255, 255, 0.1) !important;
   }
+}
+
+/* FIX: Z-index para overlays de Angular Material */
+.cdk-overlay-container, 
+.cdk-overlay-pane {
+  z-index: 3000 !important;
 }
 
 /* CHECKBOXES - Estilos globales */

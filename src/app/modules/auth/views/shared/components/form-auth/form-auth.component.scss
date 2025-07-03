@@ -621,34 +621,37 @@ button.wide-form-field {
 // Estilos de botón y checkbox con máxima especificidad - al final para mayor prioridad
 :host ::ng-deep {
   .login-form button.mat-mdc-raised-button.mat-primary:not(:disabled) {
-    color: #007701 !important;
+    color: #fff !important;
+    background-color: var(--holiday-green-medium) !important;
     
     &:hover {
-      background-color: rgba(0, 119, 1, 0.08) !important;
-      color: #007701 !important;
+      background-color: var(--holiday-green-medium) !important;
+      color: #fff !important;
     }
     
     &:focus {
-      background-color: rgba(0, 119, 1, 0.12) !important;
-      color: #007701 !important;
+      background-color: var(--holiday-green-medium) !important;
+      color: #fff !important;
     }
     
     &:active {
-      background-color: rgba(0, 119, 1, 0.16) !important;
-      color: #007701 !important;
+      background-color: var(--holiday-green-medium) !important;
+      color: #fff !important;
     }
     
     .mdc-button__label {
-      color: #007701 !important;
+      color: #fff !important;
     }
   }
   
   // Sobrescribir estados específicos de MDC
   .mdc-button.mdc-button--raised:not(:disabled) {
-    color: #007701 !important;
+    color: #fff !important;
+    background-color: var(--holiday-green-medium) !important;
     
     &:hover {
-      background-color: rgba(0, 119, 1, 0.08) !important;
+      background-color: var(--holiday-green-medium) !important;
+      color: #fff !important;
     }
   }
 
@@ -765,6 +768,7 @@ button.wide-form-field {
   .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):focus,
   .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):active {
     color: #fff !important;
+    background-color: var(--holiday-green-medium) !important;
   }
   .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):hover .mdc-button__label,
   .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):focus .mdc-button__label,
@@ -823,5 +827,17 @@ button.wide-form-field {
 
   .login-form .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mdc-button mat-icon {
     color: #fff !important;
+  }
+
+  // --- REGLA FINAL: Asegurar que NO haya cambio de color en hover ---
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):hover,
+  .login-form .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):hover {
+    background-color: var(--holiday-green-medium) !important;
+    color: #fff !important;
+    
+    .mdc-button__label,
+    mat-icon {
+      color: #fff !important;
+    }
   }
 } 
