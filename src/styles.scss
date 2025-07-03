@@ -424,3 +424,7 @@ a {
 .mat-datepicker-toggle {
   color: var(--holiday-green-medium) !important;
 }
+
+.cdk-overlay-container, .cdk-overlay-pane {
+  z-index: 3000 !important;
+}

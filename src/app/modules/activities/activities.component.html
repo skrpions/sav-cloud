@@ -1,0 +1,299 @@
+<div class="activities-page">
+  <!-- Sidebar -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Header -->
+    <app-header></app-header>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      @if (showSidePanel()) {
+        <!-- Side Panel for Form (overlay) -->
+        <div class="sidepanel-overlay">
+          <div class="sidepanel-backdrop" (click)="closeSidePanel()"></div>
+          <div class="sidepanel-content">
+            <form [formGroup]="activityForm" (ngSubmit)="onSaveActivity()" class="activity-form">
+              <div class="form-header">
+                <h2>{{ isEditMode() ? 'Editar Actividad' : 'Nueva Actividad' }}</h2>
+                <button mat-icon-button type="button" (click)="closeSidePanel()" class="close-btn">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+
+              <div class="form-content">
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Colaborador</mat-label>
+                  <mat-select formControlName="collaborator_id" required>
+                    @if (collaborators().length === 0) {
+                      <mat-option disabled>No hay colaboradores disponibles</mat-option>
+                    }
+                    @for (c of collaborators(); track c.id) {
+                      <mat-option [value]="c.id">
+                        {{ getCollaboratorName(c.id || '') }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Tipo de Actividad</mat-label>
+                  <mat-select formControlName="type" required>
+                    <mat-option value="fertilization">Fertilización</mat-option>
+                    <mat-option value="fumigation">Fumigación</mat-option>
+                    <mat-option value="pruning">Poda</mat-option>
+                    <mat-option value="weeding">Deshierbe</mat-option>
+                    <mat-option value="planting">Siembra</mat-option>
+                    <mat-option value="maintenance">Mantenimiento</mat-option>
+                    <mat-option value="other">Otras</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Fecha</mat-label>
+                  <input matInput [matDatepicker]="activityDatePicker" formControlName="date" required>
+                  <mat-datepicker-toggle matSuffix [for]="activityDatePicker"></mat-datepicker-toggle>
+                  <mat-datepicker #activityDatePicker></mat-datepicker>
+                </mat-form-field>
+
+                <div class="form-row">
+                  <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Días</mat-label>
+                    <input matInput type="number" formControlName="days" min="0.1" step="0.1" required>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Tipo de Pago</mat-label>
+                    <mat-select formControlName="payment_type" required>
+                      <mat-option value="libre">Libre (incluye comida)</mat-option>
+                      <mat-option value="grabado">Grabado (solo pago)</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Tarifa por Día</mat-label>
+                    <input matInput type="number" formControlName="rate_per_day" min="0" required>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Costo Total</mat-label>
+                    <input matInput type="number" formControlName="total_cost" min="0" required>
+                  </mat-form-field>
+                </div>
+
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Área Trabajada (opcional)</mat-label>
+                  <input matInput type="number" formControlName="area_worked" min="0" step="0.1">
+                  <span matSuffix>hectáreas</span>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Materiales Usados</mat-label>
+                  <input matInput formControlName="materials_used" placeholder="Fertilizantes, herramientas, etc.">
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Condiciones Climáticas</mat-label>
+                  <input matInput formControlName="weather_conditions" placeholder="Soleado, lluvioso, nublado...">
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Calidad del Trabajo (1-5)</mat-label>
+                  <mat-select formControlName="quality_rating">
+                    <mat-option [value]="1">1 - Deficiente</mat-option>
+                    <mat-option [value]="2">2 - Regular</mat-option>
+                    <mat-option [value]="3">3 - Bueno</mat-option>
+                    <mat-option [value]="4">4 - Muy Bueno</mat-option>
+                    <mat-option [value]="5">5 - Excelente</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Notas</mat-label>
+                  <textarea matInput formControlName="notes" rows="3" placeholder="Observaciones adicionales..."></textarea>
+                </mat-form-field>
+              </div>
+
+              <div class="form-actions">
+                <button mat-stroked-button type="button" (click)="closeSidePanel()">
+                  <mat-icon>close</mat-icon>
+                  Cancelar
+                </button>
+                <button mat-raised-button color="primary" type="submit" [disabled]="activityForm.invalid || isLoading()">
+                  <mat-icon>{{ isLoading() ? 'hourglass_empty' : 'save' }}</mat-icon>
+                  {{ isEditMode() ? 'Actualizar' : 'Crear' }} Actividad
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      } @else {
+        <!-- List View -->
+        <div class="list-view">
+          <!-- Action Header -->
+          <div class="action-header">
+            <button 
+              mat-raised-button 
+              color="primary" 
+              class="add-button"
+              (click)="openSidePanel()">
+              <mat-icon>add</mat-icon>
+              Nueva Actividad
+            </button>
+          </div>
+
+          <!-- Filters -->
+          <div class="filters-section">
+            <mat-form-field appearance="fill" class="filter-field">
+              <mat-label>Colaborador</mat-label>
+              <mat-select [(ngModel)]="filterCollaborator">
+                <mat-option value="">Selecciona</mat-option>
+                @for (c of collaborators(); track c.id) {
+                  <mat-option [value]="c.id">
+                    {{ getCollaboratorName(c.id || '') }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="filter-field">
+              <mat-label>Tipo de Actividad</mat-label>
+              <mat-select [(ngModel)]="filterType">
+                <mat-option value="">Selecciona</mat-option>
+                <mat-option value="fertilization">Fertilización</mat-option>
+                <mat-option value="fumigation">Fumigación</mat-option>
+                <mat-option value="pruning">Poda</mat-option>
+                <mat-option value="weeding">Deshierbe</mat-option>
+                <mat-option value="planting">Siembra</mat-option>
+                <mat-option value="maintenance">Mantenimiento</mat-option>
+                <mat-option value="other">Otras</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="filter-field">
+              <mat-label>Fecha</mat-label>
+              <input matInput [matDatepicker]="datePicker" [(ngModel)]="filterDate" placeholder="Filtrar por fecha">
+              <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
+              <mat-datepicker #datePicker></mat-datepicker>
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" (click)="clearFilters()" class="clear-filters-btn">
+              <mat-icon>clear</mat-icon>
+              Limpiar Filtros
+            </button>
+          </div>
+
+          <!-- Activities List -->
+          <div class="activities-container">
+            @if (isLoading()) {
+              <!-- Loading State -->
+              <div class="loading-container">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Cargando actividades...</p>
+              </div>
+            } @else if (filteredActivities.length === 0) {
+              <!-- Empty State -->
+              <div class="empty-state">
+                <mat-icon class="empty-icon">event_busy</mat-icon>
+                <h3>{{ hasFilters() ? 'No se encontraron actividades' : 'No hay actividades registradas' }}</h3>
+                <p>{{ hasFilters() ? 'Intenta ajustar los filtros de búsqueda' : 'Comienza registrando tu primera actividad' }}</p>
+                @if (!hasFilters()) {
+                  <button 
+                    mat-raised-button 
+                    color="primary"
+                    (click)="openSidePanel()">
+                    <mat-icon>add</mat-icon>
+                    Nueva Actividad
+                  </button>
+                }
+              </div>
+            } @else {
+              <!-- Activities Grid -->
+              <div class="activities-grid">
+                @for (activity of filteredActivities; track activity.id) {
+                  <div class="activity-card">
+                    <div class="card-header">
+                      <div class="activity-type-badge" [class]="'type-' + activity.type">
+                        <mat-icon>{{ getActivityIcon(activity.type) }}</mat-icon>
+                        <span>{{ getActivityTypeName(activity.type) }}</span>
+                      </div>
+                      <div class="activity-date">{{ formatDate(activity.date) }}</div>
+                    </div>
+
+                    <div class="card-content">
+                      <div class="collaborator-info">
+                        <mat-icon class="collaborator-icon">person</mat-icon>
+                        <span>{{ getCollaboratorName(activity.collaborator_id) }}</span>
+                      </div>
+
+                      <div class="activity-details">
+                        <div class="detail-item">
+                          <span class="label">Días:</span>
+                          <span class="value">{{ activity.days }}</span>
+                        </div>
+                        <div class="detail-item">
+                          <span class="label">Pago:</span>
+                          <span class="value payment-type" [class]="'payment-' + activity.payment_type">
+                            {{ activity.payment_type === 'libre' ? 'Libre' : 'Grabado' }}
+                          </span>
+                        </div>
+                        <div class="detail-item">
+                          <span class="label">Costo:</span>
+                          <span class="value cost">${{ activity.total_cost | number:'1.0-0' }}</span>
+                        </div>
+                      </div>
+
+                      @if (activity.area_worked) {
+                        <div class="area-worked">
+                          <mat-icon>landscape</mat-icon>
+                          <span>{{ activity.area_worked }} hectáreas</span>
+                        </div>
+                      }
+
+                      @if (activity.quality_rating) {
+                        <div class="quality-rating">
+                          <span class="stars">
+                            @for (star of getStarsArray(activity.quality_rating); track $index) {
+                              <mat-icon [class]="star ? 'filled' : 'empty'">{{ star ? 'star' : 'star_border' }}</mat-icon>
+                            }
+                          </span>
+                        </div>
+                      }
+                    </div>
+
+                    <div class="card-actions">
+                      <button 
+                        mat-icon-button 
+                        matTooltip="Ver detalles"
+                        class="action-btn view-btn"
+                        (click)="onViewActivity(activity)">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+                      <button 
+                        mat-icon-button 
+                        matTooltip="Editar"
+                        class="action-btn edit-btn"
+                        (click)="onEditActivity(activity)">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button 
+                        mat-icon-button 
+                        matTooltip="Eliminar"
+                        class="action-btn delete-btn"
+                        (click)="onDeleteActivity(activity)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div> 

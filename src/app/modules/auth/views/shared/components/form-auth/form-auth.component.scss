@@ -418,6 +418,7 @@ button.wide-form-field {
   // Centrar el botón
   margin: 20px auto 0 auto !important;
   display: block !important;
+  border-radius: 30px !important;
   
   .button-content {
     display: flex;
@@ -426,65 +427,15 @@ button.wide-form-field {
     gap: 8px;
     
     .button-text {
-      // Ancho fijo para el texto del botón para evitar saltos
       min-width: 80px;
       text-align: center;
       white-space: nowrap;
     }
-    
     mat-icon {
       font-size: 18px;
       width: 18px;
       height: 18px;
-      flex-shrink: 0; // Evitar que el icono se reduzca
-    }
-  }
-
-  // Personalización del color del texto del botón con mayor especificidad
-  ::ng-deep {
-    &.mat-mdc-raised-button.mat-primary:not(:disabled) {
-      color: #007701 !important;
-      
-      // Color de hover suave con verde de la paleta
-      &:hover {
-        background-color: rgba(0, 119, 1, 0.08) !important;
-        color: #007701 !important;
-      }
-
-      // Estado de focus con el mismo verde suave
-      &:focus {
-        background-color: rgba(0, 119, 1, 0.12) !important;
-        color: #007701 !important;
-      }
-
-      // Estado pressed/active
-      &:active {
-        background-color: rgba(0, 119, 1, 0.16) !important;
-        color: #007701 !important;
-      }
-      
-      // Sobrescribir ripple effect
-      .mat-ripple-element {
-        background-color: rgba(0, 119, 1, 0.1) !important;
-      }
-      
-      // Sobrescribir el mdc-button específicamente
-      .mdc-button {
-        color: #007701 !important;
-        
-        &:hover {
-          background-color: rgba(0, 119, 1, 0.08) !important;
-        }
-      }
-    }
-
-    // Selectores adicionales para mayor cobertura
-    &.mat-mdc-button.mat-primary {
-      color: #007701 !important;
-      
-      &:hover {
-        background-color: rgba(0, 119, 1, 0.08) !important;
-      }
+      flex-shrink: 0;
     }
   }
 }
@@ -802,5 +753,75 @@ button.wide-form-field {
       background-color: transparent !important;
       transition: border-bottom-color 0.2s ease, opacity 0.2s ease !important;
     }
+  }
+
+  // --- FIX FINAL: Botón submit de login/register: texto e icono SIEMPRE blancos sobre fondo verde ---
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled),
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mdc-button__label,
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) mat-icon {
+    color: #fff !important;
+  }
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):hover,
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):focus,
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):active {
+    color: #fff !important;
+  }
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):hover .mdc-button__label,
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):focus .mdc-button__label,
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):active .mdc-button__label,
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):hover mat-icon,
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):focus mat-icon,
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled):active mat-icon {
+    color: #fff !important;
+  }
+
+  // --- SOBRESCRIBIR TODAS LAS REGLAS PREVIAS CON MÁXIMA ESPECIFICIDAD ---
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mdc-button {
+    color: #fff !important;
+  }
+
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mdc-button .mdc-button__label {
+    color: #fff !important;
+  }
+
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mdc-button mat-icon {
+    color: #fff !important;
+  }
+
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mat-mdc-button-touch-target {
+    color: #fff !important;
+  }
+
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mat-mdc-button-touch-target .mdc-button__label {
+    color: #fff !important;
+  }
+
+  .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mat-mdc-button-touch-target mat-icon {
+    color: #fff !important;
+  }
+
+  // --- SOBRESCRIBIR REGLAS ESPECÍFICAS DEL LOGIN FORM ---
+  .login-form .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) {
+    color: #fff !important;
+  }
+
+  .login-form .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mdc-button__label {
+    color: #fff !important;
+  }
+
+  .login-form .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) mat-icon {
+    color: #fff !important;
+  }
+
+  .login-form .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mdc-button {
+    color: #fff !important;
+  }
+
+  .login-form .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mdc-button .mdc-button__label {
+    color: #fff !important;
+  }
+
+  .login-form .auth-submit-button.mat-mdc-raised-button.mat-primary:not(:disabled) .mdc-button mat-icon {
+    color: #fff !important;
   }
 } 

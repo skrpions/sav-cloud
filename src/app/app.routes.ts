@@ -19,7 +19,11 @@ export const routes: Routes = [
     loadComponent: () => import('./modules/collaborators/collaborators.component').then(c => c.CollaboratorsComponent)
   },
   {
+    path: 'activities',
+    loadComponent: () => import('./modules/activities/activities.component').then(c => c.ActivitiesComponent)
+  },
+  {
     path: 'settings',
     loadComponent: () => import('./modules/settings/settings.component').then(c => c.SettingsComponent)
-  }
+  },
 ];
