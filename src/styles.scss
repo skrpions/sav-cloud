@@ -434,3 +434,28 @@ a {
 .cdk-overlay-container, .cdk-overlay-pane {
   z-index: 3000 !important;
 }
+
+/* =========================================
+   UTILITY CLASSES - Clases de utilidad
+   ========================================= */
+
+/* Clase para ocultar el scroll vertical cuando hay mucha información */
+.no-scroll {
+  overflow: hidden !important;
+}
+
+/* Clase para ocultar el scroll horizontal */
+.no-scroll-x {
+  overflow-x: hidden !important;
+}
+
+/* Clase para ocultar todos los scrolls */
+.no-scrollbars {
+  overflow: hidden !important;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

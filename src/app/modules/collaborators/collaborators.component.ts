@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { FormsModule } from '@angular/forms';
 import { toast } from 'ngx-sonner';
 
 import { MaterialModule } from '@/app/shared/material.module';
@@ -9,10 +10,13 @@ import { SidebarComponent } from '@/app/shared/components/sidebar/sidebar.compon
 import { HeaderComponent } from '@/app/shared/components/header/header.component';
 import { CollaboratorFormComponent } from './components/collaborator-form/collaborator-form.component';
 import { CollaboratorsService } from './services/collaborators.service';
-import { CollaboratorEntity, CollaboratorListResponse } from '@/app/shared/models/collaborator.models';
+import { CollaboratorEntity } from '@/app/shared/models/collaborator.models';
 import { FORM_CONSTRAINTS } from '@/app/shared/constants/form-constrains';
 import { SidebarItem } from '@/app/shared/models/ui.models';
 import { DateUtils } from '@/app/shared/utils/validators';
+
+// Tipos para las vistas
+export type ViewMode = 'list' | 'cards';
 
 @Component({
   selector: 'app-collaborators',
@@ -21,6 +25,7 @@ import { DateUtils } from '@/app/shared/utils/validators';
     CommonModule,
     MaterialModule,
     TranslateModule,
+    FormsModule,
     SidebarComponent,
     HeaderComponent,
     CollaboratorFormComponent
@@ -35,13 +40,23 @@ export class CollaboratorsComponent implements OnInit {
 
   // Signals para el estado del componente
   collaborators = signal<CollaboratorEntity[]>([]);
-  filteredCollaborators = signal<CollaboratorEntity[]>([]);
   isLoading = signal(false);
   showForm = signal(false);
   selectedCollaborator = signal<CollaboratorEntity | undefined>(undefined);
   isEditMode = signal(false);
   isSidebarCollapsed = signal(false);
   searchTerm = signal('');
+
+  // Vista y paginación
+  viewMode = signal<ViewMode>('list');
+  currentPage = signal(0);
+  pageSize = signal(7);
+  totalPages = signal(0);
+
+  // Filtros
+  filterStatus = '';
+  filterContractType = '';
+  filterHireDate = '';
 
   ngOnInit(): void {
     this.loadCollaborators();
@@ -62,92 +77,130 @@ export class CollaboratorsComponent implements OnInit {
       const collaboratorsList = response?.data || [];
       console.log('Collaborators loaded:', collaboratorsList);
       this.collaborators.set(collaboratorsList);
-      this.filteredCollaborators.set(collaboratorsList);
+      this.updatePagination();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading collaborators:', error);
       
       // Si es un error de política, mostrar un mensaje más específico
-      let errorMessage = error.message || this._translateService.instant('collaborators.toasts.error.description');
-      if (error.message?.includes('infinite recursion') || error.message?.includes('policy')) {
-        errorMessage = 'Error de configuración de base de datos. Verifica las políticas de Supabase.';
-      }
+      const errorMessage = error instanceof Error ? error.message : this._translateService.instant('collaborators.toasts.error.description');
       
       toast.error(this._translateService.instant('collaborators.toasts.error.title'), {
         description: errorMessage,
         duration: FORM_CONSTRAINTS.timing.toastDuration
       });
-      
-      // Cargar datos de ejemplo mientras solucionamos el problema
-      this.loadSampleData();
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  private loadSampleData(): void {
-    console.log('Loading sample data...');
-    const sampleCollaborators: CollaboratorEntity[] = [
-      {
-        id: '1',
-        first_name: 'Juan',
-        last_name: 'Pérez',
-        identification: '12345678',
-        email: 'juan.perez@example.com',
-        phone: '+1234567890',
-        address: 'Calle Principal 123',
-        birth_date: '1990-01-15',
-        hire_date: '2023-01-01',
-        contract_type: 'full_time',
-        emergency_contact_name: 'María Pérez',
-        emergency_contact_phone: '+1234567891',
-        bank_account: '1234567890123456',
-        is_active: true,
-        notes: 'Colaborador modelo',
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z'
-      },
-      {
-        id: '2',
-        first_name: 'Ana',
-        last_name: 'García',
-        identification: '87654321',
-        email: 'ana.garcia@example.com',
-        phone: '+1234567892',
-        address: 'Avenida Central 456',
-        birth_date: '1985-05-20',
-        hire_date: '2023-02-01',
-        contract_type: 'contract',
-        emergency_contact_name: 'Carlos García',
-        emergency_contact_phone: '+1234567893',
-        bank_account: '6543210987654321',
-        is_active: true,
-        notes: 'Especialista en ventas',
-        created_at: '2023-02-01T00:00:00Z',
-        updated_at: '2023-02-01T00:00:00Z'
-      }
-    ];
+
+
+  // Métodos de vista y paginación
+  switchView(mode: ViewMode): void {
+    this.viewMode.set(mode);
+    this.currentPage.set(0);
+    this.updatePagination();
+  }
+
+  public updatePagination(): void {
+    const filtered = this.filteredCollaborators();
+    const total = Math.ceil(filtered.length / this.pageSize());
+    this.totalPages.set(total);
     
-    this.collaborators.set(sampleCollaborators);
-    this.filteredCollaborators.set(sampleCollaborators);
+    // Asegurar que la página actual sea válida
+    if (this.currentPage() >= total && total > 0) {
+      this.currentPage.set(total - 1);
+    }
+  }
+
+  changePage(page: number): void {
+    if (page >= 0 && page < this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage() < this.totalPages() - 1) {
+      this.currentPage.set(this.currentPage() + 1);
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage() > 0) {
+      this.currentPage.set(this.currentPage() - 1);
+    }
+  }
+
+  updateFilters(): void {
+    this.currentPage.set(0);
+    this.updatePagination();
+  }
+
+  // Filtros
+  clearFilters(): void {
+    this.filterStatus = '';
+    this.filterContractType = '';
+    this.filterHireDate = '';
+    this.currentPage.set(0);
+    this.updatePagination();
+  }
+
+  hasFilters(): boolean {
+    return !!(this.filterStatus || this.filterContractType || this.filterHireDate);
+  }
+
+  get filteredCollaborators(): () => CollaboratorEntity[] {
+    return () => {
+      let filtered = this.collaborators();
+
+      if (this.filterStatus) {
+        const isActive = this.filterStatus === 'active';
+        filtered = filtered.filter(c => c.is_active === isActive);
+      }
+
+      if (this.filterContractType) {
+        filtered = filtered.filter(c => c.contract_type === this.filterContractType);
+      }
+
+      if (this.filterHireDate) {
+        const filterDate = DateUtils.formatToLocalDate(new Date(this.filterHireDate));
+        filtered = filtered.filter(c => {
+          const hireDate = DateUtils.formatToLocalDate(new Date(c.hire_date));
+          return hireDate === filterDate;
+        });
+      }
+
+      // Añadir búsqueda por término
+      const searchTerm = this.searchTerm();
+      if (searchTerm.trim()) {
+        filtered = filtered.filter(collaborator =>
+          collaborator.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          collaborator.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          collaborator.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          collaborator.identification.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      return filtered;
+    };
+  }
+
+  get paginatedCollaborators(): CollaboratorEntity[] {
+    const filtered = this.filteredCollaborators();
+    
+    if (this.viewMode() === 'cards') {
+      return filtered; // Sin paginación en vista de tarjetas
+    }
+    
+    const start = this.currentPage() * this.pageSize();
+    const end = start + this.pageSize();
+    return filtered.slice(start, end);
   }
 
   onSearchChanged(searchTerm: string): void {
     this.searchTerm.set(searchTerm);
-    
-    if (!searchTerm.trim()) {
-      this.filteredCollaborators.set(this.collaborators());
-      return;
-    }
-
-    const filtered = this.collaborators().filter(collaborator =>
-      collaborator.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      collaborator.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      collaborator.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      collaborator.identification.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    this.filteredCollaborators.set(filtered);
+    this.updatePagination();
   }
 
   onAddNewCollaborator(): void {
@@ -191,11 +244,11 @@ export class CollaboratorsComponent implements OnInit {
       // Reload the list
       await this.loadCollaborators();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting collaborator:', error);
       
       toast.error(this._translateService.instant('collaborators.toasts.error.title'), {
-        description: error.message || this._translateService.instant('collaborators.toasts.error.description'),
+        description: error instanceof Error ? error.message : this._translateService.instant('collaborators.toasts.error.description'),
         duration: FORM_CONSTRAINTS.timing.toastDuration
       });
     }
@@ -236,9 +289,14 @@ export class CollaboratorsComponent implements OnInit {
 
   getContractTypeLabel(contractType: string): string {
     switch (contractType) {
-      case 'full_time': return 'Grabado (Solo pago)';
-      case 'contract': return 'Libre (Incluye comida)';
+      case 'full_time': return 'Tiempo Completo';
+      case 'contract': return 'Contrato';
       default: return contractType;
     }
+  }
+
+  // TrackBy functions para mejor rendimiento
+  trackByCollaboratorId(index: number, item: CollaboratorEntity): string {
+    return item.id || index.toString();
   }
 } 

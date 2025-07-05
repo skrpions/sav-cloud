@@ -1,5 +1,5 @@
 <!-- Layout principal con sidebar -->
-<div class="harvest-layout">
+<div class="harvest-layout" [class.no-scroll]="viewMode() === 'cards'">
   <!-- Sidebar -->
   <app-sidebar 
     (itemClicked)="onSidebarItemClicked($event)"
@@ -18,7 +18,7 @@
         <div class="controls-section">
           <h2 class="section-title">
             <mat-icon>agriculture</mat-icon>
-            Gestión de Cosechas
+            Registro de Cosechas
           </h2>
           
           <div class="actions-row">

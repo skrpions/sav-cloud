@@ -3,17 +3,19 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { toast } from 'ngx-sonner';
-import { format, isValid, parseISO } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 import { MaterialModule } from '@/app/shared/material.module';
 import { SidebarComponent } from '@/app/shared/components/sidebar/sidebar.component';
 import { HeaderComponent } from '@/app/shared/components/header/header.component';
 import { ActivitiesService } from './services/activities.service';
-import { ActivityEntity, ActivityType, ContractType } from '@/app/shared/models/activity.models';
+import { ActivityEntity } from '@/app/shared/models/activity.models';
 import { CollaboratorsService } from '../collaborators/services/collaborators.service';
 import { CollaboratorEntity } from '@/app/shared/models/collaborator.models';
-import { FORM_CONSTRAINTS } from '@/app/shared/constants/form-constrains';
 import { DateUtils } from '@/app/shared/utils/validators';
+
+// Tipos para las vistas
+export type ViewMode = 'list' | 'cards';
 
 @Component({
   selector: 'app-activities',
@@ -44,10 +46,16 @@ export class ActivitiesComponent implements OnInit {
   isEditMode = signal(false);
   selectedActivity = signal<ActivityEntity | null>(null);
 
+  // Vista y paginación
+  viewMode = signal<ViewMode>('list');
+  currentPage = signal(0);
+  pageSize = signal(7);
+  totalPages = signal(0);
+
   // Filtros
-  filterCollaborator: string = '';
-  filterType: string = '';
-  filterDate: string = '';
+  filterCollaborator = '';
+  filterType = '';
+  filterDate = '';
 
   // Formulario reactivo para el panel lateral
   activityForm: FormGroup;
@@ -88,9 +96,11 @@ export class ActivitiesComponent implements OnInit {
       const response = await this._activitiesService.getAllActivities().toPromise();
       if (response?.error) throw new Error(response.error.message);
       this.activities.set(response?.data || []);
-    } catch (error: any) {
+      this.updatePagination();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       console.error('Error loading activities:', error);
-      toast.error('Error al cargar actividades', { description: error.message });
+      toast.error('Error al cargar actividades', { description: errorMessage });
     } finally {
       this.isLoading.set(false);
     }
@@ -106,11 +116,48 @@ export class ActivitiesComponent implements OnInit {
       
       const collaboratorsData = response?.data || [];
       this.collaborators.set(collaboratorsData);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       console.error('❌ Error loading collaborators:', error);
-      toast.error('Error al cargar colaboradores', { description: error.message });
+      toast.error('Error al cargar colaboradores', { description: errorMessage });
       // Set empty array to prevent undefined errors
       this.collaborators.set([]);
+    }
+  }
+
+  // Métodos de vista y paginación
+  switchView(mode: ViewMode): void {
+    this.viewMode.set(mode);
+    this.currentPage.set(0);
+    this.updatePagination();
+  }
+
+  public updatePagination(): void {
+    const filtered = this.filteredActivities;
+    const total = Math.ceil(filtered.length / this.pageSize());
+    this.totalPages.set(total);
+    
+    // Asegurar que la página actual sea válida
+    if (this.currentPage() >= total && total > 0) {
+      this.currentPage.set(total - 1);
+    }
+  }
+
+  changePage(page: number): void {
+    if (page >= 0 && page < this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage() < this.totalPages() - 1) {
+      this.currentPage.set(this.currentPage() + 1);
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage() > 0) {
+      this.currentPage.set(this.currentPage() - 1);
     }
   }
 
@@ -121,7 +168,7 @@ export class ActivitiesComponent implements OnInit {
       this.isEditMode.set(true);
       this.selectedActivity.set(activity);
       // Prepare activity data with safe defaults
-      const activityData: any = {
+      const activityData = {
         collaborator_id: activity.collaborator_id || '',
         type: activity.type || '',
         date: activity.date ? DateUtils.formatForDatepicker(activity.date) : new Date(),
@@ -199,24 +246,25 @@ export class ActivitiesComponent implements OnInit {
       if (formData.start_time === '') formData.start_time = null;
       if (formData.end_time === '') formData.end_time = null;
 
-      // Usar DateUtils para guardar la fecha sin desfase
-      formData.date = DateUtils.formatForBackend(formData.date);
-
-      if (this.isEditMode() && this.selectedActivity()) {
-        const updateRequest = { ...formData, id: this.selectedActivity()!.id };
-        const response = await this._activitiesService.updateActivity(updateRequest).toPromise();
+      if (this.isEditMode() && this.selectedActivity()?.id) {
+        // Update
+        formData.id = this.selectedActivity()!.id;
+        const response = await this._activitiesService.updateActivity(formData).toPromise();
         if (response?.error) throw new Error(response.error.message);
-        toast.success('Actividad actualizada');
+        toast.success('Actividad actualizada exitosamente');
       } else {
+        // Create
         const response = await this._activitiesService.createActivity(formData).toPromise();
         if (response?.error) throw new Error(response.error.message);
-        toast.success('Actividad creada');
+        toast.success('Actividad creada exitosamente');
       }
+      
       this.closeSidePanel();
       await this.loadActivities();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       console.error('Error saving activity:', error);
-      toast.error('Error al guardar actividad', { description: error.message });
+      toast.error('Error al guardar actividad', { description: errorMessage });
     } finally {
       this.isLoading.set(false);
     }
@@ -227,24 +275,27 @@ export class ActivitiesComponent implements OnInit {
   }
 
   onViewActivity(activity: ActivityEntity): void {
-    // Implementar lógica para ver detalles en modal o navegar a detalle
-    console.log('Ver actividad:', activity);
-    toast.info('Funcionalidad de vista detallada', { description: 'Próximamente disponible' });
+    // TODO: Implementar vista de detalles de la actividad
+    console.log('Ver detalles de:', activity);
+    // Por ahora, simplemente editamos
+    this.onEditActivity(activity);
   }
 
   async onDeleteActivity(activity: ActivityEntity): Promise<void> {
     if (!activity.id) return;
-    if (!confirm('¿Seguro que deseas eliminar esta actividad?')) return;
-    this.isLoading.set(true);
+
+    const confirmed = confirm('¿Estás seguro de eliminar esta actividad?');
+    if (!confirmed) return;
+
     try {
       const response = await this._activitiesService.deleteActivity(activity.id).toPromise();
       if (response?.error) throw new Error(response.error.message);
-      toast.success('Actividad eliminada');
+      toast.success('Actividad eliminada exitosamente');
       await this.loadActivities();
-    } catch (error: any) {
-      toast.error('Error al eliminar actividad', { description: error.message });
-    } finally {
-      this.isLoading.set(false);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      console.error('Error deleting activity:', error);
+      toast.error('Error al eliminar actividad', { description: errorMessage });
     }
   }
 
@@ -252,76 +303,84 @@ export class ActivitiesComponent implements OnInit {
     this.filterCollaborator = '';
     this.filterType = '';
     this.filterDate = '';
+    this.currentPage.set(0);
+    this.updatePagination();
   }
 
   hasFilters(): boolean {
     return !!(this.filterCollaborator || this.filterType || this.filterDate);
   }
 
-  // Filtros (puedes expandir esta lógica según necesidades)
   get filteredActivities(): ActivityEntity[] {
-    let acts = this.activities();
+    let filtered = this.activities();
+
     if (this.filterCollaborator) {
-      acts = acts.filter(a => a.collaborator_id === this.filterCollaborator);
+      filtered = filtered.filter(activity => activity.collaborator_id === this.filterCollaborator);
     }
+
     if (this.filterType) {
-      acts = acts.filter(a => a.type === this.filterType);
+      filtered = filtered.filter(activity => activity.type === this.filterType);
     }
+
     if (this.filterDate) {
-      let filterDateStr = '';
-      if (typeof this.filterDate === 'object' && this.filterDate !== null && !isNaN((this.filterDate as Date).getTime())) {
-        filterDateStr = DateUtils.formatToLocalDate(this.filterDate as Date);
-      } else if (typeof this.filterDate === 'string') {
-        const d = DateUtils.parseLocalDate(this.filterDate);
-        filterDateStr = d ? DateUtils.formatToLocalDate(d) : this.filterDate;
-      }
-      acts = acts.filter(a => {
-        const activityDateStr = DateUtils.formatForBackend(a.date);
+      const filterDateStr = DateUtils.formatToLocalDate(new Date(this.filterDate));
+      filtered = filtered.filter(activity => {
+        const activityDateStr = DateUtils.formatToLocalDate(new Date(activity.date));
         return activityDateStr === filterDateStr;
       });
     }
-    return acts;
+
+    return filtered;
+  }
+
+  get paginatedActivities(): ActivityEntity[] {
+    const filtered = this.filteredActivities;
+    
+    if (this.viewMode() === 'cards') {
+      return filtered; // Sin paginación en vista de tarjetas
+    }
+    
+    const start = this.currentPage() * this.pageSize();
+    const end = start + this.pageSize();
+    return filtered.slice(start, end);
   }
 
   getCollaboratorName(collaboratorId: string): string {
-    if (!collaboratorId) return 'Sin asignar';
-    
-    const collaboratorsArray = this.collaborators();
-    if (!collaboratorsArray || collaboratorsArray.length === 0) {
-      return `ID: ${collaboratorId}`;
+    if (!collaboratorId) {
+      return 'Colaborador no especificado';
     }
     
-    const collaborator = collaboratorsArray.find(c => c.id === collaboratorId);
+    const collaborator = this.collaborators().find(c => c.id === collaboratorId);
     if (!collaborator) {
-      console.warn('Collaborator not found for ID:', collaboratorId);
-      return `ID: ${collaboratorId}`;
+      console.warn(`Collaborator not found for ID: ${collaboratorId}`);
+      return `Colaborador ${collaboratorId}`;
     }
     
     const firstName = collaborator.first_name || '';
     const lastName = collaborator.last_name || '';
     
     if (!firstName && !lastName) {
-      return `ID: ${collaboratorId}`;
+      return `Colaborador ${collaboratorId}`;
     }
     
     return `${firstName} ${lastName}`.trim();
   }
 
   getActivityIcon(type: string): string {
-    const iconMap: Record<string, string> = {
+    const icons = {
       fertilization: 'eco',
-      fumigation: 'bug_report',
+      fumigation: 'bug_report', 
       pruning: 'content_cut',
       weeding: 'grass',
       planting: 'park',
       maintenance: 'build',
-      other: 'work'
+      other: 'more_horiz'
     };
-    return iconMap[type] || 'work';
+    return icons[type as keyof typeof icons] || 'event';
   }
 
   getActivityTypeName(type: string): string {
-    const nameMap: Record<string, string> = {
+    const names = {
       fertilization: 'Fertilización',
       fumigation: 'Fumigación',
       pruning: 'Poda',
@@ -330,39 +389,42 @@ export class ActivitiesComponent implements OnInit {
       maintenance: 'Mantenimiento',
       other: 'Otras'
     };
-    return nameMap[type] || type;
+    return names[type as keyof typeof names] || type;
   }
 
   formatDate(dateString: string): string {
-    if (!dateString) return 'Sin fecha';
+    if (!dateString) return '';
+    
     try {
-      return DateUtils.formatToDisplay(dateString);
+      const date = new Date(dateString);
+      if (!isValid(date)) return dateString;
+      return format(date, 'dd/MM/yyyy');
     } catch (error) {
-      console.warn('Error formatting date:', dateString, error);
-      return 'Fecha inválida';
+      console.error('Error formatting date:', error);
+      return dateString;
     }
   }
 
   getStarsArray(rating: number): boolean[] {
-    const stars: boolean[] = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(i <= rating);
-    }
-    return stars;
+    return Array.from({ length: 5 }, (_, i) => i < rating);
   }
 
-  // Debug getter para verificar datos
+  // Debug information (useful for development)
   get debugInfo() {
     return {
-      collaborators: this.collaborators().length,
-      activities: this.activities().length,
-      showPanel: this.showSidePanel(),
-      isLoading: this.isLoading()
+      activitiesCount: this.activities().length,
+      collaboratorsCount: this.collaborators().length,
+      isLoading: this.isLoading(),
+      hasFilters: this.hasFilters()
     };
   }
 
-  // TrackBy function for better performance
+  // TrackBy functions para mejor rendimiento
   trackByCollaboratorId(index: number, item: CollaboratorEntity): string {
+    return item.id || index.toString();
+  }
+
+  trackByActivityId(index: number, item: ActivityEntity): string {
     return item.id || index.toString();
   }
 } 

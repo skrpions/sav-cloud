@@ -1,135 +1,417 @@
-<div class="collaborators-page">
+<div class="collaborators-layout" [class.no-scroll]="viewMode() === 'cards'">
   <!-- Sidebar -->
   <app-sidebar 
     (itemClicked)="onSidebarItemClicked($event)"
     (collapseChanged)="onSidebarCollapseChanged($event)">
   </app-sidebar>
 
-  <!-- Main Content -->
-  <div class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed()">
+  <!-- Contenido principal -->
+  <div class="collaborators-content" [class.sidebar-collapsed]="isSidebarCollapsed()">
     <!-- Header -->
     <app-header (searchChanged)="onSearchChanged($event)"></app-header>
 
-    <!-- Content Area -->
-    <div class="content-area">
-      @if (showForm()) {
-        <!-- Form View -->
-        <div class="form-view">
-          <div class="form-header">
-            <button 
-              mat-icon-button 
-              class="back-button"
-              (click)="onFormCancelled()"
-              matTooltip="Volver a la lista">
-              <mat-icon>arrow_back</mat-icon>
-            </button>
-            <h2 class="form-title">
-              {{ isEditMode() ? ('collaborators.editCollaborator' | translate) : ('collaborators.addNew' | translate) }}
-            </h2>
-          </div>
+    <!-- Contenedor principal -->
+    <div class="collaborators-main">
+      <!-- Panel de filtros y acciones -->
+      <div class="collaborators-controls">
+        <div class="controls-section">
+          <h2 class="section-title">
+            <mat-icon>people</mat-icon>
+            Registro de Colaboradores
+          </h2>
+          
+          <div class="actions-row">
+            <!-- Filtros -->
+            <div class="filters-container">
+              <!-- Filtro por estado -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Estado</mat-label>
+                <mat-select [(value)]="filterStatus" (selectionChange)="updateFilters()">
+                  <mat-option value="">Todos</mat-option>
+                  <mat-option value="active">Activo</mat-option>
+                  <mat-option value="inactive">Inactivo</mat-option>
+                </mat-select>
+              </mat-form-field>
 
-          <app-collaborator-form
-            [collaborator]="selectedCollaborator()"
-            [isEditMode]="isEditMode()"
-            (formSubmitted)="onFormSubmitted()"
-            (formCancelled)="onFormCancelled()">
-          </app-collaborator-form>
-        </div>
-      } @else {
-        <!-- List View -->
-        <div class="list-view">
-          <!-- Action Header -->
-          <div class="action-header">
+              <!-- Filtro por tipo de contrato -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Tipo de Contrato</mat-label>
+                <mat-select [(value)]="filterContractType" (selectionChange)="updateFilters()">
+                  <mat-option value="">Todos</mat-option>
+                  <mat-option value="full_time">Tiempo Completo</mat-option>
+                  <mat-option value="contract">Contrato</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Filtro por fecha de contratación -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Fecha de Contratación</mat-label>
+                <input matInput [matDatepicker]="picker" [(ngModel)]="filterHireDate" (dateChange)="updateFilters()">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+
+              <!-- Botón limpiar filtros -->
+              <button 
+                mat-icon-button 
+                (click)="clearFilters()"
+                [disabled]="!hasFilters()"
+                matTooltip="Limpiar filtros"
+                class="clear-filters-btn">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+
+            <!-- Botones de vista (centrados) -->
+            <div class="view-toggle-buttons">
+              <button 
+                mat-icon-button 
+                [class.active]="viewMode() === 'list'"
+                (click)="switchView('list')"
+                matTooltip="Vista de Lista"
+                class="view-toggle-btn">
+                <mat-icon>list</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                [class.active]="viewMode() === 'cards'"
+                (click)="switchView('cards')"
+                matTooltip="Vista de Tarjetas"
+                class="view-toggle-btn">
+                <mat-icon>view_module</mat-icon>
+              </button>
+            </div>
+
+            <!-- Botón nuevo colaborador -->
             <button 
               mat-raised-button 
               color="primary" 
-              class="add-button"
+              (click)="onAddNewCollaborator()"
+              class="add-collaborator-btn">
+              <mat-icon>add</mat-icon>
+              Nuevo Colaborador
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de Lista (tabla) -->
+      <div *ngIf="viewMode() === 'list'" class="collaborators-list-view">
+        <!-- Loading spinner -->
+        <div *ngIf="isLoading()" class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>Cargando colaboradores...</p>
+        </div>
+
+        <!-- Lista de colaboradores -->
+        <div *ngIf="!isLoading()" class="collaborators-list">
+          <!-- Mensaje cuando no hay colaboradores -->
+          <div *ngIf="filteredCollaborators().length === 0" class="no-collaborators-message">
+            <mat-icon>info</mat-icon>
+            <h3>No hay colaboradores registrados</h3>
+            <p *ngIf="!hasFilters()">Comienza registrando tu primer colaborador</p>
+            <p *ngIf="hasFilters()">No se encontraron colaboradores con los filtros aplicados</p>
+            <button 
+              *ngIf="!hasFilters()" 
+              mat-raised-button 
+              color="primary" 
               (click)="onAddNewCollaborator()">
               <mat-icon>add</mat-icon>
-              {{ 'collaborators.addNew' | translate }}
+              Registrar Primer Colaborador
             </button>
           </div>
 
-          <!-- Collaborators List -->
-          <div class="collaborators-container">
-            @if (isLoading()) {
-              <!-- Loading State -->
-              <div class="loading-container">
-                <mat-spinner diameter="40"></mat-spinner>
-                <p>Cargando colaboradores...</p>
-              </div>
-            } @else if (filteredCollaborators().length === 0) {
-              <!-- Empty State -->
-              <div class="empty-state">
-                <mat-icon class="empty-icon">people_outline</mat-icon>
-                <h3>{{ searchTerm() ? ('collaborators.noResults' | translate) : 'No hay colaboradores registrados' }}</h3>
-                <p>{{ searchTerm() ? 'Intenta con otros términos de búsqueda' : 'Comienza agregando tu primer colaborador' }}</p>
-                @if (!searchTerm()) {
-                  <button 
-                    mat-raised-button 
-                    color="primary"
-                    (click)="onAddNewCollaborator()">
-                    <mat-icon>add</mat-icon>
-                    {{ 'collaborators.addNew' | translate }}
-                  </button>
-                }
-              </div>
-            } @else {
-              <!-- Collaborators Grid -->
-              <div class="collaborators-grid">
-                @for (collaborator of filteredCollaborators(); track collaborator.id) {
-                  <div class="collaborator-card-modern">
-                    <!-- Card Header with Avatar and Basic Info -->
-                    <div class="card-header">
-                      <div class="collaborator-avatar">
-                        <mat-icon>person</mat-icon>
-                      </div>
-                      <div class="collaborator-basic-info">
-                        <div class="name-with-status">
-                          <h3 class="collaborator-name">{{ getFullName(collaborator) }}</h3>
-                          <div class="status-indicator" 
-                               [class.active]="collaborator.is_active"
-                               [class.inactive]="!collaborator.is_active">
-                          </div>
-                        </div>
-                        <div class="collaborator-phone">
-                          <mat-icon class="phone-icon">phone</mat-icon>
-                          <span>{{ collaborator.phone }}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Card Actions -->
-                    <div class="card-actions">
-                      <button 
-                        mat-icon-button 
-                        matTooltip="Ver detalles"
-                        class="action-btn view-btn"
-                        (click)="onViewCollaborator(collaborator)">
-                        <mat-icon>visibility</mat-icon>
-                      </button>
-                      <button 
-                        mat-icon-button 
-                        matTooltip="Editar"
-                        class="action-btn edit-btn"
-                        (click)="onEditCollaborator(collaborator)">
-                        <mat-icon>edit</mat-icon>
-                      </button>
-                      <button 
-                        mat-icon-button 
-                        matTooltip="Eliminar"
-                        class="action-btn delete-btn"
-                        (click)="onDeleteCollaborator(collaborator)">
-                        <mat-icon>delete</mat-icon>
-                      </button>
-                    </div>
+          <!-- Tabla de colaboradores -->
+          <div *ngIf="filteredCollaborators().length > 0" class="collaborators-table-container">
+            <table mat-table [dataSource]="paginatedCollaborators" class="collaborators-table">
+              <!-- Nombre -->
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Nombre</th>
+                <td mat-cell *matCellDef="let collaborator" class="data-cell">
+                  <div class="name-info">
+                    <mat-icon class="person-icon">person</mat-icon>
+                    <span>{{getFullName(collaborator)}}</span>
                   </div>
-                }
+                </td>
+              </ng-container>
+
+              <!-- Identificación -->
+              <ng-container matColumnDef="identification">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Identificación</th>
+                <td mat-cell *matCellDef="let collaborator" class="data-cell">
+                  <span>{{collaborator.identification}}</span>
+                </td>
+              </ng-container>
+
+              <!-- Teléfono -->
+              <ng-container matColumnDef="phone">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Teléfono</th>
+                <td mat-cell *matCellDef="let collaborator" class="data-cell">
+                  <div class="phone-info">
+                    <mat-icon class="phone-icon">phone</mat-icon>
+                    <span>{{collaborator.phone}}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Email -->
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Email</th>
+                <td mat-cell *matCellDef="let collaborator" class="data-cell">
+                  <span>{{collaborator.email}}</span>
+                </td>
+              </ng-container>
+
+              <!-- Contrato -->
+              <ng-container matColumnDef="contract">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Contrato</th>
+                <td mat-cell *matCellDef="let collaborator" class="data-cell">
+                  <span class="contract-badge">{{getContractTypeLabel(collaborator.contract_type)}}</span>
+                </td>
+              </ng-container>
+
+              <!-- Estado -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Estado</th>
+                <td mat-cell *matCellDef="let collaborator" class="data-cell">
+                  <span 
+                    class="status-badge" 
+                    [class.active]="collaborator.is_active"
+                    [class.inactive]="!collaborator.is_active">
+                    {{collaborator.is_active ? 'Activo' : 'Inactivo'}}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Acciones -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="header-cell actions-header">Acciones</th>
+                <td mat-cell *matCellDef="let collaborator" class="data-cell actions-cell">
+                  <div class="action-buttons">
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Ver detalles"
+                      class="action-btn view-btn"
+                      (click)="onViewCollaborator(collaborator)">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Editar"
+                      class="action-btn edit-btn"
+                      (click)="onEditCollaborator(collaborator)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Eliminar"
+                      class="action-btn delete-btn"
+                      (click)="onDeleteCollaborator(collaborator)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="['name', 'identification', 'phone', 'email', 'contract', 'status', 'actions']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['name', 'identification', 'phone', 'email', 'contract', 'status', 'actions']"></tr>
+            </table>
+
+            <!-- Paginación -->
+            <div class="pagination-container" *ngIf="totalPages() > 1">
+              <div class="pagination-info">
+                <span>Página {{currentPage() + 1}} de {{totalPages()}}</span>
+                <span class="total-records">({{filteredCollaborators().length}} registros)</span>
               </div>
-            }
+              
+              <div class="pagination-controls">
+                <button 
+                  mat-icon-button 
+                  [disabled]="currentPage() === 0"
+                  (click)="prevPage()"
+                  matTooltip="Página anterior">
+                  <mat-icon>chevron_left</mat-icon>
+                </button>
+                
+                <div class="page-numbers">
+                  <button 
+                    *ngFor="let page of [].constructor(totalPages()); let i = index"
+                    mat-button
+                    [class.active]="i === currentPage()"
+                    (click)="changePage(i)"
+                    class="page-btn">
+                    {{i + 1}}
+                  </button>
+                </div>
+                
+                <button 
+                  mat-icon-button 
+                  [disabled]="currentPage() >= totalPages() - 1"
+                  (click)="nextPage()"
+                  matTooltip="Página siguiente">
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      }
+      </div>
+
+      <!-- Vista de Tarjetas -->
+      <div *ngIf="viewMode() === 'cards'" class="collaborators-cards-view">
+        <!-- Loading spinner -->
+        <div *ngIf="isLoading()" class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>Cargando colaboradores...</p>
+        </div>
+
+        <!-- Lista de colaboradores -->
+        <div *ngIf="!isLoading()" class="collaborators-list">
+          <!-- Mensaje cuando no hay colaboradores -->
+          <div *ngIf="filteredCollaborators().length === 0" class="no-collaborators-message">
+            <mat-icon>info</mat-icon>
+            <h3>No hay colaboradores registrados</h3>
+            <p *ngIf="!hasFilters()">Comienza registrando tu primer colaborador</p>
+            <p *ngIf="hasFilters()">No se encontraron colaboradores con los filtros aplicados</p>
+            <button 
+              *ngIf="!hasFilters()" 
+              mat-raised-button 
+              color="primary" 
+              (click)="onAddNewCollaborator()">
+              <mat-icon>add</mat-icon>
+              Registrar Primer Colaborador
+            </button>
+          </div>
+
+          <!-- Cards de colaboradores -->
+          <div class="collaborators-cards-grid">
+            <mat-card 
+              *ngFor="let collaborator of filteredCollaborators()" 
+              class="collaborator-card"
+              [class.inactive]="!collaborator.is_active">
+              
+              <!-- Header de la card -->
+              <mat-card-header>
+                <div class="card-header-content">
+                  <div class="collaborator-info">
+                    <h3 class="collaborator-name">{{getFullName(collaborator)}}</h3>
+                    <p class="collaborator-identification">
+                      <mat-icon>badge</mat-icon>
+                      {{collaborator.identification}}
+                    </p>
+                  </div>
+                  
+                  <!-- Badge de estado -->
+                  <div class="collaborator-status">
+                    <span 
+                      class="status-badge" 
+                      [class.active]="collaborator.is_active"
+                      [class.inactive]="!collaborator.is_active">
+                      {{collaborator.is_active ? 'Activo' : 'Inactivo'}}
+                    </span>
+                  </div>
+                </div>
+              </mat-card-header>
+
+              <!-- Contenido principal -->
+              <mat-card-content>
+                <div class="collaborator-details">
+                  <!-- Información de contacto -->
+                  <div class="contact-details">
+                    <div class="detail-item">
+                      <mat-icon class="detail-icon">phone</mat-icon>
+                      <span>{{collaborator.phone}}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                      <mat-icon class="detail-icon">email</mat-icon>
+                      <span>{{collaborator.email}}</span>
+                    </div>
+
+                    <div class="detail-item">
+                      <mat-icon class="detail-icon">location_on</mat-icon>
+                      <span>{{collaborator.address}}</span>
+                    </div>
+                  </div>
+
+                  <!-- Información del contrato -->
+                  <div class="contract-details">
+                    <div class="detail-item">
+                      <span class="detail-label">Contrato:</span>
+                      <span class="contract-badge">{{getContractTypeLabel(collaborator.contract_type)}}</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                      <span class="detail-label">Fecha de Contratación:</span>
+                      <span>{{formatDate(collaborator.hire_date)}}</span>
+                    </div>
+                  </div>
+                </div>
+              </mat-card-content>
+
+              <!-- Acciones -->
+              <mat-card-actions>
+                <div class="card-actions">
+                  <button 
+                    mat-icon-button 
+                    matTooltip="Ver detalles"
+                    class="action-btn view-btn"
+                    (click)="onViewCollaborator(collaborator)">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button 
+                    mat-icon-button 
+                    matTooltip="Editar"
+                    class="action-btn edit-btn"
+                    (click)="onEditCollaborator(collaborator)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button 
+                    mat-icon-button 
+                    matTooltip="Eliminar"
+                    class="action-btn delete-btn"
+                    (click)="onDeleteCollaborator(collaborator)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Panel lateral para crear/editar colaborador -->
+  <div class="side-panel" [class.open]="showForm()">
+    <div class="side-panel-content">
+      <!-- Header del panel -->
+      <div class="panel-header">
+        <h2>
+          <mat-icon>{{isEditMode() ? 'edit' : 'add'}}</mat-icon>
+          {{isEditMode() ? 'Editar Colaborador' : 'Nuevo Colaborador'}}
+        </h2>
+        <button mat-icon-button (click)="onFormCancelled()" class="close-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Formulario -->
+      <div class="form-container">
+        <app-collaborator-form
+          [collaborator]="selectedCollaborator()"
+          [isEditMode]="isEditMode()"
+          (formSubmitted)="onFormSubmitted()"
+          (formCancelled)="onFormCancelled()">
+        </app-collaborator-form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar panel -->
+  <div 
+    class="panel-overlay" 
+    [class.visible]="showForm()" 
+    (click)="onFormCancelled()">
   </div>
 </div> 
