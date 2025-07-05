@@ -19,8 +19,7 @@ import {
   CollaboratorEntity, 
   CreateCollaboratorRequest, 
   UpdateCollaboratorRequest,
-  CONTRACT_TYPE_OPTIONS,
-  ContractType 
+  CONTRACT_TYPE_OPTIONS
 } from '@/app/shared/models/collaborator.models';
 import { CollaboratorsService } from '../../services/collaborators.service';
 import { FORM_CONSTRAINTS } from '@/app/shared/constants/form-constrains';
@@ -56,27 +55,27 @@ export class CollaboratorFormComponent implements OnInit {
   private createForm(): void {
     this.collaboratorForm = this._fb.group({
       // Información Personal
-      first_name: ['NESTOR', createNameValidators()],
-      last_name: ['MARTINEZ', createNameValidators()],
-      identification: ['1000000000', createIdentificationValidators()],
-      email: ['nestor@gmail.com', createEmailValidators()],
-      phone: ['3105338818', createPhoneValidators()],
-      address: ['Calle 123 # 45-67', createAddressValidators()],
-      birth_date: ['1990-01-01', [Validators.required]],
+      first_name: ['', createNameValidators()],
+      last_name: ['', createNameValidators()],
+      identification: ['', createIdentificationValidators()],
+      email: ['', createEmailValidators()],
+      phone: ['', createPhoneValidators()],
+      address: ['', createAddressValidators()],
+      birth_date: ['', [Validators.required]],
       
       // Información Laboral
-      hire_date: ['2024-01-01', [Validators.required]],
-      contract_type: ['grabado', [Validators.required]],
+      hire_date: ['', [Validators.required]],
+      contract_type: ['', [Validators.required]],
       
       // Contacto de Emergencia
-      emergency_contact_name: ['CARMEN COBO', createNameValidators()],
-      emergency_contact_phone: ['3105338818', createPhoneValidators()],
+      emergency_contact_name: ['', createNameValidators()],
+      emergency_contact_phone: ['', createPhoneValidators()],
       
       // Información Bancaria
-      bank_account: ['1234567890', createBankAccountValidators()],
+      bank_account: ['', createBankAccountValidators()],
       
       // Información Adicional
-      notes: ['Sin notas', createNotesValidators()],
+      notes: ['', createNotesValidators()],
       is_active: [true]
     });
   }
@@ -163,9 +162,17 @@ export class CollaboratorFormComponent implements OnInit {
     } catch (error: any) {
       console.error('Error saving collaborator:', error);
       
-      // Mostrar error genérico
+      // Verificar si es un error de documento duplicado
+      let errorMessage = this._translateService.instant('collaborators.toasts.error.description');
+      
+      if (error.message && error.message.includes('duplicate key value violates unique constraint')) {
+        errorMessage = this._translateService.instant('collaborators.toasts.error.duplicateIdentification');
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast.error(this._translateService.instant('collaborators.toasts.error.title'), {
-        description: error.message || this._translateService.instant('collaborators.toasts.error.description'),
+        description: errorMessage,
         duration: FORM_CONSTRAINTS.timing.toastDuration
       });
     } finally {

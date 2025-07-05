@@ -1,6 +1,7 @@
 // SAV Cloud Color Palette
 :host {
   --holiday-teal-dark: #024554;
+  --holiday-green-medium: #007701;
   --primary-green: #2e7d32;
   --primary-green-light: #4caf50;
   --primary-green-lighter: #e8f5e8;
@@ -58,7 +59,7 @@
     font-weight: 500;
     color: var(--text-primary);
     padding-bottom: 3px;
-    border-bottom: 1px solid var(--primary-green);
+    border-bottom: 1px solid var(--holiday-green-medium);
     position: relative;
     
     &::after {
@@ -68,7 +69,7 @@
       left: 0;
       width: 30px;
       height: 1px;
-      background: var(--primary-green);
+      background: var(--holiday-green-medium);
     }
   }
 }
@@ -152,10 +153,10 @@
         border-bottom-color: rgba(0, 0, 0, 0.87);
       }
 
-      // Estado focused - color primario
+      // Estado focused - verde Holiday Cheer
       &.mdc-text-field--focused .mdc-line-ripple::after {
-        border-bottom-color: var(--primary-green) !important;
-        border-bottom-width: 2px;
+        border-bottom-color: var(--holiday-green-medium) !important;
+        border-bottom-width: 1px;
       }
 
       // Estado unfocused
@@ -177,15 +178,15 @@
       font-size: 0.875rem;
     }
 
-    // Label en estado focused
+    // Label en estado focused con color Holiday Cheer
     &.mat-focused .mat-mdc-form-field-label {
-      color: var(--primary-green) !important;
+      color: var(--holiday-green-medium) !important;
     }
 
     // Label flotante en estado focused
     .mdc-floating-label--float-above {
       &.mdc-floating-label--focused {
-        color: var(--primary-green) !important;
+        color: var(--holiday-green-medium) !important;
       }
     }
 
@@ -265,11 +266,12 @@
 
     &.mat-checked {
       .mat-slide-toggle-thumb {
-        background-color: var(--primary-green);
+        background-color: var(--holiday-green-medium);
       }
 
       .mat-slide-toggle-bar {
-        background-color: var(--primary-green-light);
+        background-color: var(--holiday-green-medium);
+        opacity: 0.5;
       }
     }
   }
@@ -438,7 +440,7 @@
       .mdc-notched-outline__leading,
       .mdc-notched-outline__notch,
       .mdc-notched-outline__trailing {
-        border-color: var(--primary-green) !important;
+        border-color: var(--holiday-green-medium) !important;
         border-width: 2px !important;
       }
     }

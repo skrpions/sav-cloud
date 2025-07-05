@@ -393,7 +393,8 @@
             },
             "error": {
                 "title": "Error",
-                "description": "Ocurrió un error inesperado. Por favor intenta de nuevo"
+                "description": "Ocurrió un error inesperado. Por favor intenta de nuevo",
+                "duplicateIdentification": "Ya existe un colaborador registrado con este número de identificación"
             }
         }
     },
