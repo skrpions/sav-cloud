@@ -1,0 +1,652 @@
+<!-- Layout principal con sidebar -->
+<div class="harvest-layout">
+  <!-- Sidebar -->
+  <app-sidebar 
+    (itemClicked)="onSidebarItemClicked($event)"
+    (collapseChanged)="onSidebarCollapseChanged($event)">
+  </app-sidebar>
+
+  <!-- Contenido principal -->
+  <div class="harvest-content" [class.sidebar-collapsed]="isSidebarCollapsed()">
+    <!-- Header -->
+    <app-header (searchChanged)="onSearchChanged($event)"></app-header>
+
+    <!-- Contenedor principal -->
+    <div class="harvest-main">
+      <!-- Panel de filtros y acciones -->
+      <div class="harvest-controls">
+        <div class="controls-section">
+          <h2 class="section-title">
+            <mat-icon>agriculture</mat-icon>
+            Gestión de Cosechas
+          </h2>
+          
+          <div class="actions-row">
+            <!-- Filtros -->
+            <div class="filters-container">
+              <!-- Filtro por colaborador -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Colaborador</mat-label>
+                <mat-select [(value)]="filterCollaborator" (selectionChange)="updatePagination()">
+                  <mat-option value="">Seleccione</mat-option>
+                  <mat-option 
+                    *ngFor="let collaborator of collaborators(); trackBy: trackByCollaboratorId" 
+                    [value]="collaborator.id">
+                    {{getCollaboratorName(collaborator.id!)}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Filtro por calidad -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Calidad</mat-label>
+                <mat-select [(value)]="filterQualityGrade" (selectionChange)="updatePagination()">
+                  <mat-option value="">Seleccione</mat-option>
+                  <mat-option 
+                    *ngFor="let grade of qualityGradeOptions" 
+                    [value]="grade.value">
+                    {{getQualityGradeLabel(grade.value)}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Filtro por fecha -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Fecha</mat-label>
+                <input matInput [matDatepicker]="picker" [(ngModel)]="filterDate" (dateChange)="updatePagination()">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+
+              <!-- Filtro por estado de venta -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Estado</mat-label>
+                <mat-select [(value)]="filterIsSold" (selectionChange)="updatePagination()">
+                  <mat-option value="">Seleccione</mat-option>
+                  <mat-option value="false">Disponible</mat-option>
+                  <mat-option value="true">Vendido</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Botón limpiar filtros -->
+              <button 
+                mat-icon-button 
+                (click)="clearFilters()"
+                [disabled]="!hasFilters()"
+                matTooltip="Limpiar filtros"
+                class="clear-filters-btn">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+
+            <!-- Botones de vista (centrados) -->
+            <div class="view-toggle-buttons">
+              <button 
+                mat-icon-button 
+                [class.active]="viewMode() === 'list'"
+                (click)="switchView('list')"
+                matTooltip="Vista de Lista"
+                class="view-toggle-btn">
+                <mat-icon>list</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                [class.active]="viewMode() === 'cards'"
+                (click)="switchView('cards')"
+                matTooltip="Vista de Tarjetas"
+                class="view-toggle-btn">
+                <mat-icon>view_module</mat-icon>
+              </button>
+            </div>
+
+            <!-- Botón nueva cosecha -->
+            <button 
+              mat-raised-button 
+              color="primary" 
+              (click)="openSidePanel()"
+              class="add-harvest-btn">
+              <mat-icon>add</mat-icon>
+              Nueva Cosecha
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de Lista (por defecto) -->
+      <div *ngIf="viewMode() === 'list'" class="harvest-list-view">
+        <!-- Loading spinner -->
+        <div *ngIf="isLoading()" class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>Cargando cosechas...</p>
+        </div>
+
+        <!-- Lista de cosechas -->
+        <div *ngIf="!isLoading()" class="harvest-list">
+          <!-- Mensaje cuando no hay cosechas -->
+          <div *ngIf="filteredHarvests.length === 0" class="no-harvests-message">
+            <mat-icon>info</mat-icon>
+            <h3>No hay cosechas registradas</h3>
+            <p *ngIf="!hasFilters()">Comienza registrando tu primera cosecha</p>
+            <p *ngIf="hasFilters()">No se encontraron cosechas con los filtros aplicados</p>
+            <button 
+              *ngIf="!hasFilters()" 
+              mat-raised-button 
+              color="primary" 
+              (click)="openSidePanel()">
+              <mat-icon>add</mat-icon>
+              Registrar Primera Cosecha
+            </button>
+          </div>
+
+          <!-- Tabla de cosechas -->
+          <div *ngIf="filteredHarvests.length > 0" class="harvest-table-container">
+            <table mat-table [dataSource]="paginatedHarvests" class="harvest-table">
+              <!-- Colaborador -->
+              <ng-container matColumnDef="collaborator">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Colaborador</th>
+                <td mat-cell *matCellDef="let harvest" class="data-cell">
+                  <div class="collaborator-info">
+                    <mat-icon class="collaborator-icon">person</mat-icon>
+                    <span>{{getCollaboratorName(harvest.collaborator_id)}}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Fecha -->
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Fecha</th>
+                <td mat-cell *matCellDef="let harvest" class="data-cell">
+                  <div class="date-info">
+                    <mat-icon class="date-icon">calendar_today</mat-icon>
+                    <span>{{formatDate(harvest.date)}}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Kilos -->
+              <ng-container matColumnDef="kilograms">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Kilos</th>
+                <td mat-cell *matCellDef="let harvest" class="data-cell">
+                  <span class="weight-value">{{harvest.kilograms}} kg</span>
+                </td>
+              </ng-container>
+
+              <!-- Calidad -->
+              <ng-container matColumnDef="quality">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Calidad</th>
+                <td mat-cell *matCellDef="let harvest" class="data-cell">
+                  <span 
+                    class="quality-badge" 
+                    [style.background-color]="getQualityGradeColor(harvest.quality_grade)">
+                    {{getQualityGradeLabel(harvest.quality_grade)}}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Precio/kg -->
+              <ng-container matColumnDef="price">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Precio/kg</th>
+                <td mat-cell *matCellDef="let harvest" class="data-cell">
+                  <span class="price-value">{{formatCurrency(harvest.price_per_kilogram)}}</span>
+                </td>
+              </ng-container>
+
+              <!-- Total -->
+              <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Total</th>
+                <td mat-cell *matCellDef="let harvest" class="data-cell">
+                  <span class="total-value">{{formatCurrency(harvest.total_payment)}}</span>
+                </td>
+              </ng-container>
+
+              <!-- Estado -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Estado</th>
+                <td mat-cell *matCellDef="let harvest" class="data-cell">
+                  <span 
+                    class="status-badge" 
+                    [class.available]="!harvest.is_sold"
+                    [class.sold]="harvest.is_sold">
+                    {{harvest.is_sold ? 'Vendido' : 'Disponible'}}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Acciones -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="header-cell actions-header">Acciones</th>
+                <td mat-cell *matCellDef="let harvest" class="data-cell actions-cell">
+                  <div class="action-buttons">
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Ver detalles"
+                      class="action-btn view-btn"
+                      (click)="onViewHarvest(harvest)">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Editar"
+                      class="action-btn edit-btn"
+                      (click)="onEditHarvest(harvest)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Eliminar"
+                      class="action-btn delete-btn"
+                      (click)="onDeleteHarvest(harvest)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="['collaborator', 'date', 'kilograms', 'quality', 'price', 'total', 'status', 'actions']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['collaborator', 'date', 'kilograms', 'quality', 'price', 'total', 'status', 'actions']"></tr>
+            </table>
+
+            <!-- Paginación -->
+            <div class="pagination-container" *ngIf="totalPages() > 1">
+              <div class="pagination-info">
+                <span>Página {{currentPage() + 1}} de {{totalPages()}}</span>
+                <span class="total-records">({{filteredHarvests.length}} registros)</span>
+              </div>
+              
+              <div class="pagination-controls">
+                <button 
+                  mat-icon-button 
+                  [disabled]="currentPage() === 0"
+                  (click)="prevPage()"
+                  matTooltip="Página anterior">
+                  <mat-icon>chevron_left</mat-icon>
+                </button>
+                
+                <div class="page-numbers">
+                  <button 
+                    *ngFor="let page of [].constructor(totalPages()); let i = index"
+                    mat-button
+                    [class.active]="i === currentPage()"
+                    (click)="changePage(i)"
+                    class="page-btn">
+                    {{i + 1}}
+                  </button>
+                </div>
+                
+                <button 
+                  mat-icon-button 
+                  [disabled]="currentPage() >= totalPages() - 1"
+                  (click)="nextPage()"
+                  matTooltip="Página siguiente">
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de Tarjetas -->
+      <div *ngIf="viewMode() === 'cards'" class="harvest-cards-view">
+        <!-- Loading spinner -->
+        <div *ngIf="isLoading()" class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>Cargando cosechas...</p>
+        </div>
+
+        <!-- Lista de cosechas -->
+        <div *ngIf="!isLoading()" class="harvest-list">
+          <!-- Mensaje cuando no hay cosechas -->
+          <div *ngIf="filteredHarvests.length === 0" class="no-harvests-message">
+            <mat-icon>info</mat-icon>
+            <h3>No hay cosechas registradas</h3>
+            <p *ngIf="!hasFilters()">Comienza registrando tu primera cosecha</p>
+            <p *ngIf="hasFilters()">No se encontraron cosechas con los filtros aplicados</p>
+            <button 
+              *ngIf="!hasFilters()" 
+              mat-raised-button 
+              color="primary" 
+              (click)="openSidePanel()">
+              <mat-icon>add</mat-icon>
+              Registrar Primera Cosecha
+            </button>
+          </div>
+
+          <!-- Cards de cosechas -->
+          <div class="harvest-cards-grid">
+            <mat-card 
+              *ngFor="let harvest of filteredHarvests; trackBy: trackByHarvestId" 
+              class="harvest-card"
+              [class.sold]="harvest.is_sold">
+              
+              <!-- Header de la card -->
+              <mat-card-header>
+                <div class="card-header-content">
+                  <div class="harvest-info">
+                    <h3 class="harvest-title">
+                      {{getCollaboratorName(harvest.collaborator_id)}}
+                    </h3>
+                    <p class="harvest-date">
+                      <mat-icon>calendar_today</mat-icon>
+                      {{formatDate(harvest.date)}}
+                    </p>
+                  </div>
+                  
+                  <!-- Badge de estado -->
+                  <div class="harvest-status">
+                    <span 
+                      class="status-badge" 
+                      [class.available]="!harvest.is_sold"
+                      [class.sold]="harvest.is_sold">
+                      {{harvest.is_sold ? 'Vendido' : 'Disponible'}}
+                    </span>
+                  </div>
+                </div>
+              </mat-card-header>
+
+              <!-- Contenido principal -->
+              <mat-card-content>
+                <div class="harvest-details">
+                  <!-- Información principal -->
+                  <div class="main-details">
+                    <div class="detail-item">
+                      <span class="detail-label">Kilos:</span>
+                      <span class="detail-value weight">{{harvest.kilograms}} kg</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                      <span class="detail-label">Calidad:</span>
+                      <span 
+                        class="detail-value quality-badge" 
+                        [style.background-color]="getQualityGradeColor(harvest.quality_grade)">
+                        {{getQualityGradeLabel(harvest.quality_grade)}}
+                      </span>
+                    </div>
+
+                    <div class="detail-item">
+                      <span class="detail-label">Precio/kg:</span>
+                      <span class="detail-value price">{{formatCurrency(harvest.price_per_kilogram)}}</span>
+                    </div>
+
+                    <div class="detail-item total">
+                      <span class="detail-label">Total:</span>
+                      <span class="detail-value total-payment">{{formatCurrency(harvest.total_payment)}}</span>
+                    </div>
+                  </div>
+
+                  <!-- Información adicional -->
+                  <div class="additional-details" *ngIf="harvest.humidity_percentage || harvest.defects_percentage">
+                    <div class="detail-item" *ngIf="harvest.humidity_percentage">
+                      <span class="detail-label">Humedad:</span>
+                      <span class="detail-value">{{harvest.humidity_percentage}}%</span>
+                    </div>
+                    
+                    <div class="detail-item" *ngIf="harvest.defects_percentage">
+                      <span class="detail-label">Defectos:</span>
+                      <span class="detail-value">{{harvest.defects_percentage}}%</span>
+                    </div>
+                  </div>
+
+                  <!-- Horario -->
+                  <div class="time-details" *ngIf="harvest.start_time || harvest.end_time">
+                    <mat-icon>access_time</mat-icon>
+                    <span>
+                      {{harvest.start_time || '--:--'}} - {{harvest.end_time || '--:--'}}
+                    </span>
+                  </div>
+
+                  <!-- Notas -->
+                  <div class="harvest-notes" *ngIf="harvest.notes">
+                    <mat-icon>note</mat-icon>
+                    <span>{{harvest.notes}}</span>
+                  </div>
+                </div>
+              </mat-card-content>
+
+              <!-- Acciones -->
+              <mat-card-actions>
+                <div class="card-actions">
+                  <button 
+                    mat-icon-button 
+                    matTooltip="Ver detalles"
+                    class="action-btn view-btn"
+                    (click)="onViewHarvest(harvest)">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button 
+                    mat-icon-button 
+                    matTooltip="Editar"
+                    class="action-btn edit-btn"
+                    (click)="onEditHarvest(harvest)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button 
+                    mat-icon-button 
+                    matTooltip="Eliminar"
+                    class="action-btn delete-btn"
+                    (click)="onDeleteHarvest(harvest)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel lateral para crear/editar cosecha -->
+  <div class="side-panel" [class.open]="showSidePanel()">
+    <div class="side-panel-content">
+      <!-- Header del panel -->
+      <div class="panel-header">
+        <h2>
+          <mat-icon>{{isEditMode() ? 'edit' : 'add'}}</mat-icon>
+          {{isEditMode() ? 'Editar Cosecha' : 'Nueva Cosecha'}}
+        </h2>
+        <button mat-icon-button (click)="closeSidePanel()" class="close-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Formulario -->
+      <form [formGroup]="harvestForm" (ngSubmit)="onSaveHarvest()" class="harvest-form">
+        <!-- Información básica -->
+        <div class="form-section">
+          <h3>Información Básica</h3>
+          
+          <!-- Colaborador -->
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Colaborador</mat-label>
+            <mat-select formControlName="collaborator_id" required>
+              <mat-option 
+                *ngFor="let collaborator of collaborators(); trackBy: trackByCollaboratorId" 
+                [value]="collaborator.id">
+                {{collaborator.first_name}} {{collaborator.last_name}}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="harvestForm.get('collaborator_id')?.hasError('required')">
+              El colaborador es requerido
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Fecha -->
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Fecha de Cosecha</mat-label>
+            <input matInput [matDatepicker]="harvestPicker" formControlName="date" required>
+            <mat-datepicker-toggle matSuffix [for]="harvestPicker"></mat-datepicker-toggle>
+            <mat-datepicker #harvestPicker></mat-datepicker>
+            <mat-error *ngIf="harvestForm.get('date')?.hasError('required')">
+              La fecha es requerida
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Horarios -->
+          <div class="time-row">
+            <mat-form-field appearance="fill">
+              <mat-label>Hora Inicio</mat-label>
+              <input matInput type="time" formControlName="start_time">
+            </mat-form-field>
+
+            <mat-form-field appearance="fill">
+              <mat-label>Hora Fin</mat-label>
+              <input matInput type="time" formControlName="end_time">
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Información de cantidad y calidad -->
+        <div class="form-section">
+          <h3>Cantidad y Calidad</h3>
+          
+          <!-- Kilos y calidad -->
+          <div class="quantity-row">
+            <mat-form-field appearance="fill">
+              <mat-label>Kilos</mat-label>
+              <input 
+                matInput 
+                type="number" 
+                formControlName="kilograms" 
+                (input)="onKilogramsChange()"
+                min="0" 
+                step="0.1" 
+                required>
+              <mat-error *ngIf="harvestForm.get('kilograms')?.hasError('required')">
+                Los kilos son requeridos
+              </mat-error>
+              <mat-error *ngIf="harvestForm.get('kilograms')?.hasError('min')">
+                Debe ser mayor a 0
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill">
+              <mat-label>Calidad</mat-label>
+              <mat-select formControlName="quality_grade" required>
+                <mat-option 
+                  *ngFor="let grade of qualityGradeOptions" 
+                  [value]="grade.value">
+                  {{getQualityGradeLabel(grade.value)}}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="harvestForm.get('quality_grade')?.hasError('required')">
+                La calidad es requerida
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- Porcentajes -->
+          <div class="percentage-row">
+            <mat-form-field appearance="fill">
+              <mat-label>Humedad</mat-label>
+              <input matInput type="number" formControlName="humidity_percentage" min="0" max="100">
+            </mat-form-field>
+
+            <mat-form-field appearance="fill">
+              <mat-label>Defectos</mat-label>
+              <input matInput type="number" formControlName="defects_percentage" min="0" max="100">
+            </mat-form-field>
+          </div>
+
+          <!-- Área cosechada -->
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Área Cosechada</mat-label>
+            <input matInput type="number" formControlName="area_harvested" min="0" step="0.01">
+          </mat-form-field>
+        </div>
+
+        <!-- Información económica -->
+        <div class="form-section">
+          <h3>Información Económica</h3>
+          
+          <div class="payment-row">
+            <mat-form-field appearance="fill">
+              <mat-label>Precio por Kg</mat-label>
+              <input 
+                matInput 
+                type="number" 
+                formControlName="price_per_kilogram" 
+                (input)="onPricePerKgChange()"
+                min="0" 
+                step="100" 
+                required>
+              <mat-error *ngIf="harvestForm.get('price_per_kilogram')?.hasError('required')">
+                El precio es requerido
+              </mat-error>
+              <mat-error *ngIf="harvestForm.get('price_per_kilogram')?.hasError('min')">
+                Debe ser mayor a 0
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill">
+              <mat-label>Pago Total</mat-label>
+              <input matInput type="number" formControlName="total_payment" readonly>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Información adicional -->
+        <div class="form-section">
+          <h3>Información Adicional</h3>
+          
+          <!-- Condiciones climáticas -->
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Condiciones Climáticas</mat-label>
+            <mat-select formControlName="weather_conditions">
+              <mat-option value="">Seleccionar...</mat-option>
+              <mat-option 
+                *ngFor="let weather of weatherConditionsOptions" 
+                [value]="weather.value">
+                {{weather.value | titlecase}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Notas -->
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Notas</mat-label>
+            <textarea 
+              matInput 
+              formControlName="notes" 
+              rows="3" 
+              placeholder="Observaciones adicionales...">
+            </textarea>
+          </mat-form-field>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="form-actions">
+          <button 
+            type="button" 
+            mat-stroked-button 
+            (click)="closeSidePanel()"
+            [disabled]="isLoading()">
+            Cancelar
+          </button>
+          
+          <button 
+            type="submit" 
+            mat-raised-button 
+            color="primary"
+            [disabled]="harvestForm.invalid || isLoading()">
+            <mat-icon *ngIf="!isLoading()">{{isEditMode() ? 'save' : 'add'}}</mat-icon>
+            <mat-spinner *ngIf="isLoading()" diameter="20"></mat-spinner>
+            {{isEditMode() ? 'Actualizar' : 'Guardar'}} Cosecha
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar panel -->
+  <div 
+    class="panel-overlay" 
+    [class.visible]="showSidePanel()" 
+    (click)="closeSidePanel()"
+    (keydown)="onOverlayKeydown($event)"
+    tabindex="0"
+    role="button"
+    aria-label="Cerrar panel lateral"
+    [attr.aria-hidden]="!showSidePanel()">
+  </div>
+</div> 

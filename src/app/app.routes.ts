@@ -23,6 +23,10 @@ export const routes: Routes = [
     loadComponent: () => import('./modules/activities/activities.component').then(c => c.ActivitiesComponent)
   },
   {
+    path: 'harvest',
+    loadComponent: () => import('./modules/harvest/harvest.component').then(c => c.HarvestComponent)
+  },
+  {
     path: 'settings',
     loadComponent: () => import('./modules/settings/settings.component').then(c => c.SettingsComponent)
   },

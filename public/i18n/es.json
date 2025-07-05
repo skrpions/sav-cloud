@@ -200,6 +200,110 @@
         }
     },
 
+    "harvest": {
+        "title": "Gestión de Cosechas",
+        "subtitle": "Registra y controla las cosechas de café",
+        "addNew": "Nueva Cosecha",
+        "editHarvest": "Editar Cosecha",
+        "viewHarvest": "Ver Cosecha",
+        "list": "Lista de Cosechas",
+        "search": "Buscar cosechas...",
+        "noResults": "No se encontraron cosechas",
+        "deleteConfirm": "¿Estás seguro de eliminar esta cosecha?",
+        
+        "form": {
+            "basicInfo": "Información Básica",
+            "collaborator": "Colaborador",
+            "date": "Fecha de Cosecha",
+            "startTime": "Hora Inicio",
+            "endTime": "Hora Fin",
+            
+            "quantityAndQuality": "Cantidad y Calidad",
+            "kilograms": "Kilos",
+            "qualityGrade": "Calidad",
+            "humidityPercentage": "Humedad",
+            "defectsPercentage": "Defectos",
+            "areaHarvested": "Área Cosechada",
+            
+            "economicInfo": "Información Económica",
+            "pricePerKg": "Precio por Kg",
+            "totalPayment": "Pago Total",
+            
+            "additionalInfo": "Información Adicional",
+            "weatherConditions": "Condiciones Climáticas",
+            "notes": "Notas",
+            
+            "save": "Guardar",
+            "cancel": "Cancelar",
+            "update": "Actualizar"
+        },
+        
+        "qualityGrades": {
+            "premium": "Premium",
+            "standard": "Estándar",
+            "low": "Baja"
+        },
+        
+        "weather": {
+            "sunny": "Soleado",
+            "cloudy": "Nublado",
+            "rainy": "Lluvioso",
+            "windy": "Ventoso",
+            "humid": "Húmedo",
+            "dry": "Seco"
+        },
+        
+        "status": {
+            "available": "Disponible",
+            "sold": "Vendido"
+        },
+        
+        "filters": {
+            "allCollaborators": "Todos los colaboradores",
+            "allQualities": "Todas las calidades",
+            "allStatuses": "Todos",
+            "clearFilters": "Limpiar Filtros"
+        },
+        
+        "validation": {
+            "collaboratorRequired": "El colaborador es requerido",
+            "dateRequired": "La fecha es requerida",
+            "kilogramsRequired": "Los kilos son requeridos",
+            "kilogramsMin": "Debe ser mayor a 0",
+            "qualityRequired": "La calidad es requerida",
+            "priceRequired": "El precio es requerido",
+            "priceMin": "Debe ser mayor a 0",
+            "humidityRange": "Debe estar entre 0 y 100%",
+            "defectsRange": "Debe estar entre 0 y 100%",
+            "areaMin": "Debe ser mayor a 0"
+        },
+        
+        "actions": {
+            "view": "Ver",
+            "edit": "Editar",
+            "delete": "Eliminar"
+        },
+        
+        "toasts": {
+            "createSuccess": {
+                "title": "Cosecha registrada",
+                "description": "La cosecha ha sido registrada exitosamente"
+            },
+            "updateSuccess": {
+                "title": "Cosecha actualizada",
+                "description": "La información de la cosecha ha sido actualizada"
+            },
+            "deleteSuccess": {
+                "title": "Cosecha eliminada",
+                "description": "La cosecha ha sido eliminada del sistema"
+            },
+            "error": {
+                "title": "Error",
+                "description": "Ocurrió un error inesperado. Por favor intenta de nuevo"
+            }
+        }
+    },
+
     "collaborators": {
         "title": "Colaboradores",
         "subtitle": "Gestiona la información de los colaboradores",
