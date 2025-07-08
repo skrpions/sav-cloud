@@ -18,7 +18,7 @@
         <div class="controls-section">
           <h2 class="section-title">
             <mat-icon>agriculture</mat-icon>
-            Registro de Cosechas
+            {{ 'modules.harvest.title' | translate }}
           </h2>
           
           <div class="actions-row">
@@ -125,16 +125,16 @@
           <!-- Mensaje cuando no hay cosechas -->
           <div *ngIf="filteredHarvests.length === 0" class="no-harvests-message">
             <mat-icon>info</mat-icon>
-            <h3>No hay cosechas registradas</h3>
-            <p *ngIf="!hasFilters()">Comienza registrando tu primera cosecha</p>
-            <p *ngIf="hasFilters()">No se encontraron cosechas con los filtros aplicados</p>
+            <h3>{{ 'modules.harvest.emptyTitle' | translate }}</h3>
+            <p *ngIf="!hasFilters()">{{ 'modules.harvest.emptyMessage' | translate }}</p>
+            <p *ngIf="hasFilters()">{{ 'modules.harvest.emptyFiltersMessage' | translate }}</p>
             <button 
               *ngIf="!hasFilters()" 
               mat-raised-button 
               color="primary" 
               (click)="openSidePanel()">
               <mat-icon>add</mat-icon>
-              Registrar Primera Cosecha
+              {{ 'modules.harvest.firstButton' | translate }}
             </button>
           </div>
 
@@ -299,16 +299,16 @@
           <!-- Mensaje cuando no hay cosechas -->
           <div *ngIf="filteredHarvests.length === 0" class="no-harvests-message">
             <mat-icon>info</mat-icon>
-            <h3>No hay cosechas registradas</h3>
-            <p *ngIf="!hasFilters()">Comienza registrando tu primera cosecha</p>
-            <p *ngIf="hasFilters()">No se encontraron cosechas con los filtros aplicados</p>
+            <h3>{{ 'modules.harvest.emptyTitle' | translate }}</h3>
+            <p *ngIf="!hasFilters()">{{ 'modules.harvest.emptyMessage' | translate }}</p>
+            <p *ngIf="hasFilters()">{{ 'modules.harvest.emptyFiltersMessage' | translate }}</p>
             <button 
               *ngIf="!hasFilters()" 
               mat-raised-button 
               color="primary" 
               (click)="openSidePanel()">
               <mat-icon>add</mat-icon>
-              Registrar Primera Cosecha
+              {{ 'modules.harvest.firstButton' | translate }}
             </button>
           </div>
 

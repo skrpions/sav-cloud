@@ -16,8 +16,8 @@
       <div class="collaborators-controls">
         <div class="controls-section">
           <h2 class="section-title">
-            <mat-icon>people</mat-icon>
-            Registro de Colaboradores
+            <mat-icon>groups</mat-icon>
+            {{ 'modules.collaborators.title' | translate }}
           </h2>
           
           <div class="actions-row">
@@ -108,16 +108,16 @@
           <!-- Mensaje cuando no hay colaboradores -->
           <div *ngIf="filteredCollaborators().length === 0" class="no-collaborators-message">
             <mat-icon>info</mat-icon>
-            <h3>No hay colaboradores registrados</h3>
-            <p *ngIf="!hasFilters()">Comienza registrando tu primer colaborador</p>
-            <p *ngIf="hasFilters()">No se encontraron colaboradores con los filtros aplicados</p>
+            <h3>{{ 'modules.collaborators.emptyTitle' | translate }}</h3>
+            <p *ngIf="!hasFilters()">{{ 'modules.collaborators.emptyMessage' | translate }}</p>
+            <p *ngIf="hasFilters()">{{ 'modules.collaborators.emptyFiltersMessage' | translate }}</p>
             <button 
               *ngIf="!hasFilters()" 
               mat-raised-button 
               color="primary" 
               (click)="onAddNewCollaborator()">
               <mat-icon>add</mat-icon>
-              Registrar Primer Colaborador
+              {{ 'modules.collaborators.firstButton' | translate }}
             </button>
           </div>
 
@@ -270,16 +270,16 @@
           <!-- Mensaje cuando no hay colaboradores -->
           <div *ngIf="filteredCollaborators().length === 0" class="no-collaborators-message">
             <mat-icon>info</mat-icon>
-            <h3>No hay colaboradores registrados</h3>
-            <p *ngIf="!hasFilters()">Comienza registrando tu primer colaborador</p>
-            <p *ngIf="hasFilters()">No se encontraron colaboradores con los filtros aplicados</p>
+            <h3>{{ 'modules.collaborators.emptyTitle' | translate }}</h3>
+            <p *ngIf="!hasFilters()">{{ 'modules.collaborators.emptyMessage' | translate }}</p>
+            <p *ngIf="hasFilters()">{{ 'modules.collaborators.emptyFiltersMessage' | translate }}</p>
             <button 
               *ngIf="!hasFilters()" 
               mat-raised-button 
               color="primary" 
               (click)="onAddNewCollaborator()">
               <mat-icon>add</mat-icon>
-              Registrar Primer Colaborador
+              {{ 'modules.collaborators.firstButton' | translate }}
             </button>
           </div>
 
@@ -412,6 +412,11 @@
   <div 
     class="panel-overlay" 
     [class.visible]="showForm()" 
-    (click)="onFormCancelled()">
+    (click)="onFormCancelled()"
+    (keydown)="onOverlayKeydown($event)"
+    tabindex="0"
+    role="button"
+    aria-label="Cerrar panel lateral"
+    [attr.aria-hidden]="!showForm()">
   </div>
 </div> 

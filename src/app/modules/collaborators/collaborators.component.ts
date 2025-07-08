@@ -279,6 +279,13 @@ export class CollaboratorsComponent implements OnInit {
     this.isSidebarCollapsed.set(isCollapsed);
   }
 
+  onOverlayKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape') {
+      event.preventDefault();
+      this.onFormCancelled();
+    }
+  }
+
   getFullName(collaborator: CollaboratorEntity): string {
     return `${collaborator.first_name} ${collaborator.last_name}`;
   }

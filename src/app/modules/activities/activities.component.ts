@@ -232,6 +232,13 @@ export class ActivitiesComponent implements OnInit {
     this.isEditMode.set(false);
   }
 
+  onOverlayKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape') {
+      event.preventDefault();
+      this.closeSidePanel();
+    }
+  }
+
   async onSaveActivity(): Promise<void> {
     if (this.activityForm.invalid) {
       toast.error('Datos inválidos', { description: 'Por favor revisa los campos del formulario.' });

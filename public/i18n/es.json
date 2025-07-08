@@ -56,6 +56,30 @@
         }
     },
 
+    "modules": {
+        "activities": {
+            "title": "Gestión de Actividades",
+            "emptyTitle": "No hay actividades registradas",
+            "emptyMessage": "Comienza registrando tu primera actividad",
+            "emptyFiltersMessage": "No se encontraron actividades con los filtros aplicados",
+            "firstButton": "Registrar Primera Actividad"
+        },
+        "harvest": {
+            "title": "Gestión de Cosechas",
+            "emptyTitle": "No hay cosechas registradas",
+            "emptyMessage": "Comienza registrando tu primera cosecha",
+            "emptyFiltersMessage": "No se encontraron cosechas con los filtros aplicados",
+            "firstButton": "Registrar Primera Cosecha"
+        },
+        "collaborators": {
+            "title": "Gestión de Colaboradores",
+            "emptyTitle": "No hay colaboradores registrados",
+            "emptyMessage": "Comienza registrando tu primer colaborador",
+            "emptyFiltersMessage": "No se encontraron colaboradores con los filtros aplicados",
+            "firstButton": "Registrar Primer Colaborador"
+        }
+    },
+
     "header": {
         "analytics": "Analytics",
         "analyticsDashboard": "Analytics Dashboard",
