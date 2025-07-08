@@ -4,11 +4,12 @@ import { map, catchError } from 'rxjs/operators';
 
 import { SupabaseService } from '@/app/shared/services/supabase.service';
 import { 
-  SettingsEntity, 
-  CreateSettingsRequest, 
+  // Usando solo los aliases para compatibilidad hacia atrás
+  SettingsEntity,
+  CreateSettingsRequest,
   UpdateSettingsRequest,
   SettingsResponse,
-  SettingsListResponse 
+  SettingsListResponse
 } from '@/app/shared/models/settings.models';
 
 @Injectable({
@@ -16,70 +17,82 @@ import {
 })
 export class SettingsService {
   private readonly _supabaseService = inject(SupabaseService);
-  private readonly tableName = 'settings';
+  private readonly tableName = 'farm_settings'; // Nueva tabla
+  
+  // Campos actualizados según nueva estructura de BD
   private readonly fieldList = `
     id,
+    farm_id,
     year,
-    harvest_price_per_kilogram,
-    daily_rate_libre,
-    daily_rate_grabado,
-    activity_rate_fertilization,
-    activity_rate_fumigation,
-    activity_rate_pruning,
-    activity_rate_weeding,
-    activity_rate_planting,
-    activity_rate_maintenance,
-    activity_rate_other,
     currency,
     tax_percentage,
+    crop_prices,
+    daily_rate_libre,
+    daily_rate_grabado,
+    activity_rates,
+    quality_premiums,
     is_active,
     created_at,
     updated_at
   `;
 
   /**
-   * Obtiene todas las configuraciones
+   * Obtiene todas las configuraciones de finca
    */
-  getAllSettings(): Observable<SettingsListResponse> {
-    return from(
-      this._supabaseService.supabaseClient
-        .from(this.tableName)
-        .select(this.fieldList)
-        .order('year', { ascending: false })
-    ).pipe(
+  getAllSettings(farmId?: string): Observable<SettingsListResponse> {
+    let query = this._supabaseService.supabaseClient
+      .from(this.tableName)
+      .select(this.fieldList)
+      .order('year', { ascending: false });
+
+    // Filtrar por farm_id si se proporciona
+    if (farmId) {
+      query = query.eq('farm_id', farmId);
+    }
+
+    return from(query).pipe(
       map(response => this.mapListResponse(response)),
       catchError(this.handleError.bind(this))
     );
   }
 
   /**
-   * Obtiene la configuración activa (solo debería haber una por año)
+   * Obtiene la configuración activa por finca (solo debería haber una por finca/año)
    */
-  getActiveSettings(): Observable<SettingsListResponse> {
-    return from(
-      this._supabaseService.supabaseClient
-        .from(this.tableName)
-        .select(this.fieldList)
-        .eq('is_active', true)
-        .order('year', { ascending: false })
-    ).pipe(
+  getActiveSettings(farmId?: string): Observable<SettingsListResponse> {
+    let query = this._supabaseService.supabaseClient
+      .from(this.tableName)
+      .select(this.fieldList)
+      .eq('is_active', true)
+      .order('year', { ascending: false });
+
+    // Filtrar por farm_id si se proporciona
+    if (farmId) {
+      query = query.eq('farm_id', farmId);
+    }
+
+    return from(query).pipe(
       map(response => this.mapListResponse(response)),
       catchError(this.handleError.bind(this))
     );
   }
 
   /**
-   * Obtiene configuración por año
+   * Obtiene configuración por año y finca
    */
-  getSettingsByYear(year: number): Observable<SettingsResponse> {
-    return from(
-      this._supabaseService.supabaseClient
-        .from(this.tableName)
-        .select(this.fieldList)
-        .eq('year', year)
-        .eq('is_active', true)
-        .single()
-    ).pipe(
+  getSettingsByYear(year: number, farmId?: string): Observable<SettingsResponse> {
+    let query = this._supabaseService.supabaseClient
+      .from(this.tableName)
+      .select(this.fieldList)
+      .eq('year', year)
+      .eq('is_active', true);
+
+    // Filtrar por farm_id si se proporciona
+    if (farmId) {
+      query = query.eq('farm_id', farmId);
+    }
+
+    return from(query.single()).pipe(
       map(response => this.mapSingleResponse(response)),
       catchError(this.handleError.bind(this))
     );
@@ -102,32 +115,28 @@ export class SettingsService {
   }
 
   /**
-   * Crea nueva configuración
+   * Crea nueva configuración de finca
    */
   createSettings(request: CreateSettingsRequest): Observable<SettingsResponse> {
-    // Preparar los datos para la inserción
-    const settingsData = {
+    // Preparar los datos para la inserción con nueva estructura
+    const farmSettingsData = {
+      farm_id: request.farm_id,
       year: request.year,
-      harvest_price_per_kilogram: request.harvest_price_per_kilogram,
+      currency: request.currency || 'COP',
+      tax_percentage: request.tax_percentage,
+      crop_prices: request.crop_prices || {},
       daily_rate_libre: request.daily_rate_libre,
       daily_rate_grabado: request.daily_rate_grabado,
-      activity_rate_fertilization: request.activity_rate_fertilization || null,
-      activity_rate_fumigation: request.activity_rate_fumigation || null,
-      activity_rate_pruning: request.activity_rate_pruning || null,
-      activity_rate_weeding: request.activity_rate_weeding || null,
-      activity_rate_planting: request.activity_rate_planting || null,
-      activity_rate_maintenance: request.activity_rate_maintenance || null,
-      activity_rate_other: request.activity_rate_other || null,
-      currency: request.currency,
-      tax_percentage: request.tax_percentage,
+      activity_rates: request.activity_rates || {},
+      quality_premiums: request.quality_premiums || {},
       is_active: true
     };
 
     return from(
       this._supabaseService.supabaseClient
         .from(this.tableName)
-        .insert([settingsData])
-        .select()
+        .insert([farmSettingsData])
+        .select(this.fieldList)
         .single()
     ).pipe(
       map(response => this.mapSingleResponse(response)),
@@ -141,29 +150,25 @@ export class SettingsService {
   updateSettings(request: UpdateSettingsRequest): Observable<SettingsResponse> {
     const { id, ...updateData } = request;
     
-    const settingsData = {
+    const farmSettingsData = {
+      farm_id: updateData.farm_id,
       year: updateData.year,
-      harvest_price_per_kilogram: updateData.harvest_price_per_kilogram,
+      currency: updateData.currency || 'COP',
+      tax_percentage: updateData.tax_percentage,
+      crop_prices: updateData.crop_prices || {},
       daily_rate_libre: updateData.daily_rate_libre,
       daily_rate_grabado: updateData.daily_rate_grabado,
-      activity_rate_fertilization: updateData.activity_rate_fertilization || null,
-      activity_rate_fumigation: updateData.activity_rate_fumigation || null,
-      activity_rate_pruning: updateData.activity_rate_pruning || null,
-      activity_rate_weeding: updateData.activity_rate_weeding || null,
-      activity_rate_planting: updateData.activity_rate_planting || null,
-      activity_rate_maintenance: updateData.activity_rate_maintenance || null,
-      activity_rate_other: updateData.activity_rate_other || null,
-      currency: updateData.currency,
-      tax_percentage: updateData.tax_percentage,
+      activity_rates: updateData.activity_rates || {},
+      quality_premiums: updateData.quality_premiums || {},
       is_active: updateData.is_active ?? true
     };
 
     return from(
       this._supabaseService.supabaseClient
         .from(this.tableName)
-        .update(settingsData)
+        .update(farmSettingsData)
         .eq('id', id)
-        .select()
+        .select(this.fieldList)
         .single()
     ).pipe(
       map(response => this.mapSingleResponse(response)),
@@ -180,7 +185,7 @@ export class SettingsService {
         .from(this.tableName)
         .update({ is_active: false })
         .eq('id', id)
-        .select()
+        .select(this.fieldList)
         .single()
     ).pipe(
       map(response => this.mapSingleResponse(response)),
@@ -189,16 +194,17 @@ export class SettingsService {
   }
 
   /**
-   * Desactiva todas las configuraciones de otros años para activar la nueva
+   * Desactiva todas las configuraciones de otros años para una finca específica
    */
-  deactivateOtherSettings(currentId: string, year: number): Observable<SettingsListResponse> {
+  deactivateOtherSettings(currentId: string, year: number, farmId: string): Observable<SettingsListResponse> {
     return from(
       this._supabaseService.supabaseClient
         .from(this.tableName)
         .update({ is_active: false })
         .eq('year', year)
+        .eq('farm_id', farmId)
         .neq('id', currentId)
-        .select()
+        .select(this.fieldList)
     ).pipe(
       map(response => this.mapListResponse(response)),
       catchError(this.handleError.bind(this))
@@ -206,60 +212,69 @@ export class SettingsService {
   }
 
   /**
-   * Mapea la respuesta de lista de Supabase
+   * Mapea respuesta de lista desde Supabase
    */
-  private mapListResponse(response: any): SettingsListResponse {
-    if (response.error) {
-      console.error('Supabase list error:', response.error);
+  private mapListResponse(response: unknown): SettingsListResponse {
+    const typedResponse = response as { data?: unknown[]; error?: { message: string; code?: string } };
+    
+    if (typedResponse.error) {
+      console.error('Supabase list error:', typedResponse.error);
       return {
         data: [],
         error: {
-          message: response.error.message || 'Error al obtener configuraciones',
-          code: response.error.code
+          message: typedResponse.error.message || 'Error al obtener configuraciones',
+          code: typedResponse.error.code
         }
       };
     }
 
     return {
-      data: response.data || []
+      data: (typedResponse.data as SettingsEntity[]) || []
     };
   }
 
   /**
-   * Mapea la respuesta única de Supabase
+   * Mapea respuesta individual desde Supabase
    */
-  private mapSingleResponse(response: any): SettingsResponse {
-    if (response.error) {
-      console.error('Supabase single error:', response.error);
+  private mapSingleResponse(response: unknown): SettingsResponse {
+    const typedResponse = response as { data?: unknown; error?: { message: string; code?: string } };
+    
+    if (typedResponse.error) {
+      // Manejar específicamente el error PGRST116 (no hay filas)
+      if (typedResponse.error.code === 'PGRST116') {
+        console.warn('No settings found for the given criteria');
+        return {
+          data: undefined, // No hay datos, pero no es un error crítico
+          error: undefined
+        };
+      }
+      
+      console.error('Supabase single error:', typedResponse.error);
       return {
         error: {
-          message: response.error.message || 'Error al procesar configuración',
-          code: response.error.code
+          message: typedResponse.error.message || 'Error al procesar configuración',
+          code: typedResponse.error.code
         }
       };
     }
 
     return {
-      data: response.data
+      data: typedResponse.data as SettingsEntity
     };
   }
 
   /**
-   * Maneja errores comunes
+   * Maneja errores del servicio
    */
-  private handleError(error: any): Observable<never> {
-    console.error('Settings service error:', error);
+  private handleError(error: unknown): Observable<never> {
+    const typedError = error as { message?: string; code?: string };
     
-    let errorMessage = 'Error inesperado en el servicio de configuraciones';
-    
-    if (error.message) {
-      errorMessage = error.message;
-    }
+    console.error('Settings service error:', typedError);
     
     throw {
       error: {
-        message: errorMessage,
-        code: error.code || 'UNKNOWN_ERROR'
+        message: typedError.message || 'Error inesperado en el servicio de configuraciones',
+        code: typedError.code || 'UNKNOWN_ERROR'
       }
     };
   }

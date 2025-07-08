@@ -167,7 +167,7 @@
               <ng-container matColumnDef="kilograms">
                 <th mat-header-cell *matHeaderCellDef class="header-cell">Kilos</th>
                 <td mat-cell *matCellDef="let harvest" class="data-cell">
-                  <span class="weight-value">{{harvest.kilograms}} kg</span>
+                  <span class="weight-value">{{harvest.quantity}} kg</span>
                 </td>
               </ng-container>
 
@@ -187,7 +187,7 @@
               <ng-container matColumnDef="price">
                 <th mat-header-cell *matHeaderCellDef class="header-cell">Precio/kg</th>
                 <td mat-cell *matCellDef="let harvest" class="data-cell">
-                  <span class="price-value">{{formatCurrency(harvest.price_per_kilogram)}}</span>
+                  <span class="price-value">{{formatCurrency(harvest.price_per_unit)}}</span>
                 </td>
               </ng-container>
 
@@ -351,7 +351,7 @@
                   <div class="main-details">
                     <div class="detail-item">
                       <span class="detail-label">Kilos:</span>
-                      <span class="detail-value weight">{{harvest.kilograms}} kg</span>
+                      <span class="detail-value weight">{{harvest.quantity}} kg</span>
                     </div>
                     
                     <div class="detail-item">
@@ -365,7 +365,7 @@
 
                     <div class="detail-item">
                       <span class="detail-label">Precio/kg:</span>
-                      <span class="detail-value price">{{formatCurrency(harvest.price_per_kilogram)}}</span>
+                      <span class="detail-value price">{{formatCurrency(harvest.price_per_unit)}}</span>
                     </div>
 
                     <div class="detail-item total">
@@ -507,15 +507,15 @@
               <input 
                 matInput 
                 type="number" 
-                formControlName="kilograms" 
-                (input)="onKilogramsChange()"
+                formControlName="quantity" 
+                (input)="onQuantityChange()"
                 min="0" 
                 step="0.1" 
                 required>
-              <mat-error *ngIf="harvestForm.get('kilograms')?.hasError('required')">
+              <mat-error *ngIf="harvestForm.get('quantity')?.hasError('required')">
                 Los kilos son requeridos
               </mat-error>
-              <mat-error *ngIf="harvestForm.get('kilograms')?.hasError('min')">
+              <mat-error *ngIf="harvestForm.get('quantity')?.hasError('min')">
                 Debe ser mayor a 0
               </mat-error>
             </mat-form-field>
@@ -565,15 +565,15 @@
               <input 
                 matInput 
                 type="number" 
-                formControlName="price_per_kilogram" 
-                (input)="onPricePerKgChange()"
+                formControlName="price_per_unit" 
+                (input)="onPricePerUnitChange()"
                 min="0" 
                 step="100" 
                 required>
-              <mat-error *ngIf="harvestForm.get('price_per_kilogram')?.hasError('required')">
+              <mat-error *ngIf="harvestForm.get('price_per_unit')?.hasError('required')">
                 El precio es requerido
               </mat-error>
-              <mat-error *ngIf="harvestForm.get('price_per_kilogram')?.hasError('min')">
+              <mat-error *ngIf="harvestForm.get('price_per_unit')?.hasError('min')">
                 Debe ser mayor a 0
               </mat-error>
             </mat-form-field>

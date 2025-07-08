@@ -16,7 +16,7 @@ import {
   CURRENCY_OPTIONS,
   ACTIVITY_RATES_CONFIG 
 } from '@/app/shared/models/settings.models';
-import { FORM_CONSTRAINTS } from '@/app/shared/constants/form-constrains';
+import { FORM_CONSTRAINTS, TEMP_FARM_CONSTANTS } from '@/app/shared/constants/form-constrains';
 import { SidebarItem } from '@/app/shared/models/ui.models';
 
 @Component({
@@ -66,18 +66,30 @@ export class SettingsComponent implements OnInit {
   private createSettingsForm(): FormGroup {
     return this._formBuilder.group({
       year: [this.currentYear, [Validators.required, Validators.min(2020), Validators.max(2030)]],
-      harvest_price_per_kilogram: [0, [Validators.required, Validators.min(0)]],
+      currency: ['COP', [Validators.required]],
+      tax_percentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+      crop_prices: this._formBuilder.group({
+        coffee: this._formBuilder.group({
+          price_per_kg: [0, [Validators.required, Validators.min(0)]],
+          unit: ['kg']
+        })
+      }),
       daily_rate_libre: [0, [Validators.required, Validators.min(0)]],
       daily_rate_grabado: [0, [Validators.required, Validators.min(0)]],
-      activity_rate_fertilization: [0, [Validators.min(0)]],
-      activity_rate_fumigation: [0, [Validators.min(0)]],
-      activity_rate_pruning: [0, [Validators.min(0)]],
-      activity_rate_weeding: [0, [Validators.min(0)]],
-      activity_rate_planting: [0, [Validators.min(0)]],
-      activity_rate_maintenance: [0, [Validators.min(0)]],
-      activity_rate_other: [0, [Validators.min(0)]],
-      currency: ['COP', [Validators.required]],
-      tax_percentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
+      activity_rates: this._formBuilder.group({
+        fertilization: [0, [Validators.min(0)]],
+        fumigation: [0, [Validators.min(0)]],
+        pruning: [0, [Validators.min(0)]],
+        weeding: [0, [Validators.min(0)]],
+        planting: [0, [Validators.min(0)]],
+        maintenance: [0, [Validators.min(0)]],
+        other: [0, [Validators.min(0)]]
+      }),
+      quality_premiums: this._formBuilder.group({
+        premium: [0, [Validators.min(0)]],
+        standard: [0],
+        low: [0]
+      })
     });
   }
 
@@ -109,11 +121,12 @@ export class SettingsComponent implements OnInit {
         this.isEditMode.set(false);
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading settings:', error);
       
+      const errorMessage = error instanceof Error ? error.message : this._translateService.instant('settings.toasts.error.description');
       toast.error(this._translateService.instant('settings.toasts.error.title'), {
-        description: error.message || this._translateService.instant('settings.toasts.error.description'),
+        description: errorMessage,
         duration: FORM_CONSTRAINTS.timing.toastDuration
       });
       
@@ -128,36 +141,55 @@ export class SettingsComponent implements OnInit {
   private setDefaultValues(): void {
     this.settingsForm.patchValue({
       year: this.currentYear,
-      harvest_price_per_kilogram: 5000,
-      daily_rate_libre: 45000,
-      daily_rate_grabado: 50000,
-      activity_rate_fertilization: 30000,
-      activity_rate_fumigation: 35000,
-      activity_rate_pruning: 40000,
-      activity_rate_weeding: 30000,
-      activity_rate_planting: 35000,
-      activity_rate_maintenance: 40000,
-      activity_rate_other: 30000,
       currency: 'COP',
-      tax_percentage: 0
+      tax_percentage: 0,
+      crop_prices: {
+        coffee: {
+          price_per_kg: 5000,
+          unit: 'kg'
+        }
+      },
+      daily_rate_libre: 0,
+      daily_rate_grabado: 0,
+      activity_rates: {
+        fertilization: 0,
+        fumigation: 0,
+        pruning: 0,
+        weeding: 0,
+        planting: 0,
+        maintenance: 0,
+        other: 0
+      },
+      quality_premiums: {
+        premium: 0,
+        standard: 0,
+        low: 0
+      }
     });
   }
 
   private loadFormData(settings: SettingsEntity): void {
     this.settingsForm.patchValue({
       year: settings.year,
-      harvest_price_per_kilogram: settings.harvest_price_per_kilogram,
+      currency: settings.currency,
+      tax_percentage: settings.tax_percentage,
+      crop_prices: settings.crop_prices || { coffee: { price_per_kg: 5000, unit: 'kg' } },
       daily_rate_libre: settings.daily_rate_libre,
       daily_rate_grabado: settings.daily_rate_grabado,
-      activity_rate_fertilization: settings.activity_rate_fertilization || 0,
-      activity_rate_fumigation: settings.activity_rate_fumigation || 0,
-      activity_rate_pruning: settings.activity_rate_pruning || 0,
-      activity_rate_weeding: settings.activity_rate_weeding || 0,
-      activity_rate_planting: settings.activity_rate_planting || 0,
-      activity_rate_maintenance: settings.activity_rate_maintenance || 0,
-      activity_rate_other: settings.activity_rate_other || 0,
-      currency: settings.currency,
-      tax_percentage: settings.tax_percentage
+      activity_rates: settings.activity_rates || {
+        fertilization: 0,
+        fumigation: 0,
+        pruning: 0,
+        weeding: 0,
+        planting: 0,
+        maintenance: 0,
+        other: 0
+      },
+      quality_premiums: settings.quality_premiums || {
+        premium: 0,
+        standard: 0,
+        low: 0
+      }
     });
   }
 
@@ -181,6 +213,7 @@ export class SettingsComponent implements OnInit {
         // Actualizar configuración existente
         const updateRequest: UpdateSettingsRequest = {
           id: this.currentSettings()!.id!,
+          farm_id: this.currentSettings()!.farm_id,
           ...formData
         };
 
@@ -197,7 +230,10 @@ export class SettingsComponent implements OnInit {
 
       } else {
         // Crear nueva configuración
-        const createRequest: CreateSettingsRequest = formData;
+        const createRequest: CreateSettingsRequest = {
+          farm_id: TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID, // TODO: Obtener farm_id del usuario actual
+          ...formData
+        };
         
         const response = await this._settingsService.createSettings(createRequest).toPromise();
         
@@ -217,11 +253,12 @@ export class SettingsComponent implements OnInit {
       // Recargar la lista
       await this.loadSettings();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving settings:', error);
       
+      const errorMessage = error instanceof Error ? error.message : this._translateService.instant('settings.toasts.error.description');
       toast.error(this._translateService.instant('settings.toasts.error.title'), {
-        description: error.message || this._translateService.instant('settings.toasts.error.description'),
+        description: errorMessage,
         duration: FORM_CONSTRAINTS.timing.toastDuration
       });
       

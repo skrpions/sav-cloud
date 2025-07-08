@@ -1,328 +1,496 @@
--- =============================================
--- SAV CLOUD DATABASE SETUP COMPLETO
--- Para ejecutar en el SQL Editor de Supabase
--- =============================================
+-- ============================================
+-- SAV CLOUD - CONFIGURACIÓN COMPLETA DE BASE DE DATOS
+-- Sistema de Gestión de Múltiples Fincas Cafeteras
+-- ============================================
 
--- IMPORTANTE: Antes de ejecutar este script, asegúrate de:
--- 1. Estar autenticado en Supabase con tu cuenta (sksmartinez@gmail.com)
--- 2. Tener permisos de administrador en el proyecto
--- 3. Ejecutar este script en el SQL Editor de Supabase
+-- ============================================
+-- HABILITAR EXTENSIONES NECESARIAS
+-- ============================================
 
--- =============================================
--- ENUMS
--- =============================================
+-- Habilitar la extensión UUID para generar IDs únicos
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Enum para roles de usuario
-DO $$ BEGIN
-    CREATE TYPE user_role AS ENUM ('admin', 'collaborator');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- Habilitar PostGIS para datos geoespaciales (opcional para coordenadas)
+-- CREATE EXTENSION IF NOT EXISTS "postgis";
 
--- Enum para tipos de contrato
--- 'libre' = Se le da comida al trabajador + pago en efectivo (menor)
--- 'grabado' = Solo pago en efectivo (mayor, sin comida)
-DO $$ BEGIN
-    CREATE TYPE contract_type AS ENUM ('libre', 'grabado');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- ============================================
+-- CREAR TIPOS ENUM PERSONALIZADOS
+-- ============================================
 
--- Enum para tipos de actividad
-DO $$ BEGIN
-    CREATE TYPE activity_type AS ENUM (
-      'fertilization', 
-      'fumigation', 
-      'pruning', 
-      'weeding', 
-      'planting', 
-      'maintenance', 
-      'other'
-    );
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- Limpiar tipos existentes si existen para evitar conflictos
+DROP TYPE IF EXISTS user_role CASCADE;
+DROP TYPE IF EXISTS contract_type CASCADE;
+DROP TYPE IF EXISTS activity_type CASCADE;
+DROP TYPE IF EXISTS plot_status CASCADE;
+DROP TYPE IF EXISTS plant_status CASCADE;
+DROP TYPE IF EXISTS quality_grade CASCADE;
+DROP TYPE IF EXISTS payment_method CASCADE;
+DROP TYPE IF EXISTS payment_status CASCADE;
+DROP TYPE IF EXISTS purchase_type CASCADE;
+DROP TYPE IF EXISTS bank_type CASCADE;
+DROP TYPE IF EXISTS bancolombia_product_type CASCADE;
+DROP TYPE IF EXISTS generic_product_type CASCADE;
 
--- Enum para calidad del café
-DO $$ BEGIN
-    CREATE TYPE quality_grade AS ENUM ('premium', 'standard', 'low');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- Tipos de roles de usuario
+CREATE TYPE user_role AS ENUM ('admin', 'farm_owner', 'farm_manager', 'collaborator');
 
--- Enum para métodos de pago
-DO $$ BEGIN
-    CREATE TYPE payment_method AS ENUM ('cash', 'transfer', 'check', 'credit');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- Tipos de contrato para colaboradores
+CREATE TYPE contract_type AS ENUM ('libre', 'grabado');
 
--- Enum para estado de pago
-DO $$ BEGIN
-    CREATE TYPE payment_status AS ENUM ('pending', 'partial', 'completed');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- Tipos de actividades en la finca
+CREATE TYPE activity_type AS ENUM (
+    'fertilization',    -- Fertilización
+    'fumigation',       -- Fumigación
+    'pruning',          -- Poda
+    'weeding',          -- Deshierbe
+    'planting',         -- Siembra
+    'maintenance',      -- Mantenimiento general
+    'harvesting',       -- Cosecha
+    'soil_preparation', -- Preparación de suelo
+    'pest_control',     -- Control de plagas
+    'irrigation',       -- Riego
+    'other'             -- Otras actividades
+);
 
--- Enum para tipos de compra
-DO $$ BEGIN
-    CREATE TYPE purchase_type AS ENUM (
-      'fertilizer', 
-      'pesticide', 
-      'tools', 
-      'seeds', 
-      'equipment', 
-      'fuel', 
-      'other'
-    );
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- Estados de parcelas/lotes
+CREATE TYPE plot_status AS ENUM (
+    'active',           -- Activa/Productiva
+    'preparation',      -- En preparación
+    'renovation',       -- En renovación
+    'resting',          -- En descanso
+    'abandoned'         -- Abandonada
+);
 
--- =============================================
--- TABLA: users (extiende auth.users de Supabase)
--- =============================================
+-- Estados de plantas
+CREATE TYPE plant_status AS ENUM (
+    'seedling',         -- Plántula
+    'growing',          -- Crecimiento
+    'productive',       -- Productiva
+    'declining',        -- En declive
+    'dead'              -- Muerta
+);
 
+-- Grados de calidad de los cultivos
+CREATE TYPE quality_grade AS ENUM ('premium', 'standard', 'low');
+
+-- Métodos de pago
+CREATE TYPE payment_method AS ENUM ('cash', 'transfer', 'check', 'credit');
+
+-- Estados de pago
+CREATE TYPE payment_status AS ENUM ('pending', 'partial', 'completed');
+
+-- Tipos de compras
+CREATE TYPE purchase_type AS ENUM (
+    'fertilizer',       -- Fertilizantes
+    'pesticide',        -- Pesticidas
+    'tools',            -- Herramientas
+    'equipment',        -- Equipos
+    'seeds',            -- Semillas
+    'seedlings',        -- Plántulas
+    'fuel',             -- Combustible
+    'maintenance',      -- Mantenimiento
+    'infrastructure',   -- Infraestructura
+    'services',         -- Servicios
+    'other'             -- Otros
+);
+
+-- Tipos de bancos
+CREATE TYPE bank_type AS ENUM (
+    'bancolombia',
+    'nequi',
+    'daviplata',
+    'banco_bogota',
+    'banco_popular',
+    'bbva',
+    'scotiabank',
+    'otro'
+);
+
+-- Tipos de productos bancarios específicos para Bancolombia
+CREATE TYPE bancolombia_product_type AS ENUM ('ahorros', 'corriente', 'bancolombia_a_la_mano');
+
+-- Tipos de productos bancarios genéricos
+CREATE TYPE generic_product_type AS ENUM ('ahorros', 'corriente');
+
+-- ============================================
+-- CREAR TABLAS PRINCIPALES
+-- ============================================
+
+-- Tabla de usuarios del sistema
 CREATE TABLE IF NOT EXISTS public.users (
-  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
-  role user_role NOT NULL DEFAULT 'collaborator',
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    role user_role NOT NULL DEFAULT 'farm_owner',
+    phone VARCHAR(20),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indices para users
+-- Índices para usuarios
 CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_is_active ON public.users(is_active);
 
--- =============================================
--- TABLA: collaborators
--- =============================================
+-- Tabla de información bancaria
+CREATE TABLE IF NOT EXISTS public.banking_info (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    bank bank_type NOT NULL,
+    product_type VARCHAR(50) NOT NULL, -- Puede ser bancolombia_product_type o generic_product_type
+    account_number VARCHAR(50) NOT NULL,
+    use_phone_number BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
+-- Índices para información bancaria
+CREATE INDEX IF NOT EXISTS idx_banking_info_bank ON public.banking_info(bank);
+CREATE INDEX IF NOT EXISTS idx_banking_info_account_number ON public.banking_info(account_number);
+
+-- Tabla de variedades de cultivos (café, cacao, aguacate, etc.)
+CREATE TABLE IF NOT EXISTS public.crop_varieties (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    crop_type VARCHAR(50) NOT NULL, -- 'coffee', 'cacao', 'avocado', 'plantain', etc.
+    name VARCHAR(100) NOT NULL,
+    scientific_name VARCHAR(150),
+    description TEXT,
+    characteristics JSONB, -- {yield_per_plant, disease_resistance, altitude_range, etc.}
+    maturation_months INTEGER, -- Meses hasta primera cosecha/producción
+    productive_years INTEGER, -- Años productivos
+    plants_per_hectare INTEGER,
+    harvest_seasons JSONB, -- Épocas de cosecha ["january", "february", etc.]
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Índices para variedades de cultivos
+CREATE INDEX IF NOT EXISTS idx_crop_varieties_crop_type ON public.crop_varieties(crop_type);
+CREATE INDEX IF NOT EXISTS idx_crop_varieties_name ON public.crop_varieties(name);
+CREATE INDEX IF NOT EXISTS idx_crop_varieties_is_active ON public.crop_varieties(is_active);
+
+-- Restricción única para evitar duplicados de variedad por tipo de cultivo
+CREATE UNIQUE INDEX IF NOT EXISTS idx_crop_varieties_crop_name_unique ON public.crop_varieties(crop_type, name);
+
+-- Tabla de fincas
+CREATE TABLE IF NOT EXISTS public.farms (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    owner_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    address TEXT,
+    municipality VARCHAR(100),
+    department VARCHAR(100),
+    country VARCHAR(100) DEFAULT 'Colombia',
+    total_area DECIMAL(10,2), -- Hectáreas totales
+    altitude_min INTEGER, -- Metros sobre el nivel del mar mínimo
+    altitude_max INTEGER, -- Metros sobre el nivel del mar máximo
+    latitude DECIMAL(10,8),
+    longitude DECIMAL(11,8),
+    phone VARCHAR(20),
+    email VARCHAR(255),
+    established_date DATE,
+    certifications JSONB, -- {organic: true, fair_trade: false, etc.}
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Índices para fincas
+CREATE INDEX IF NOT EXISTS idx_farms_owner_id ON public.farms(owner_id);
+CREATE INDEX IF NOT EXISTS idx_farms_name ON public.farms(name);
+CREATE INDEX IF NOT EXISTS idx_farms_is_active ON public.farms(is_active);
+CREATE INDEX IF NOT EXISTS idx_farms_municipality ON public.farms(municipality);
+
+-- Tabla de lotes/parcelas
+CREATE TABLE IF NOT EXISTS public.plots (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    farm_id UUID NOT NULL REFERENCES public.farms(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50), -- Código identificador del lote
+    crop_type VARCHAR(50) NOT NULL, -- Tipo de cultivo: 'coffee', 'cacao', 'avocado', etc.
+    area DECIMAL(8,2) NOT NULL, -- Hectáreas
+    altitude INTEGER, -- Metros sobre el nivel del mar
+    slope_percentage DECIMAL(5,2), -- Porcentaje de pendiente
+    soil_type VARCHAR(100),
+    irrigation_system VARCHAR(100),
+    status plot_status DEFAULT 'active',
+    planting_date DATE,
+    last_renovation_date DATE,
+    notes TEXT,
+    coordinates JSONB, -- Array de coordenadas para polígono del lote
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Índices para lotes
+CREATE INDEX IF NOT EXISTS idx_plots_farm_id ON public.plots(farm_id);
+CREATE INDEX IF NOT EXISTS idx_plots_name ON public.plots(name);
+CREATE INDEX IF NOT EXISTS idx_plots_crop_type ON public.plots(crop_type);
+CREATE INDEX IF NOT EXISTS idx_plots_status ON public.plots(status);
+CREATE INDEX IF NOT EXISTS idx_plots_is_active ON public.plots(is_active);
+CREATE INDEX IF NOT EXISTS idx_plots_farm_crop ON public.plots(farm_id, crop_type);
+
+-- Tabla de inventario de plantas por lote
+CREATE TABLE IF NOT EXISTS public.plant_inventory (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    plot_id UUID NOT NULL REFERENCES public.plots(id) ON DELETE CASCADE,
+    variety_id UUID NOT NULL REFERENCES public.crop_varieties(id) ON DELETE RESTRICT,
+    plant_count INTEGER NOT NULL CHECK (plant_count >= 0),
+    planted_date DATE,
+    expected_first_harvest DATE,
+    status plant_status DEFAULT 'growing',
+    mortality_count INTEGER DEFAULT 0,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Índices para inventario de plantas
+CREATE INDEX IF NOT EXISTS idx_plant_inventory_plot_id ON public.plant_inventory(plot_id);
+CREATE INDEX IF NOT EXISTS idx_plant_inventory_variety_id ON public.plant_inventory(variety_id);
+CREATE INDEX IF NOT EXISTS idx_plant_inventory_status ON public.plant_inventory(status);
+
+-- Tabla de colaboradores
 CREATE TABLE IF NOT EXISTS public.collaborators (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    farm_id UUID NOT NULL REFERENCES public.farms(id) ON DELETE CASCADE,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
-  identification VARCHAR(50) UNIQUE NOT NULL,
-  phone VARCHAR(20),
-  address TEXT,
-  email VARCHAR(255),
+    identification VARCHAR(50) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    address TEXT NOT NULL,
   birth_date DATE,
   hire_date DATE NOT NULL,
   contract_type contract_type NOT NULL,
-  emergency_contact_name VARCHAR(100),
+    emergency_contact_name VARCHAR(200),
   emergency_contact_phone VARCHAR(20),
-  bank_account VARCHAR(50),
-  is_active BOOLEAN NOT NULL DEFAULT true,
+    banking_info_id UUID REFERENCES public.banking_info(id) ON DELETE SET NULL,
+    specializations JSONB, -- {fertilization: true, pruning: false, etc.}
   notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indices para collaborators
-CREATE UNIQUE INDEX IF NOT EXISTS idx_collaborators_identification ON public.collaborators(identification);
+-- Índices para colaboradores
+CREATE INDEX IF NOT EXISTS idx_collaborators_farm_id ON public.collaborators(farm_id);
+CREATE INDEX IF NOT EXISTS idx_collaborators_identification ON public.collaborators(identification);
 CREATE INDEX IF NOT EXISTS idx_collaborators_contract_type ON public.collaborators(contract_type);
 CREATE INDEX IF NOT EXISTS idx_collaborators_is_active ON public.collaborators(is_active);
-CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON public.collaborators(user_id);
+CREATE INDEX IF NOT EXISTS idx_collaborators_banking_info_id ON public.collaborators(banking_info_id);
 
--- =============================================
--- TABLA: settings
--- =============================================
-
-CREATE TABLE IF NOT EXISTS public.settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- Tabla de configuraciones por finca
+CREATE TABLE IF NOT EXISTS public.farm_settings (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    farm_id UUID NOT NULL REFERENCES public.farms(id) ON DELETE CASCADE,
   year INTEGER NOT NULL,
-  harvest_price_per_kilogram DECIMAL(8,2) NOT NULL,
-  daily_rate_libre DECIMAL(8,2) NOT NULL,
-  daily_rate_grabado DECIMAL(8,2) NOT NULL,
-  activity_rate_fertilization DECIMAL(8,2),
-  activity_rate_fumigation DECIMAL(8,2),
-  activity_rate_pruning DECIMAL(8,2),
-  activity_rate_weeding DECIMAL(8,2),
-  activity_rate_planting DECIMAL(8,2),
-  activity_rate_maintenance DECIMAL(8,2),
-  activity_rate_other DECIMAL(8,2),
-  currency VARCHAR(3) NOT NULL DEFAULT 'COP',
-  tax_percentage DECIMAL(4,2) NOT NULL DEFAULT 0,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    currency VARCHAR(10) DEFAULT 'COP',
+    tax_percentage DECIMAL(5,2) DEFAULT 0.00,
+    crop_prices JSONB NOT NULL, -- {coffee: {price_per_kg: 2800, unit: "kg"}, cacao: {price_per_kg: 8500, unit: "kg"}, avocado: {price_per_unit: 1200, unit: "units"}}
+    daily_rate_libre DECIMAL(10,2) NOT NULL,
+    daily_rate_grabado DECIMAL(10,2) NOT NULL,
+    activity_rates JSONB, -- {fertilization: 40000, fumigation: 45000, etc.}
+    quality_premiums JSONB, -- {premium: 500, standard: 0, low: -200}
+    is_active BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indices para settings
-CREATE UNIQUE INDEX IF NOT EXISTS idx_settings_year_active ON public.settings(year) WHERE is_active = true;
-CREATE INDEX IF NOT EXISTS idx_settings_year ON public.settings(year);
+-- Índices para configuraciones
+CREATE UNIQUE INDEX IF NOT EXISTS idx_farm_settings_farm_year_active ON public.farm_settings(farm_id, year) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_farm_settings_farm_id ON public.farm_settings(farm_id);
+CREATE INDEX IF NOT EXISTS idx_farm_settings_year ON public.farm_settings(year);
 
--- =============================================
--- TABLA: activities
--- =============================================
-
+-- Tabla de actividades
 CREATE TABLE IF NOT EXISTS public.activities (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    farm_id UUID NOT NULL REFERENCES public.farms(id) ON DELETE CASCADE,
   collaborator_id UUID NOT NULL REFERENCES public.collaborators(id) ON DELETE CASCADE,
+    plot_id UUID REFERENCES public.plots(id) ON DELETE SET NULL, -- Opcional: actividad en lote específico
   type activity_type NOT NULL,
   date DATE NOT NULL,
-  start_time TIME,
-  end_time TIME,
-  days DECIMAL(3,1) NOT NULL DEFAULT 1.0 CHECK (days > 0),
-  area_worked DECIMAL(8,2) CHECK (area_worked >= 0),
+    days DECIMAL(3,1) NOT NULL CHECK (days > 0),
   payment_type contract_type NOT NULL,
-  rate_per_day DECIMAL(10,2) NOT NULL CHECK (rate_per_day >= 0),
-  total_cost DECIMAL(10,2) NOT NULL CHECK (total_cost >= 0),
+    rate_per_day DECIMAL(10,2) NOT NULL,
+    total_cost DECIMAL(10,2) NOT NULL,
+    area_worked DECIMAL(8,2),
   materials_used TEXT,
   weather_conditions VARCHAR(100),
   quality_rating INTEGER CHECK (quality_rating >= 1 AND quality_rating <= 5),
+    supervisor_id UUID REFERENCES public.collaborators(id) ON DELETE SET NULL,
+    equipment_used JSONB, -- Array de equipos utilizados
   notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indices para activities
+-- Índices para actividades
+CREATE INDEX IF NOT EXISTS idx_activities_farm_id ON public.activities(farm_id);
 CREATE INDEX IF NOT EXISTS idx_activities_collaborator_id ON public.activities(collaborator_id);
+CREATE INDEX IF NOT EXISTS idx_activities_plot_id ON public.activities(plot_id);
 CREATE INDEX IF NOT EXISTS idx_activities_type ON public.activities(type);
 CREATE INDEX IF NOT EXISTS idx_activities_date ON public.activities(date);
-CREATE INDEX IF NOT EXISTS idx_activities_collaborator_date ON public.activities(collaborator_id, date);
+CREATE INDEX IF NOT EXISTS idx_activities_farm_date ON public.activities(farm_id, date);
 
--- =============================================
--- TABLA: harvests
--- =============================================
-
+-- Tabla de cosechas
 CREATE TABLE IF NOT EXISTS public.harvests (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    farm_id UUID NOT NULL REFERENCES public.farms(id) ON DELETE CASCADE,
   collaborator_id UUID NOT NULL REFERENCES public.collaborators(id) ON DELETE CASCADE,
+    plot_id UUID REFERENCES public.plots(id) ON DELETE SET NULL, -- Opcional: cosecha de lote específico
+    variety_id UUID REFERENCES public.crop_varieties(id) ON DELETE SET NULL,
   date DATE NOT NULL,
   start_time TIME,
   end_time TIME,
-  kilograms DECIMAL(8,2) NOT NULL CHECK (kilograms > 0),
-  quality_grade quality_grade NOT NULL DEFAULT 'standard',
-  price_per_kilogram DECIMAL(8,2) NOT NULL CHECK (price_per_kilogram > 0),
-  total_payment DECIMAL(10,2) NOT NULL CHECK (total_payment >= 0),
-  humidity_percentage DECIMAL(4,1) CHECK (humidity_percentage >= 0 AND humidity_percentage <= 100),
-  defects_percentage DECIMAL(4,1) CHECK (defects_percentage >= 0 AND defects_percentage <= 100),
-  area_harvested DECIMAL(8,2) CHECK (area_harvested >= 0),
+  quantity DECIMAL(8,2) NOT NULL CHECK (quantity > 0), -- Cantidad cosechada (kg, unidades, etc.)
+    unit_measure VARCHAR(20) DEFAULT 'kg', -- kg, units, tons, etc.
+    quality_grade quality_grade NOT NULL,
+    humidity_percentage DECIMAL(5,2) CHECK (humidity_percentage >= 0 AND humidity_percentage <= 100),
+    defects_percentage DECIMAL(5,2) CHECK (defects_percentage >= 0 AND defects_percentage <= 100),
+    area_harvested DECIMAL(8,2),
+    price_per_unit DECIMAL(10,2) NOT NULL,
+    total_payment DECIMAL(10,2) NOT NULL,
   weather_conditions VARCHAR(100),
-  is_sold BOOLEAN NOT NULL DEFAULT false,
+    processing_method VARCHAR(100), -- Lavado, natural, honey, fermentado, etc.
+    is_sold BOOLEAN DEFAULT false,
+    batch_number VARCHAR(50),
   notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indices para harvests
+-- Índices para cosechas
+CREATE INDEX IF NOT EXISTS idx_harvests_farm_id ON public.harvests(farm_id);
 CREATE INDEX IF NOT EXISTS idx_harvests_collaborator_id ON public.harvests(collaborator_id);
+CREATE INDEX IF NOT EXISTS idx_harvests_plot_id ON public.harvests(plot_id);
+CREATE INDEX IF NOT EXISTS idx_harvests_variety_id ON public.harvests(variety_id);
 CREATE INDEX IF NOT EXISTS idx_harvests_date ON public.harvests(date);
-CREATE INDEX IF NOT EXISTS idx_harvests_collaborator_date ON public.harvests(collaborator_id, date);
+CREATE INDEX IF NOT EXISTS idx_harvests_farm_date ON public.harvests(farm_id, date);
 CREATE INDEX IF NOT EXISTS idx_harvests_is_sold ON public.harvests(is_sold);
 CREATE INDEX IF NOT EXISTS idx_harvests_quality_grade ON public.harvests(quality_grade);
 
--- =============================================
--- TABLA: sales
--- =============================================
-
+-- Tabla de ventas
 CREATE TABLE IF NOT EXISTS public.sales (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    farm_id UUID NOT NULL REFERENCES public.farms(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
   buyer_name VARCHAR(200) NOT NULL,
-  buyer_contact VARCHAR(100),
+    buyer_contact VARCHAR(200),
   buyer_address TEXT,
-  date DATE NOT NULL,
-  kilograms DECIMAL(8,2) NOT NULL CHECK (kilograms > 0),
+    total_quantity DECIMAL(10,2) NOT NULL CHECK (total_quantity > 0),
+    unit_measure VARCHAR(20) DEFAULT 'kg', -- kg, units, tons, etc.
+    price_per_unit DECIMAL(10,2) NOT NULL CHECK (price_per_unit > 0),
+    total_amount DECIMAL(12,2) NOT NULL,
   quality_grade quality_grade NOT NULL,
-  price_per_kilogram DECIMAL(8,2) NOT NULL CHECK (price_per_kilogram > 0),
-  total_amount DECIMAL(12,2) NOT NULL CHECK (total_amount >= 0),
   payment_method payment_method NOT NULL,
-  payment_status payment_status NOT NULL DEFAULT 'pending',
-  payment_due_date DATE,
-  invoice_number VARCHAR(50),
-  transport_cost DECIMAL(8,2) NOT NULL DEFAULT 0 CHECK (transport_cost >= 0),
-  packaging_cost DECIMAL(8,2) NOT NULL DEFAULT 0 CHECK (packaging_cost >= 0),
-  commission_percentage DECIMAL(4,2) NOT NULL DEFAULT 0 CHECK (commission_percentage >= 0 AND commission_percentage <= 100),
-  net_amount DECIMAL(12,2) NOT NULL CHECK (net_amount >= 0),
+    payment_status payment_status DEFAULT 'pending',
+    payment_date DATE,
+    transport_cost DECIMAL(10,2) DEFAULT 0,
+    processing_cost DECIMAL(10,2) DEFAULT 0,
+    packaging_cost DECIMAL(10,2) DEFAULT 0,
+    other_costs DECIMAL(10,2) DEFAULT 0,
+    profit_margin DECIMAL(10,2),
+    delivery_location VARCHAR(200),
+    invoice_number VARCHAR(100),
+    tax_amount DECIMAL(10,2) DEFAULT 0,
+    net_amount DECIMAL(12,2),
+    moisture_percentage DECIMAL(5,2),
+    certifications JSONB, -- Certificaciones aplicables a esta venta
+    contract_details JSONB, -- Detalles del contrato de venta
   notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indices para sales
+-- Índices para ventas
+CREATE INDEX IF NOT EXISTS idx_sales_farm_id ON public.sales(farm_id);
 CREATE INDEX IF NOT EXISTS idx_sales_date ON public.sales(date);
 CREATE INDEX IF NOT EXISTS idx_sales_buyer_name ON public.sales(buyer_name);
 CREATE INDEX IF NOT EXISTS idx_sales_payment_status ON public.sales(payment_status);
 CREATE INDEX IF NOT EXISTS idx_sales_quality_grade ON public.sales(quality_grade);
 
--- =============================================
--- TABLA: sale_harvest_details (relación N:M)
--- =============================================
-
+-- Tabla de relación entre ventas y cosechas
 CREATE TABLE IF NOT EXISTS public.sale_harvest_details (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   sale_id UUID NOT NULL REFERENCES public.sales(id) ON DELETE CASCADE,
   harvest_id UUID NOT NULL REFERENCES public.harvests(id) ON DELETE CASCADE,
-  kilograms_used DECIMAL(8,2) NOT NULL CHECK (kilograms_used > 0),
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    kilograms_sold DECIMAL(8,2) NOT NULL CHECK (kilograms_sold > 0),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indices para sale_harvest_details
+-- Índices para detalles de venta-cosecha
 CREATE UNIQUE INDEX IF NOT EXISTS idx_sale_harvest_unique ON public.sale_harvest_details(sale_id, harvest_id);
 CREATE INDEX IF NOT EXISTS idx_sale_harvest_sale_id ON public.sale_harvest_details(sale_id);
 CREATE INDEX IF NOT EXISTS idx_sale_harvest_harvest_id ON public.sale_harvest_details(harvest_id);
 
--- =============================================
--- TABLA: purchases
--- =============================================
-
+-- Tabla de compras/gastos
 CREATE TABLE IF NOT EXISTS public.purchases (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    farm_id UUID NOT NULL REFERENCES public.farms(id) ON DELETE CASCADE,
   type purchase_type NOT NULL,
+    date DATE NOT NULL,
   supplier_name VARCHAR(200) NOT NULL,
-  supplier_contact VARCHAR(100),
-  date DATE NOT NULL,
+    supplier_contact VARCHAR(200),
+    supplier_address TEXT,
   description TEXT NOT NULL,
-  quantity DECIMAL(8,2) NOT NULL CHECK (quantity > 0),
-  unit_price DECIMAL(8,2) NOT NULL CHECK (unit_price > 0),
-  total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
+    quantity DECIMAL(10,2),
+    unit VARCHAR(50), -- kg, litros, unidades, etc.
+    unit_price DECIMAL(10,2),
+    total_amount DECIMAL(12,2) NOT NULL CHECK (total_amount > 0),
   payment_method payment_method NOT NULL,
-  payment_status payment_status NOT NULL DEFAULT 'pending',
-  purchased_by UUID REFERENCES public.collaborators(id) ON DELETE SET NULL,
-  invoice_number VARCHAR(50),
+    payment_status payment_status DEFAULT 'pending',
+    payment_date DATE,
+    invoice_number VARCHAR(100),
+    tax_amount DECIMAL(10,2) DEFAULT 0,
   delivery_date DATE,
-  warranty_months INTEGER CHECK (warranty_months >= 0),
+    delivery_location VARCHAR(200),
+    warranty_months INTEGER,
+    purchased_by UUID REFERENCES public.users(id),
+    approved_by UUID REFERENCES public.users(id),
+    category_tags JSONB, -- Tags para categorización
   notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indices para purchases
+-- Índices para compras
+CREATE INDEX IF NOT EXISTS idx_purchases_farm_id ON public.purchases(farm_id);
 CREATE INDEX IF NOT EXISTS idx_purchases_type ON public.purchases(type);
 CREATE INDEX IF NOT EXISTS idx_purchases_date ON public.purchases(date);
 CREATE INDEX IF NOT EXISTS idx_purchases_supplier_name ON public.purchases(supplier_name);
 CREATE INDEX IF NOT EXISTS idx_purchases_payment_status ON public.purchases(payment_status);
 CREATE INDEX IF NOT EXISTS idx_purchases_purchased_by ON public.purchases(purchased_by);
 
--- =============================================
--- TABLA: inventory_summary
--- =============================================
-
+-- Tabla de resumen de inventario por finca
 CREATE TABLE IF NOT EXISTS public.inventory_summary (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    farm_id UUID NOT NULL REFERENCES public.farms(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   quality_grade quality_grade NOT NULL,
-  total_kilograms DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (total_kilograms >= 0),
-  available_kilograms DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (available_kilograms >= 0),
-  sold_kilograms DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (sold_kilograms >= 0),
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    total_harvested DECIMAL(10,2) DEFAULT 0,
+    total_sold DECIMAL(10,2) DEFAULT 0,
+    remaining_stock DECIMAL(10,2) DEFAULT 0,
+    average_price DECIMAL(10,2),
+    storage_location VARCHAR(200),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indices para inventory_summary
-CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_date_quality ON public.inventory_summary(date, quality_grade);
+-- Índices para resumen de inventario
+CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_farm_date_quality ON public.inventory_summary(farm_id, date, quality_grade);
+CREATE INDEX IF NOT EXISTS idx_inventory_farm_id ON public.inventory_summary(farm_id);
 CREATE INDEX IF NOT EXISTS idx_inventory_date ON public.inventory_summary(date);
 
--- =============================================
--- TRIGGERS PARA UPDATED_AT
--- =============================================
+-- ============================================
+-- CREAR FUNCIONES Y TRIGGERS
+-- ============================================
 
+-- Función para actualizar timestamp automáticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -331,63 +499,119 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Crear triggers para actualizar updated_at automáticamente
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_banking_info_updated_at BEFORE UPDATE ON public.banking_info FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_crop_varieties_updated_at BEFORE UPDATE ON public.crop_varieties FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_farms_updated_at BEFORE UPDATE ON public.farms FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_plots_updated_at BEFORE UPDATE ON public.plots FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_plant_inventory_updated_at BEFORE UPDATE ON public.plant_inventory FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_collaborators_updated_at BEFORE UPDATE ON public.collaborators FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_farm_settings_updated_at BEFORE UPDATE ON public.farm_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_activities_updated_at BEFORE UPDATE ON public.activities FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_harvests_updated_at BEFORE UPDATE ON public.harvests FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_sales_updated_at BEFORE UPDATE ON public.sales FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_purchases_updated_at BEFORE UPDATE ON public.purchases FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_settings_updated_at BEFORE UPDATE ON public.settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_inventory_summary_updated_at BEFORE UPDATE ON public.inventory_summary FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- =============================================
--- POLITICAS RLS (Row Level Security)
--- =============================================
+-- ============================================
+-- POLÍTICAS DE SEGURIDAD (RLS)
+-- ============================================
 
 -- Habilitar RLS en todas las tablas
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.banking_info ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.crop_varieties ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.farms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.plots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.plant_inventory ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.collaborators ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.farm_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.harvests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sale_harvest_details ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.purchases ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inventory_summary ENABLE ROW LEVEL SECURITY;
 
--- Politicas simplificadas para evitar errores de dependencias
+-- Políticas simplificadas: permitir todas las operaciones para usuarios autenticados
+-- En producción deberían ser más específicas según roles y ownership
+
+-- Política para usuarios
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.users;
 CREATE POLICY "Enable all operations for authenticated users" ON public.users
-  FOR ALL USING (true);
+    FOR ALL USING (auth.uid() IS NOT NULL);
 
+-- Política para información bancaria
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.banking_info;
+CREATE POLICY "Enable all operations for authenticated users" ON public.banking_info
+    FOR ALL USING (auth.uid() IS NOT NULL);
+
+-- Política para variedades de cultivos (acceso global)
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.crop_varieties;
+CREATE POLICY "Enable all operations for authenticated users" ON public.crop_varieties
+    FOR ALL USING (auth.uid() IS NOT NULL);
+
+-- Política para fincas
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.farms;
+CREATE POLICY "Enable all operations for authenticated users" ON public.farms
+    FOR ALL USING (auth.uid() IS NOT NULL);
+
+-- Política para lotes
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.plots;
+CREATE POLICY "Enable all operations for authenticated users" ON public.plots
+    FOR ALL USING (auth.uid() IS NOT NULL);
+
+-- Política para inventario de plantas
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.plant_inventory;
+CREATE POLICY "Enable all operations for authenticated users" ON public.plant_inventory
+    FOR ALL USING (auth.uid() IS NOT NULL);
+
+-- Política para colaboradores
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.collaborators;
 CREATE POLICY "Enable all operations for authenticated users" ON public.collaborators
-  FOR ALL USING (true);
+    FOR ALL USING (auth.uid() IS NOT NULL);
 
+-- Política para configuraciones de finca
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.farm_settings;
+CREATE POLICY "Enable all operations for authenticated users" ON public.farm_settings
+    FOR ALL USING (auth.uid() IS NOT NULL);
+
+-- Política para actividades
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.activities;
 CREATE POLICY "Enable all operations for authenticated users" ON public.activities
-  FOR ALL USING (true);
+    FOR ALL USING (auth.uid() IS NOT NULL);
 
+-- Política para cosechas
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.harvests;
 CREATE POLICY "Enable all operations for authenticated users" ON public.harvests
-  FOR ALL USING (true);
+    FOR ALL USING (auth.uid() IS NOT NULL);
 
+-- Política para ventas
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.sales;
 CREATE POLICY "Enable all operations for authenticated users" ON public.sales
-  FOR ALL USING (true);
+    FOR ALL USING (auth.uid() IS NOT NULL);
 
+-- Política para detalles de venta-cosecha
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.sale_harvest_details;
 CREATE POLICY "Enable all operations for authenticated users" ON public.sale_harvest_details
-  FOR ALL USING (true);
+    FOR ALL USING (auth.uid() IS NOT NULL);
 
+-- Política para compras
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.purchases;
 CREATE POLICY "Enable all operations for authenticated users" ON public.purchases
-  FOR ALL USING (true);
+    FOR ALL USING (auth.uid() IS NOT NULL);
 
-CREATE POLICY "Enable all operations for authenticated users" ON public.settings
-  FOR ALL USING (true);
-
+-- Política para resumen de inventario
+DROP POLICY IF EXISTS "Enable all operations for authenticated users" ON public.inventory_summary;
 CREATE POLICY "Enable all operations for authenticated users" ON public.inventory_summary
-  FOR ALL USING (true);
+    FOR ALL USING (auth.uid() IS NOT NULL);
 
--- =============================================
--- FUNCIONES AUXILIARES
--- =============================================
+-- ============================================
+-- FUNCIONES DE UTILIDAD
+-- ============================================
 
--- Funcion auxiliar para verificar si el usuario actual es admin
+-- Función para verificar si el usuario actual es admin
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -398,189 +622,207 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Funcion para calcular el costo de una actividad
+-- Función para verificar si el usuario es propietario de una finca
+CREATE OR REPLACE FUNCTION public.is_farm_owner(farm_uuid UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.farms 
+        WHERE id = farm_uuid AND owner_id = auth.uid()
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Función para calcular el costo de una actividad
 CREATE OR REPLACE FUNCTION calculate_activity_cost(
-  p_activity_type activity_type,
+    p_days DECIMAL,
   p_payment_type contract_type,
-  p_days DECIMAL,
-  p_year INTEGER DEFAULT NULL
-) RETURNS DECIMAL AS $$
+    p_rate_per_day DECIMAL,
+    p_farm_id UUID DEFAULT NULL
+)
+RETURNS DECIMAL AS $$
 DECLARE
-  v_rate DECIMAL;
-  v_current_year INTEGER;
+    v_base_cost DECIMAL;
 BEGIN
-  -- Si no se proporciona año, usar el año actual
-  v_current_year := COALESCE(p_year, EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER);
-  
-  -- Obtener la tarifa base según el tipo de pago
-  IF p_payment_type = 'libre' THEN
-    SELECT daily_rate_libre INTO v_rate
-    FROM public.settings 
-    WHERE year = v_current_year AND is_active = true;
-  ELSE
-    SELECT daily_rate_grabado INTO v_rate
-    FROM public.settings 
-    WHERE year = v_current_year AND is_active = true;
-  END IF;
-  
-  -- Si hay una tarifa específica para el tipo de actividad, usarla
-  CASE p_activity_type
-    WHEN 'fertilization' THEN
-      SELECT COALESCE(activity_rate_fertilization, v_rate) INTO v_rate
-      FROM public.settings 
-      WHERE year = v_current_year AND is_active = true;
-    WHEN 'fumigation' THEN
-      SELECT COALESCE(activity_rate_fumigation, v_rate) INTO v_rate
-      FROM public.settings 
-      WHERE year = v_current_year AND is_active = true;
-    WHEN 'pruning' THEN
-      SELECT COALESCE(activity_rate_pruning, v_rate) INTO v_rate
-      FROM public.settings 
-      WHERE year = v_current_year AND is_active = true;
-    WHEN 'weeding' THEN
-      SELECT COALESCE(activity_rate_weeding, v_rate) INTO v_rate
-      FROM public.settings 
-      WHERE year = v_current_year AND is_active = true;
-    WHEN 'planting' THEN
-      SELECT COALESCE(activity_rate_planting, v_rate) INTO v_rate
-      FROM public.settings 
-      WHERE year = v_current_year AND is_active = true;
-    WHEN 'maintenance' THEN
-      SELECT COALESCE(activity_rate_maintenance, v_rate) INTO v_rate
-      FROM public.settings 
-      WHERE year = v_current_year AND is_active = true;
-    WHEN 'other' THEN
-      SELECT COALESCE(activity_rate_other, v_rate) INTO v_rate
-      FROM public.settings 
-      WHERE year = v_current_year AND is_active = true;
-  END CASE;
-  
-  -- Calcular el costo total
-  RETURN COALESCE(v_rate, 0) * p_days;
-END;
-$$ LANGUAGE plpgsql;
-
--- Funcion para calcular el pago de una cosecha
-CREATE OR REPLACE FUNCTION calculate_harvest_payment(
-  p_kilograms DECIMAL,
-  p_quality_grade quality_grade DEFAULT 'standard',
-  p_year INTEGER DEFAULT NULL
-) RETURNS DECIMAL AS $$
-DECLARE
-  v_price_per_kg DECIMAL;
-  v_current_year INTEGER;
-BEGIN
-  -- Si no se proporciona año, usar el año actual
-  v_current_year := COALESCE(p_year, EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER);
-  
-  -- Obtener el precio por kilogramo
-  SELECT harvest_price_per_kilogram INTO v_price_per_kg
-  FROM public.settings 
-  WHERE year = v_current_year AND is_active = true;
-  
-  -- Calcular el pago total
-  RETURN COALESCE(v_price_per_kg, 0) * p_kilograms;
-END;
-$$ LANGUAGE plpgsql;
-
--- =============================================
--- CONFIGURACIÓN INICIAL
--- =============================================
-
--- Crear usuario administrador automáticamente
--- IMPORTANTE: Este bloque busca tu usuario en auth.users y lo registra como admin
-DO $$
-DECLARE
-  admin_user_id UUID;
-BEGIN
-  -- Buscar el ID del usuario en auth.users
-  SELECT id INTO admin_user_id 
-  FROM auth.users 
-  WHERE email = 'sksmartinez@gmail.com'
-  LIMIT 1;
-  
-  -- Si se encuentra el usuario, insertarlo en public.users como admin
-  IF admin_user_id IS NOT NULL THEN
-    INSERT INTO public.users (id, email, first_name, last_name, role, is_active)
-    VALUES (
-      admin_user_id,
-      'sksmartinez@gmail.com',
-      'Nestor',
-      'Martinez',
-      'admin',
-      true
-    )
-    ON CONFLICT (id) DO UPDATE SET
-      role = 'admin',
-      is_active = true,
-      first_name = EXCLUDED.first_name,
-      last_name = EXCLUDED.last_name,
-      updated_at = NOW();
+    -- Calcular costo base
+    v_base_cost := p_days * p_rate_per_day;
     
-    RAISE NOTICE 'Usuario administrador creado/actualizado exitosamente: %', admin_user_id;
-  ELSE
-    RAISE NOTICE 'No se encontró el usuario con email sksmartinez@gmail.com en auth.users';
-    RAISE NOTICE 'INSTRUCCIONES:';
-    RAISE NOTICE '1. Primero debes registrarte en tu aplicación Angular con el email: sksmartinez@gmail.com';
-    RAISE NOTICE '2. Luego ejecuta este comando SQL para convertirte en admin:';
-    RAISE NOTICE 'UPDATE public.users SET role = ''admin'' WHERE email = ''sksmartinez@gmail.com'';';
-  END IF;
-END $$;
+    -- Aquí se pueden agregar cálculos adicionales basados en configuraciones de la finca
+    -- por ejemplo, bonificaciones, descuentos, etc.
+    
+    RETURN v_base_cost;
+END;
+$$ LANGUAGE plpgsql;
 
--- Configuracion inicial de settings (valores minimos por defecto)
--- IMPORTANTE: Estos valores deben ser configurados segun las necesidades reales
-INSERT INTO public.settings (
-  year,
-  harvest_price_per_kilogram,
-  daily_rate_libre,
-  daily_rate_grabado,
-  activity_rate_fertilization,
-  activity_rate_fumigation,
-  activity_rate_pruning,
-  activity_rate_weeding,
-  activity_rate_planting,
-  activity_rate_maintenance,
-  activity_rate_other,
-  currency,
-  tax_percentage,
-  is_active
-) VALUES (
-  EXTRACT(YEAR FROM CURRENT_DATE),
-     1000.00, -- Precio por kg - CONFIGURAR SEGUN MERCADO
-   30000.00, -- Tarifa diaria libre - CONFIGURAR SEGUN NECESIDADES
-   35000.00, -- Tarifa diaria grabado - CONFIGURAR SEGUN NECESIDADES
-  NULL, -- Usar tarifa base por defecto
-  NULL, -- Usar tarifa base por defecto
-  NULL, -- Usar tarifa base por defecto
-  NULL, -- Usar tarifa base por defecto
-  NULL, -- Usar tarifa base por defecto
-  NULL, -- Usar tarifa base por defecto
-  NULL, -- Usar tarifa base por defecto
-  'COP',
-  0,
-  true
-) ON CONFLICT (year) WHERE is_active = true DO UPDATE SET
-  harvest_price_per_kilogram = EXCLUDED.harvest_price_per_kilogram,
-  daily_rate_libre = EXCLUDED.daily_rate_libre,
-  daily_rate_grabado = EXCLUDED.daily_rate_grabado,
-  updated_at = NOW();
+-- Función para calcular estadísticas de producción por finca
+CREATE OR REPLACE FUNCTION get_farm_production_stats(
+    p_farm_id UUID,
+    p_start_date DATE DEFAULT NULL,
+    p_end_date DATE DEFAULT NULL,
+    p_crop_type VARCHAR DEFAULT NULL
+)
+RETURNS JSONB AS $$
+DECLARE
+    v_stats JSONB;
+    v_start_date DATE;
+    v_end_date DATE;
+BEGIN
+    -- Establecer fechas por defecto
+    v_start_date := COALESCE(p_start_date, DATE_TRUNC('year', CURRENT_DATE));
+    v_end_date := COALESCE(p_end_date, CURRENT_DATE);
+    
+    SELECT jsonb_build_object(
+        'total_harvested', COALESCE(SUM(h.quantity), 0),
+        'total_revenue', COALESCE(SUM(h.total_payment), 0),
+        'average_price_per_unit', COALESCE(AVG(h.price_per_unit), 0),
+        'harvest_count', COUNT(*),
+        'plots_harvested', COUNT(DISTINCT h.plot_id),
+        'collaborators_involved', COUNT(DISTINCT h.collaborator_id),
+        'crop_breakdown', jsonb_object_agg(p.crop_type, COUNT(*))
+    ) INTO v_stats
+    FROM public.harvests h
+    LEFT JOIN public.plots p ON h.plot_id = p.id
+    WHERE h.farm_id = p_farm_id
+        AND h.date BETWEEN v_start_date AND v_end_date
+        AND (p_crop_type IS NULL OR p.crop_type = p_crop_type);
+    
+    RETURN v_stats;
+END;
+$$ LANGUAGE plpgsql;
 
--- =============================================
--- SCRIPT COMPLETADO
--- =============================================
+-- Función para obtener los tipos de cultivos de una finca
+CREATE OR REPLACE FUNCTION get_farm_crop_types(p_farm_id UUID)
+RETURNS TABLE(crop_type VARCHAR, plot_count BIGINT, total_area DECIMAL) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.crop_type,
+        COUNT(*) as plot_count,
+        SUM(p.area) as total_area
+    FROM public.plots p
+    WHERE p.farm_id = p_farm_id 
+        AND p.is_active = true
+    GROUP BY p.crop_type
+    ORDER BY p.crop_type;
+END;
+$$ LANGUAGE plpgsql;
 
--- El script ha creado exitosamente:
--- ✅ Todas las tablas con sus relaciones
--- ✅ Indices para optimizacion de consultas
--- ✅ Politicas RLS para seguridad
--- ✅ Triggers para updated_at
--- ✅ Funciones auxiliares para calculos
--- ✅ Usuario administrador (sksmartinez@gmail.com)
--- ✅ Configuracion inicial minima
+-- Función para obtener variedades disponibles por tipo de cultivo
+CREATE OR REPLACE FUNCTION get_crop_varieties_by_type(p_crop_type VARCHAR)
+RETURNS TABLE(
+    id UUID, 
+    name VARCHAR, 
+    scientific_name VARCHAR, 
+    description TEXT,
+    maturation_months INTEGER,
+    productive_years INTEGER,
+    plants_per_hectare INTEGER,
+    harvest_seasons JSONB
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        cv.id,
+        cv.name,
+        cv.scientific_name,
+        cv.description,
+        cv.maturation_months,
+        cv.productive_years,
+        cv.plants_per_hectare,
+        cv.harvest_seasons
+    FROM public.crop_varieties cv
+    WHERE cv.crop_type = p_crop_type 
+        AND cv.is_active = true
+    ORDER BY cv.name;
+END;
+$$ LANGUAGE plpgsql;
 
--- PROXIMOS PASOS:
--- 1. Configurar las tarifas reales en la tabla settings
--- 2. Comenzar a agregar colaboradores a traves de la aplicacion
--- 3. Registrar actividades y cosechas segun las operaciones de la finca
+-- ============================================
+-- DATOS INICIALES
+-- ============================================
 
-SELECT 'SAV CLOUD Database setup completed successfully!' as status; 
+-- Insertar variedades de cultivos comunes
+INSERT INTO public.crop_varieties (crop_type, name, scientific_name, description, characteristics, maturation_months, productive_years, plants_per_hectare, harvest_seasons) VALUES
+-- Variedades de Café
+('coffee', 'Caturra', 'Coffea arabica var. Caturra', 'Variedad de porte bajo, muy productiva y adaptable', '{"yield_per_plant": "1.5-2.5", "disease_resistance": "medium", "altitude_range": "1200-1800"}', 24, 15, 5000, '["october", "november", "december", "january", "february"]'),
+('coffee', 'Colombia', 'Coffea arabica var. Colombia', 'Variedad resistente a la roya, desarrollada en Colombia', '{"yield_per_plant": "2.0-3.0", "disease_resistance": "high", "altitude_range": "1200-2000"}', 30, 20, 4500, '["october", "november", "december", "january", "february"]'),
+('coffee', 'Castillo', 'Coffea arabica var. Castillo', 'Variedad moderna resistente a roya y CBD', '{"yield_per_plant": "2.5-3.5", "disease_resistance": "very_high", "altitude_range": "1000-2000"}', 24, 18, 4800, '["october", "november", "december", "january", "february"]'),
+('coffee', 'Típica', 'Coffea arabica var. Typica', 'Variedad tradicional de excelente calidad de taza', '{"yield_per_plant": "1.0-1.5", "disease_resistance": "low", "altitude_range": "1400-2000"}', 36, 25, 4000, '["october", "november", "december", "january", "february"]'),
+('coffee', 'Borbón', 'Coffea arabica var. Bourbon', 'Variedad tradicional de alta calidad', '{"yield_per_plant": "1.5-2.0", "disease_resistance": "medium", "altitude_range": "1200-2000"}', 30, 20, 4200, '["october", "november", "december", "january", "february"]'),
+('coffee', 'Geisha', 'Coffea arabica var. Geisha', 'Variedad de especialidad con perfil de taza excepcional', '{"yield_per_plant": "0.8-1.2", "disease_resistance": "medium", "altitude_range": "1500-2000"}', 36, 20, 3500, '["october", "november", "december", "january", "february"]'),
+-- Variedades de Cacao
+('cacao', 'Trinitario', 'Theobroma cacao var. Trinitario', 'Variedad híbrida de alta calidad y buen rendimiento', '{"yield_per_plant": "1.0-2.0", "disease_resistance": "high", "altitude_range": "400-1000"}', 36, 30, 1000, '["april", "may", "june", "october", "november", "december"]'),
+('cacao', 'Criollo', 'Theobroma cacao var. Criollo', 'Variedad nativa de excelente calidad pero baja producción', '{"yield_per_plant": "0.5-1.0", "disease_resistance": "low", "altitude_range": "200-800"}', 48, 25, 800, '["april", "may", "june", "october", "november", "december"]'),
+('cacao', 'Forastero', 'Theobroma cacao var. Forastero', 'Variedad resistente y productiva', '{"yield_per_plant": "1.5-2.5", "disease_resistance": "very_high", "altitude_range": "200-600"}', 30, 35, 1200, '["april", "may", "june", "october", "november", "december"]'),
+-- Variedades de Aguacate
+('avocado', 'Hass', 'Persea americana var. Hass', 'Variedad comercial de piel rugosa y excelente sabor', '{"yield_per_plant": "50-200", "disease_resistance": "medium", "altitude_range": "1800-2600"}', 36, 50, 200, '["march", "april", "may", "june", "july", "august"]'),
+('avocado', 'Fuerte', 'Persea americana var. Fuerte', 'Variedad de piel lisa, resistente al frío', '{"yield_per_plant": "80-250", "disease_resistance": "high", "altitude_range": "1500-2400"}', 30, 45, 180, '["november", "december", "january", "february", "march"]'),
+('avocado', 'Quindia', 'Persea americana var. Quindia', 'Variedad colombiana adaptada al clima tropical', '{"yield_per_plant": "100-300", "disease_resistance": "high", "altitude_range": "1200-2200"}', 24, 40, 220, '["february", "march", "april", "may", "june"]'),
+-- Variedades de Plátano
+('plantain', 'Dominico Hartón', 'Musa acuminata x balbisiana', 'Variedad tradicional de cocción, muy popular', '{"yield_per_plant": "15-25", "disease_resistance": "medium", "altitude_range": "0-1500"}', 12, 8, 1600, '["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]'),
+('plantain', 'FHIA-21', 'Musa FHIA-21', 'Variedad resistente a Sigatoka negra', '{"yield_per_plant": "20-30", "disease_resistance": "very_high", "altitude_range": "0-1200"}', 10, 6, 1800, '["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]')
+ON CONFLICT (crop_type, name) DO NOTHING;
+
+-- ============================================
+-- VERIFICACIÓN FINAL
+-- ============================================
+
+-- Mostrar resumen de tablas creadas
+SELECT 
+    'Tabla creada: ' || table_name as resultado
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+    AND table_type = 'BASE TABLE'
+    AND table_name NOT LIKE 'pg_%'
+ORDER BY table_name;
+
+-- Mensaje de finalización
+SELECT 
+    'SAV Cloud Database Setup Completed!' as status,
+    'Total de tablas principales: ' || count(*) as table_count
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+    AND table_type = 'BASE TABLE'
+    AND table_name NOT LIKE 'pg_%';
+
+-- Mostrar estructura de relaciones principales
+SELECT 
+    'SISTEMA AGRÍCOLA MULTI-CULTIVO COMPLETO:' as info
+UNION ALL
+SELECT '• Users (usuarios propietarios de fincas agrícolas)'
+UNION ALL
+SELECT '• Farms (fincas con datos geográficos y técnicos)'
+UNION ALL
+SELECT '• Plots (lotes/parcelas con diferentes tipos de cultivos)'
+UNION ALL
+SELECT '• Crop_varieties (variedades de café, cacao, aguacate, plátano, etc.)'
+UNION ALL
+SELECT '• Plant_inventory (inventario de plantas por lote y variedad)'
+UNION ALL
+SELECT '• Collaborators (trabajadores asignados a fincas específicas)'
+UNION ALL
+SELECT '• Activities (actividades realizadas en fincas/lotes específicos)'
+UNION ALL
+SELECT '• Harvests (cosechas de lotes específicos por variedad y cultivo)'
+UNION ALL
+SELECT '• Sales (ventas multi-cultivo de cada finca)'
+UNION ALL
+SELECT '• Purchases (compras/gastos por finca)'
+UNION ALL
+SELECT '• Farm_settings (configuraciones por finca con precios por cultivo)'
+UNION ALL
+SELECT '• Inventory_summary (resumen de inventario por finca y cultivo)'
+UNION ALL
+SELECT ''
+UNION ALL
+SELECT 'CULTIVOS SOPORTADOS:'
+UNION ALL
+SELECT '• Café (coffee) - 6 variedades incluidas'
+UNION ALL
+SELECT '• Cacao (cacao) - 3 variedades incluidas'
+UNION ALL
+SELECT '• Aguacate (avocado) - 3 variedades incluidas'
+UNION ALL
+SELECT '• Plátano (plantain) - 2 variedades incluidas'
+UNION ALL
+SELECT '• Fácilmente extensible para otros cultivos'; 

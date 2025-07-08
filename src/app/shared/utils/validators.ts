@@ -1,4 +1,4 @@
-import { FormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { FormGroup, ValidatorFn, Validators, AbstractControl } from '@angular/forms';
 import { FORM_CONSTRAINTS } from '../constants/form-constrains';
 
 /**
@@ -192,6 +192,58 @@ export function createBankAccountValidators(): ValidatorFn[] {
 export function createNotesValidators(): ValidatorFn[] {
   return [
     Validators.maxLength(FORM_CONSTRAINTS.maxLength.notes)
+  ];
+}
+
+/**
+ * Validador de edad mínima - verifica que la persona tenga al menos la edad especificada
+ * @param minimumAge - Edad mínima requerida en años
+ * @returns ValidatorFn - Función validadora
+ */
+export function minimumAgeValidator(minimumAge: number): ValidatorFn {
+  return (control: AbstractControl) => {
+    if (!control.value) {
+      return null; // Si no hay valor, no validamos (required se encarga)
+    }
+
+    let birthDate: Date;
+    
+    // Manejar tanto Date objects como strings
+    if (control.value instanceof Date) {
+      birthDate = control.value;
+    } else if (typeof control.value === 'string') {
+      birthDate = new Date(control.value);
+    } else {
+      return null;
+    }
+
+    // Verificar que la fecha sea válida
+    if (isNaN(birthDate.getTime())) {
+      return null; // Si la fecha es inválida, no validamos aquí
+    }
+
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    // Ajustar la edad si el cumpleaños no ha pasado este año
+    const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
+      ? age - 1 
+      : age;
+
+    return actualAge >= minimumAge ? null : { minimumAge: { requiredAge: minimumAge, actualAge } };
+  };
+}
+
+/**
+ * Crea validadores para fecha de nacimiento con edad mínima
+ * @param minimumAge - Edad mínima requerida (por defecto 5 años)
+ * @returns Array de validadores para fecha de nacimiento
+ */
+export function createBirthDateValidators(minimumAge = 5): ValidatorFn[] {
+  return [
+    Validators.required,
+    minimumAgeValidator(minimumAge)
   ];
 }
 

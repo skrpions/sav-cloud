@@ -18,6 +18,7 @@ import { SettingsService } from '../settings/services/settings.service';
 import { SettingsEntity } from '@/app/shared/models/settings.models';
 import { DateUtils } from '@/app/shared/utils/validators';
 import { SidebarItem } from '@/app/shared/models/ui.models';
+import { TEMP_FARM_CONSTANTS } from '@/app/shared/constants/form-constrains';
 
 // Tipos para las vistas
 export type ViewMode = 'list' | 'cards';
@@ -94,9 +95,9 @@ export class HarvestComponent implements OnInit {
       date: [today, Validators.required],
       start_time: [''],
       end_time: [''],
-      kilograms: [0, [Validators.required, Validators.min(0.1)]],
+      quantity: [0, [Validators.required, Validators.min(0.1)]],
       quality_grade: ['standard', Validators.required],
-      price_per_kilogram: [0, [Validators.required, Validators.min(0)]],
+      price_per_unit: [0, [Validators.required, Validators.min(0)]],
       total_payment: [0, [Validators.required, Validators.min(0)]],
       humidity_percentage: [null, [Validators.min(0), Validators.max(100)]],
       defects_percentage: [null, [Validators.min(0), Validators.max(100)]],
@@ -110,7 +111,7 @@ export class HarvestComponent implements OnInit {
     try {
       this.isLoading.set(true);
       
-      const response = await this._harvestService.getAllHarvests().toPromise();
+      const response = await this._harvestService.getAllHarvests(TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID).toPromise();
       
       if (response?.error) {
         console.error('Error loading harvests:', response.error);
@@ -133,14 +134,17 @@ export class HarvestComponent implements OnInit {
 
   async loadCollaborators(): Promise<void> {
     try {
-      const response = await this._collaboratorsService.getActiveCollaborators().toPromise();
+      // Usar getAllCollaborators con farmId y filtrar activos aquí
+      const response = await this._collaboratorsService.getAllCollaborators(TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID).toPromise();
       
       if (response?.error) {
         console.error('Error loading collaborators:', response.error);
         return;
       }
 
-      this.collaborators.set(response?.data || []);
+      // Filtrar solo colaboradores activos
+      const activeCollaborators = (response?.data || []).filter(collaborator => collaborator.is_active);
+      this.collaborators.set(activeCollaborators);
       console.log('Colaboradores cargados para cosechas:', this.collaborators().length);
       
     } catch (error) {
@@ -151,25 +155,28 @@ export class HarvestComponent implements OnInit {
   async loadSettings(): Promise<void> {
     try {
       const currentYear = new Date().getFullYear();
-      const response = await this._settingsService.getSettingsByYear(currentYear).toPromise();
+      const response = await this._settingsService.getSettingsByYear(currentYear, TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID).toPromise();
       
       if (response?.error) {
-        console.error('Error loading settings:', response.error);
+        console.warn('No settings found (this is normal for new installations):', response.error);
+        this.settings.set(undefined);
         return;
       }
 
       this.settings.set(response?.data);
       
-      // Actualizar el precio por kilogramo en el formulario si hay configuración
-      if (response?.data?.harvest_price_per_kilogram) {
+      // Actualizar el precio por unidad en el formulario si hay configuración de café
+      const settingsData = response?.data;
+      if (settingsData?.crop_prices?.['coffee']?.price_per_kg) {
         this.harvestForm.patchValue({
-          price_per_kilogram: response.data.harvest_price_per_kilogram
+          price_per_unit: settingsData.crop_prices['coffee'].price_per_kg
         });
         this.calculateTotalPayment();
       }
       
     } catch (error) {
-      console.error('Error in loadSettings:', error);
+      console.warn('No settings available (normal for first-time setup):', error);
+      this.settings.set(undefined);
     }
   }
 
@@ -222,9 +229,9 @@ export class HarvestComponent implements OnInit {
         date: harvest.date ? DateUtils.formatForDatepicker(harvest.date) : new Date(),
         start_time: harvest.start_time || '',
         end_time: harvest.end_time || '',
-        kilograms: harvest.kilograms || 0,
+        quantity: harvest.quantity || 0,
         quality_grade: harvest.quality_grade || 'standard',
-        price_per_kilogram: harvest.price_per_kilogram || 0,
+        price_per_unit: harvest.price_per_unit || 0,
         total_payment: harvest.total_payment || 0,
         humidity_percentage: harvest.humidity_percentage || null,
         defects_percentage: harvest.defects_percentage || null,
@@ -240,14 +247,15 @@ export class HarvestComponent implements OnInit {
       
       // Valores por defecto
       const currentSettings = this.settings();
+      const defaultPricePerUnit = currentSettings?.crop_prices?.['coffee']?.price_per_kg || 0;
       const defaultData = { 
         collaborator_id: '',
         date: new Date(),
         start_time: '',
         end_time: '',
-        kilograms: 0,
+        quantity: 0,
         quality_grade: 'standard',
-        price_per_kilogram: currentSettings?.harvest_price_per_kilogram || 0,
+        price_per_unit: defaultPricePerUnit,
         total_payment: 0,
         humidity_percentage: null,
         defects_percentage: null,
@@ -268,11 +276,12 @@ export class HarvestComponent implements OnInit {
     // Restaurar valores por defecto
     const today = new Date();
     const currentSettings = this.settings();
+    const defaultPricePerUnit = currentSettings?.crop_prices?.['coffee']?.price_per_kg || 0;
     this.harvestForm.patchValue({
       date: today,
       quality_grade: 'standard',
-      price_per_kilogram: currentSettings?.harvest_price_per_kilogram || 0,
-      kilograms: 0,
+      price_per_unit: defaultPricePerUnit,
+      quantity: 0,
       total_payment: 0
     });
   }
@@ -286,7 +295,10 @@ export class HarvestComponent implements OnInit {
 
     try {
       this.isLoading.set(true);
-      const formData = { ...this.harvestForm.value };
+      const formData = { 
+        ...this.harvestForm.value,
+        farm_id: TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID // Agregar farm_id requerido
+      };
       
       // Formatear la fecha para el backend
       if (formData.date) {
@@ -478,17 +490,24 @@ export class HarvestComponent implements OnInit {
 
   // Cálculos automáticos
   calculateTotalPayment(): void {
-    const kilograms = this.harvestForm.get('kilograms')?.value || 0;
-    const pricePerKg = this.harvestForm.get('price_per_kilogram')?.value || 0;
-    const total = kilograms * pricePerKg;
-    this.harvestForm.patchValue({ total_payment: total });
+    const quantityControl = this.harvestForm.get('quantity');
+    const priceControl = this.harvestForm.get('price_per_unit');
+    const totalControl = this.harvestForm.get('total_payment');
+
+    if (quantityControl && priceControl && totalControl) {
+      const quantity = quantityControl.value || 0;
+      const price = priceControl.value || 0;
+      const total = quantity * price;
+      
+      totalControl.setValue(total, { emitEvent: false });
+    }
   }
 
-  onKilogramsChange(): void {
+  onQuantityChange(): void {
     this.calculateTotalPayment();
   }
 
-  onPricePerKgChange(): void {
+  onPricePerUnitChange(): void {
     this.calculateTotalPayment();
   }
 

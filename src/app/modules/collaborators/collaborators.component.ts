@@ -11,7 +11,7 @@ import { HeaderComponent } from '@/app/shared/components/header/header.component
 import { CollaboratorFormComponent } from './components/collaborator-form/collaborator-form.component';
 import { CollaboratorsService } from './services/collaborators.service';
 import { CollaboratorEntity } from '@/app/shared/models/collaborator.models';
-import { FORM_CONSTRAINTS } from '@/app/shared/constants/form-constrains';
+import { FORM_CONSTRAINTS, TEMP_FARM_CONSTANTS } from '@/app/shared/constants/form-constrains';
 import { SidebarItem } from '@/app/shared/models/ui.models';
 import { DateUtils } from '@/app/shared/utils/validators';
 
@@ -67,7 +67,7 @@ export class CollaboratorsComponent implements OnInit {
     
     try {
       console.log('Loading collaborators...');
-      const response = await this._collaboratorsService.getAllCollaborators().toPromise();
+      const response = await this._collaboratorsService.getAllCollaborators(TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID).toPromise();
       
       if (response?.error) {
         console.error('Service returned error:', response.error);
@@ -296,8 +296,8 @@ export class CollaboratorsComponent implements OnInit {
 
   getContractTypeLabel(contractType: string): string {
     switch (contractType) {
-      case 'full_time': return 'Tiempo Completo';
-      case 'contract': return 'Contrato';
+      case 'libre': return 'Libre (Incluye comida)';
+      case 'grabado': return 'Grabado (Solo pago)';
       default: return contractType;
     }
   }

@@ -1,56 +1,55 @@
-// Modelos para el módulo de settings
+// Modelos para el módulo de farm settings (configuraciones por finca)
 
-export interface SettingsEntity {
+export interface FarmSettingsEntity {
   id?: string;
+  farm_id: string; // Obligatorio: configuraciones pertenecen a una finca específica
   year: number;
-  harvest_price_per_kilogram: number;
-  daily_rate_libre: number;
-  daily_rate_grabado: number;
-  activity_rate_fertilization?: number;
-  activity_rate_fumigation?: number;
-  activity_rate_pruning?: number;
-  activity_rate_weeding?: number;
-  activity_rate_planting?: number;
-  activity_rate_maintenance?: number;
-  activity_rate_other?: number;
-  currency: string;
-  tax_percentage: number;
-  is_active?: boolean;
+  currency: string; // Default: 'COP'
+  tax_percentage: number; // Porcentaje de impuestos
+  crop_prices: Record<string, CropPriceConfig>; // JSONB: precios por tipo de cultivo
+  daily_rate_libre: number; // Tarifa diaria para contrato libre (incluye comida)
+  daily_rate_grabado: number; // Tarifa diaria para contrato grabado (solo pago)
+  activity_rates?: Record<string, number>; // JSONB: tarifas por actividad específica
+  quality_premiums?: Record<string, number>; // JSONB: premios por calidad
+  is_active?: boolean; // Solo una configuración activa por finca/año
   created_at?: string;
   updated_at?: string;
 }
 
-export interface CreateSettingsRequest {
-  year: number;
-  harvest_price_per_kilogram: number;
-  daily_rate_libre: number;
-  daily_rate_grabado: number;
-  activity_rate_fertilization?: number;
-  activity_rate_fumigation?: number;
-  activity_rate_pruning?: number;
-  activity_rate_weeding?: number;
-  activity_rate_planting?: number;
-  activity_rate_maintenance?: number;
-  activity_rate_other?: number;
-  currency: string;
-  tax_percentage: number;
+// Configuración de precios por cultivo
+export interface CropPriceConfig {
+  price_per_kg?: number; // Para cultivos que se miden en kg (café, cacao)
+  price_per_unit?: number; // Para cultivos que se miden en unidades (aguacate)
+  unit: 'kg' | 'units' | 'tons' | 'pounds'; // Unidad de medida
 }
 
-export interface UpdateSettingsRequest extends CreateSettingsRequest {
+export interface CreateFarmSettingsRequest {
+  farm_id: string;
+  year: number;
+  currency: string;
+  tax_percentage: number;
+  crop_prices: Record<string, CropPriceConfig>;
+  daily_rate_libre: number;
+  daily_rate_grabado: number;
+  activity_rates?: Record<string, number>;
+  quality_premiums?: Record<string, number>;
+}
+
+export interface UpdateFarmSettingsRequest extends CreateFarmSettingsRequest {
   id: string;
   is_active?: boolean;
 }
 
-export interface SettingsListResponse {
-  data: SettingsEntity[];
+export interface FarmSettingsListResponse {
+  data: FarmSettingsEntity[];
   error?: {
     message: string;
     code?: string;
   };
 }
 
-export interface SettingsResponse {
-  data?: SettingsEntity;
+export interface FarmSettingsResponse {
+  data?: FarmSettingsEntity;
   error?: {
     message: string;
     code?: string;
@@ -65,6 +64,10 @@ export type ActivityType =
   | 'weeding'
   | 'planting'
   | 'maintenance'
+  | 'harvesting'
+  | 'soil_preparation'
+  | 'pest_control'
+  | 'irrigation'
   | 'other';
 
 // Tipos de contrato
@@ -80,38 +83,92 @@ export const CURRENCY_OPTIONS = [
 // Configuración de actividades para el formulario
 export const ACTIVITY_RATES_CONFIG = [
   { 
-    key: 'activity_rate_fertilization' as keyof SettingsEntity, 
+    key: 'fertilization', 
     labelKey: 'settings.activities.fertilization',
     icon: 'eco'
   },
   { 
-    key: 'activity_rate_fumigation' as keyof SettingsEntity, 
+    key: 'fumigation', 
     labelKey: 'settings.activities.fumigation',
     icon: 'pest_control'
   },
   { 
-    key: 'activity_rate_pruning' as keyof SettingsEntity, 
+    key: 'pruning', 
     labelKey: 'settings.activities.pruning',
     icon: 'content_cut'
   },
   { 
-    key: 'activity_rate_weeding' as keyof SettingsEntity, 
+    key: 'weeding', 
     labelKey: 'settings.activities.weeding',
     icon: 'grass'
   },
   { 
-    key: 'activity_rate_planting' as keyof SettingsEntity, 
+    key: 'planting', 
     labelKey: 'settings.activities.planting',
     icon: 'local_florist'
   },
   { 
-    key: 'activity_rate_maintenance' as keyof SettingsEntity, 
+    key: 'maintenance', 
     labelKey: 'settings.activities.maintenance',
     icon: 'build'
   },
   { 
-    key: 'activity_rate_other' as keyof SettingsEntity, 
+    key: 'other', 
     labelKey: 'settings.activities.other',
     icon: 'more_horiz'
   }
 ] as const;
+
+// Configuración de tipos de cultivo para precios
+export const CROP_TYPES_CONFIG = [
+  {
+    key: 'coffee',
+    labelKey: 'settings.crops.coffee',
+    defaultUnit: 'kg' as const,
+    icon: 'local_cafe'
+  },
+  {
+    key: 'cacao',
+    labelKey: 'settings.crops.cacao',
+    defaultUnit: 'kg' as const,
+    icon: 'cake'
+  },
+  {
+    key: 'avocado',
+    labelKey: 'settings.crops.avocado',
+    defaultUnit: 'units' as const,
+    icon: 'eco'
+  },
+  {
+    key: 'plantain',
+    labelKey: 'settings.crops.plantain',
+    defaultUnit: 'units' as const,
+    icon: 'agriculture'
+  }
+] as const;
+
+// Configuración de premios por calidad
+export const QUALITY_PREMIUMS_CONFIG = [
+  {
+    key: 'premium',
+    labelKey: 'settings.quality.premium',
+    description: 'Bono por calidad premium'
+  },
+  {
+    key: 'standard',
+    labelKey: 'settings.quality.standard',
+    description: 'Precio base estándar'
+  },
+  {
+    key: 'low',
+    labelKey: 'settings.quality.low',
+    description: 'Descuento por calidad baja'
+  }
+] as const;
+
+// Backward compatibility aliases
+export type SettingsEntity = FarmSettingsEntity;
+export type CreateSettingsRequest = CreateFarmSettingsRequest;
+export type UpdateSettingsRequest = UpdateFarmSettingsRequest;
+export type SettingsListResponse = FarmSettingsListResponse;
+export type SettingsResponse = FarmSettingsResponse;

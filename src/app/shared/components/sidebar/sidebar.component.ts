@@ -31,6 +31,7 @@ export class SidebarComponent implements OnInit {
 
   sidebarItems: SidebarItem[] = [
     { icon: 'dashboard', labelKey: 'sidebar.navigation.dashboard', route: '/dashboard', active: true },
+    { icon: 'terrain', labelKey: 'sidebar.navigation.farms', route: '/farms' },
     { icon: 'assignment', labelKey: 'sidebar.navigation.activities', route: '/activities' },
     { icon: 'people', labelKey: 'sidebar.navigation.collaborators', route: '/collaborators' },
     { icon: 'agriculture', labelKey: 'sidebar.navigation.harvest', route: '/harvest' },

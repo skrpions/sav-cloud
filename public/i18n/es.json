@@ -118,6 +118,7 @@
         },
         "navigation": {
         "dashboard": "Dashboard",
+        "farms": "Fincas",
         "activities": "Actividades",
         "collaborators": "Colaboradores",
         "harvest": "Cosecha",
@@ -359,7 +360,6 @@
             "emergencyContactPhone": "Teléfono de Contacto",
             
             "bankingInfo": "Información Bancaria",
-            "bankAccount": "Cuenta Bancaria / Nequi / Daviplata",
             
             "additionalInfo": "Información Adicional",
             "notes": "Notas",
@@ -370,8 +370,23 @@
         },
         
         "contractTypes": {
-            "fullTime": "Grabado (Solo pago)",
-            "contract": "Libre (Incluye comida)"
+            "libre": "Libre (Incluye comida)",
+            "grabado": "Grabado (Solo pago)"
+        },
+        "banks": {
+            "bancolombia": "Bancolombia",
+            "nequi": "Nequi",
+            "daviplata": "Daviplata",
+            "banco_bogota": "Banco de Bogotá",
+            "banco_popular": "Banco Popular",
+            "bbva": "BBVA",
+            "scotiabank": "Scotiabank",
+            "otro": "Otro banco"
+        },
+        "productTypes": {
+            "ahorros": "Cuenta de Ahorros",
+            "corriente": "Cuenta Corriente",
+            "bancolombia_a_la_mano": "Bancolombia a la mano"
         },
         
         "validation": {
@@ -389,9 +404,7 @@
             "contractTypeRequired": "El tipo de contrato es requerido",
             "emergencyContactNameRequired": "El nombre de contacto de emergencia es requerido",
             "emergencyContactPhoneRequired": "El teléfono de contacto de emergencia es requerido",
-            "emergencyContactPhoneInvalid": "Formato de teléfono de emergencia inválido",
-            "bankAccountRequired": "La cuenta bancaria es requerida",
-            "bankAccountInvalid": "Formato de cuenta bancaria inválido"
+            "emergencyContactPhoneInvalid": "Formato de teléfono de emergencia inválido"
         },
         
         "actions": {

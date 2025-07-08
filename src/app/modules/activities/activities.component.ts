@@ -13,6 +13,7 @@ import { ActivityEntity } from '@/app/shared/models/activity.models';
 import { CollaboratorsService } from '../collaborators/services/collaborators.service';
 import { CollaboratorEntity } from '@/app/shared/models/collaborator.models';
 import { DateUtils } from '@/app/shared/utils/validators';
+import { TEMP_FARM_CONSTANTS } from '@/app/shared/constants/form-constrains';
 
 // Tipos para las vistas
 export type ViewMode = 'list' | 'cards';
@@ -71,21 +72,18 @@ export class ActivitiesComponent implements OnInit {
   }
 
   private createActivityForm(): FormGroup {
-    const today = new Date();
     return this._formBuilder.group({
       collaborator_id: ['', Validators.required],
       type: ['', Validators.required],
-      date: [today, Validators.required],
-      start_time: [''],
-      end_time: [''],
+      date: [new Date(), Validators.required],
       days: [1, [Validators.required, Validators.min(0.1)]],
-      area_worked: [null],
       payment_type: ['', Validators.required],
       rate_per_day: [0, [Validators.required, Validators.min(0)]],
       total_cost: [0, [Validators.required, Validators.min(0)]],
+      area_worked: [null, [Validators.min(0)]],
       materials_used: [''],
       weather_conditions: [''],
-      quality_rating: [null],
+      quality_rating: [null, [Validators.min(1), Validators.max(5)]],
       notes: ['']
     });
   }
@@ -93,7 +91,7 @@ export class ActivitiesComponent implements OnInit {
   async loadActivities(): Promise<void> {
     this.isLoading.set(true);
     try {
-      const response = await this._activitiesService.getAllActivities().toPromise();
+      const response = await this._activitiesService.getAllActivities(TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID).toPromise();
       if (response?.error) throw new Error(response.error.message);
       this.activities.set(response?.data || []);
       this.updatePagination();
@@ -108,7 +106,7 @@ export class ActivitiesComponent implements OnInit {
 
   async loadCollaborators(): Promise<void> {
     try {
-      const response = await this._collaboratorsService.getAllCollaborators().toPromise();
+      const response = await this._collaboratorsService.getAllCollaborators(TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID).toPromise();
       
       if (response?.error) {
         throw new Error(response.error.message);
@@ -172,8 +170,6 @@ export class ActivitiesComponent implements OnInit {
         collaborator_id: activity.collaborator_id || '',
         type: activity.type || '',
         date: activity.date ? DateUtils.formatForDatepicker(activity.date) : new Date(),
-        start_time: activity.start_time || '',
-        end_time: activity.end_time || '',
         days: activity.days || 1,
         area_worked: activity.area_worked || null,
         payment_type: activity.payment_type || '',
@@ -194,8 +190,6 @@ export class ActivitiesComponent implements OnInit {
         collaborator_id: '',
         type: '',
         date: new Date(),
-        start_time: '',
-        end_time: '',
         days: 1,
         area_worked: null,
         payment_type: '',
@@ -216,8 +210,6 @@ export class ActivitiesComponent implements OnInit {
       collaborator_id: '',
       type: '',
       date: new Date(),
-      start_time: '',
-      end_time: '',
       days: 1,
       area_worked: null,
       payment_type: '',
@@ -247,11 +239,10 @@ export class ActivitiesComponent implements OnInit {
     this.isLoading.set(true);
     try {
       // Preparar datos con fecha formateada
-      const formData = { ...this.activityForm.value };
-
-      // Solución: convertir strings vacíos a null para campos de hora
-      if (formData.start_time === '') formData.start_time = null;
-      if (formData.end_time === '') formData.end_time = null;
+      const formData = { 
+        ...this.activityForm.value,
+        farm_id: TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID // Agregar farm_id requerido
+      };
 
       if (this.isEditMode() && this.selectedActivity()?.id) {
         // Update

@@ -1,0 +1,561 @@
+<div class="farms-layout">
+  <!-- Sidebar -->
+  <app-sidebar (itemClicked)="onSidebarItemClicked($event)"></app-sidebar>
+
+  <!-- Contenido principal -->
+  <div class="farms-content">
+    <!-- Header -->
+    <app-header></app-header>
+
+    <!-- Contenedor principal -->
+    <div class="farms-main">
+      <!-- Panel de filtros y acciones -->
+      <div class="farms-controls">
+        <div class="controls-section">
+          <h2 class="section-title">
+            <mat-icon>agriculture</mat-icon>
+            Gestión de Fincas
+          </h2>
+          
+          <div class="actions-row">
+            <!-- Filtros -->
+            <div class="filters-container">
+              <!-- Búsqueda -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Buscar fincas...</mat-label>
+                <input matInput 
+                       [value]="searchTerm()" 
+                       (input)="onSearchChanged($event)"
+                       placeholder="Nombre, municipio, departamento...">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+
+              <!-- Filtro por departamento -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Departamento</mat-label>
+                <mat-select [(ngModel)]="filterDepartment" (ngModelChange)="updatePagination()">
+                  <mat-option value="">Todos los departamentos</mat-option>
+                  @for (dept of departmentOptions; track dept.value) {
+                    <mat-option [value]="dept.value">{{ dept.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Botón limpiar filtros -->
+              <button 
+                mat-icon-button 
+                (click)="clearFilters()"
+                [disabled]="!hasFilters()"
+                matTooltip="Limpiar filtros"
+                class="clear-filters-btn">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+
+            <!-- Botones de vista -->
+            <div class="view-toggle-buttons">
+              <button 
+                mat-icon-button 
+                [class.active]="viewMode() === 'list'"
+                (click)="switchView('list')"
+                matTooltip="Vista de Lista"
+                class="view-toggle-btn">
+                <mat-icon>list</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                [class.active]="viewMode() === 'cards'"
+                (click)="switchView('cards')"
+                matTooltip="Vista de Tarjetas"
+                class="view-toggle-btn">
+                <mat-icon>view_module</mat-icon>
+              </button>
+            </div>
+
+            <!-- Botón nueva finca -->
+            <button 
+              mat-raised-button 
+              color="primary" 
+              (click)="openSidePanel()"
+              class="add-farm-btn">
+              <mat-icon>add</mat-icon>
+              Nueva Finca
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de Lista (tabla) -->
+      <div *ngIf="viewMode() === 'list'" class="farms-list-view">
+        <!-- Loading spinner -->
+        <div *ngIf="isLoading()" class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>Cargando fincas...</p>
+        </div>
+
+        <!-- Lista de fincas -->
+        <div *ngIf="!isLoading()" class="farms-list">
+          <!-- Mensaje cuando no hay fincas -->
+          <div *ngIf="filteredFarms.length === 0" class="no-farms-message">
+            <mat-icon>info</mat-icon>
+            <h3>No hay fincas registradas</h3>
+            <p *ngIf="!hasFilters()">Comienza registrando tu primera finca</p>
+            <p *ngIf="hasFilters()">No se encontraron fincas con los filtros aplicados</p>
+            <button 
+              *ngIf="!hasFilters()" 
+              mat-raised-button 
+              color="primary" 
+              (click)="openSidePanel()">
+              <mat-icon>add</mat-icon>
+              Registrar Primera Finca
+            </button>
+          </div>
+
+          <!-- Tabla de fincas -->
+          <div *ngIf="filteredFarms.length > 0" class="farms-table-container">
+            <table mat-table [dataSource]="paginatedFarms" class="farms-table">
+              <!-- Nombre -->
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Finca</th>
+                <td mat-cell *matCellDef="let farm" class="data-cell">
+                  <div class="farm-info">
+                    <div class="farm-name">{{ farm.name }}</div>
+                    <div class="farm-description" *ngIf="farm.description">{{ farm.description }}</div>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Ubicación -->
+              <ng-container matColumnDef="location">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Ubicación</th>
+                <td mat-cell *matCellDef="let farm" class="data-cell">
+                  <div class="location-info">
+                    <div *ngIf="farm.municipality">{{ farm.municipality }}</div>
+                    <div *ngIf="farm.department">{{ farm.department }}</div>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Área -->
+              <ng-container matColumnDef="area">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Área</th>
+                <td mat-cell *matCellDef="let farm" class="data-cell">
+                  <span class="area-value">{{ formatArea(farm.total_area) }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Altitud -->
+              <ng-container matColumnDef="altitude">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Altitud</th>
+                <td mat-cell *matCellDef="let farm" class="data-cell">
+                  <span class="altitude-value">{{ formatAltitudeRange(farm.altitude_min, farm.altitude_max) }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Certificaciones -->
+              <ng-container matColumnDef="certifications">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Certificaciones</th>
+                <td mat-cell *matCellDef="let farm" class="data-cell">
+                  <div class="certifications-list">
+                    @for (cert of getCertificationsList(farm.certifications); track cert) {
+                      <span class="certification-badge">{{ cert }}</span>
+                    }
+                    @if (getCertificationsList(farm.certifications).length === 0) {
+                      <span class="no-certifications">Sin certificaciones</span>
+                    }
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Acciones -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="header-cell actions-header">Acciones</th>
+                <td mat-cell *matCellDef="let farm" class="data-cell actions-cell">
+                  <div class="action-buttons">
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Editar"
+                      class="action-btn edit-btn"
+                      (click)="openSidePanel(farm)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Eliminar"
+                      class="action-btn delete-btn"
+                      (click)="onDeleteFarm(farm)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="['name', 'location', 'area', 'altitude', 'certifications', 'actions']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['name', 'location', 'area', 'altitude', 'certifications', 'actions']"></tr>
+            </table>
+
+            <!-- Paginación -->
+            <div class="pagination-container" *ngIf="totalPages() > 1">
+              <div class="pagination-info">
+                <span>Página {{ currentPage() + 1 }} de {{ totalPages() }}</span>
+                <span class="total-records">({{ filteredFarms.length }} fincas)</span>
+              </div>
+              
+              <div class="pagination-controls">
+                <button 
+                  mat-icon-button 
+                  [disabled]="currentPage() === 0"
+                  (click)="prevPage()"
+                  matTooltip="Página anterior">
+                  <mat-icon>chevron_left</mat-icon>
+                </button>
+                
+                <div class="page-numbers">
+                  <button 
+                    *ngFor="let page of [].constructor(totalPages()); let i = index"
+                    mat-button
+                    [class.active]="i === currentPage()"
+                    (click)="changePage(i)"
+                    class="page-btn">
+                    {{ i + 1 }}
+                  </button>
+                </div>
+                
+                <button 
+                  mat-icon-button 
+                  [disabled]="currentPage() >= totalPages() - 1"
+                  (click)="nextPage()"
+                  matTooltip="Página siguiente">
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de Tarjetas -->
+      <div *ngIf="viewMode() === 'cards'" class="farms-cards-view">
+        <!-- Loading spinner -->
+        <div *ngIf="isLoading()" class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>Cargando fincas...</p>
+        </div>
+
+        <!-- Lista de fincas -->
+        <div *ngIf="!isLoading()" class="farms-list">
+          <!-- Mensaje cuando no hay fincas -->
+          <div *ngIf="filteredFarms.length === 0" class="no-farms-message">
+            <mat-icon>info</mat-icon>
+            <h3>No hay fincas registradas</h3>
+            <p *ngIf="!hasFilters()">Comienza registrando tu primera finca</p>
+            <p *ngIf="hasFilters()">No se encontraron fincas con los filtros aplicados</p>
+            <button 
+              *ngIf="!hasFilters()" 
+              mat-raised-button 
+              color="primary" 
+              (click)="openSidePanel()">
+              <mat-icon>add</mat-icon>
+              Registrar Primera Finca
+            </button>
+          </div>
+
+          <!-- Cards de fincas -->
+          <div class="farms-cards-grid">
+            @for (farm of paginatedFarms; track trackByFarmId($index, farm)) {
+              <div class="farm-card">
+                <div class="card-header">
+                  <div class="farm-name">{{ farm.name }}</div>
+                  <div class="farm-actions">
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Editar"
+                      class="action-btn edit-btn"
+                      (click)="openSidePanel(farm)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Eliminar"
+                      class="action-btn delete-btn"
+                      (click)="onDeleteFarm(farm)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="card-content">
+                  <div class="farm-description" *ngIf="farm.description">
+                    {{ farm.description }}
+                  </div>
+
+                  <div class="farm-details">
+                    <div class="detail-item" *ngIf="farm.municipality || farm.department">
+                      <mat-icon>location_on</mat-icon>
+                      <div class="detail-content">
+                        <div class="detail-label">Ubicación</div>
+                        <div class="detail-value">
+                          {{ getLocationString(farm) }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="detail-item" *ngIf="farm.total_area">
+                      <mat-icon>landscape</mat-icon>
+                      <div class="detail-content">
+                        <div class="detail-label">Área Total</div>
+                        <div class="detail-value">{{ formatArea(farm.total_area) }}</div>
+                      </div>
+                    </div>
+
+                    <div class="detail-item" *ngIf="farm.altitude_min || farm.altitude_max">
+                      <mat-icon>terrain</mat-icon>
+                      <div class="detail-content">
+                        <div class="detail-label">Altitud</div>
+                        <div class="detail-value">{{ formatAltitudeRange(farm.altitude_min, farm.altitude_max) }}</div>
+                      </div>
+                    </div>
+
+                    <div class="detail-item" *ngIf="farm.established_date">
+                      <mat-icon>calendar_today</mat-icon>
+                      <div class="detail-content">
+                        <div class="detail-label">Establecida</div>
+                        <div class="detail-value">{{ formatDate(farm.established_date) }}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="certifications-section" *ngIf="getCertificationsList(farm.certifications).length > 0">
+                    <div class="certifications-label">Certificaciones:</div>
+                    <div class="certifications-list">
+                      @for (cert of getCertificationsList(farm.certifications); track cert) {
+                        <span class="certification-badge">{{ cert }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Paginación para cards -->
+          <div class="pagination-container" *ngIf="totalPages() > 1">
+            <div class="pagination-info">
+              <span>Página {{ currentPage() + 1 }} de {{ totalPages() }}</span>
+              <span class="total-records">({{ filteredFarms.length }} fincas)</span>
+            </div>
+            
+            <div class="pagination-controls">
+              <button 
+                mat-icon-button 
+                [disabled]="currentPage() === 0"
+                (click)="prevPage()"
+                matTooltip="Página anterior">
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+              
+              <div class="page-numbers">
+                <button 
+                  *ngFor="let page of [].constructor(totalPages()); let i = index"
+                  mat-button
+                  [class.active]="i === currentPage()"
+                  (click)="changePage(i)"
+                  class="page-btn">
+                  {{ i + 1 }}
+                </button>
+              </div>
+              
+              <button 
+                mat-icon-button 
+                [disabled]="currentPage() >= totalPages() - 1"
+                (click)="nextPage()"
+                matTooltip="Página siguiente">
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel lateral para crear/editar finca -->
+  <div class="side-panel" [class.open]="showSidePanel()">
+    <div class="side-panel-content">
+      <!-- Header del panel -->
+      <div class="panel-header">
+        <h2>
+          <mat-icon>{{ isEditMode() ? 'edit' : 'add' }}</mat-icon>
+          {{ isEditMode() ? 'Editar Finca' : 'Nueva Finca' }}
+        </h2>
+        <button mat-icon-button (click)="closeSidePanel()" class="close-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Formulario -->
+      <div class="form-container">
+        <form [formGroup]="farmForm" (ngSubmit)="onSaveFarm()" class="farm-form">
+          <div class="form-content">
+            <!-- Información básica -->
+            <div class="form-section">
+              <h3 class="section-title">Información Básica</h3>
+              
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>Nombre de la Finca *</mat-label>
+                <input matInput formControlName="name" required>
+                <mat-error *ngIf="isFieldInvalid('name')">{{ getFieldError('name') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>Descripción</mat-label>
+                <textarea matInput formControlName="description" rows="3" placeholder="Descripción breve de la finca..."></textarea>
+                <mat-error *ngIf="isFieldInvalid('description')">{{ getFieldError('description') }}</mat-error>
+              </mat-form-field>
+            </div>
+
+            <!-- Ubicación -->
+            <div class="form-section">
+              <h3 class="section-title">Ubicación</h3>
+              
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>Dirección</mat-label>
+                <input matInput formControlName="address">
+                <mat-error *ngIf="isFieldInvalid('address')">{{ getFieldError('address') }}</mat-error>
+              </mat-form-field>
+
+              <div class="form-row">
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Municipio</mat-label>
+                  <input matInput formControlName="municipality">
+                  <mat-error *ngIf="isFieldInvalid('municipality')">{{ getFieldError('municipality') }}</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Departamento</mat-label>
+                  <mat-select formControlName="department">
+                    @for (dept of departmentOptions; track dept.value) {
+                      <mat-option [value]="dept.value">{{ dept.label }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-error *ngIf="isFieldInvalid('department')">{{ getFieldError('department') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>País</mat-label>
+                <input matInput formControlName="country" readonly>
+              </mat-form-field>
+            </div>
+
+            <!-- Características físicas -->
+            <div class="form-section">
+              <h3 class="section-title">Características Físicas</h3>
+              
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>Área Total</mat-label>
+                <input matInput type="number" formControlName="total_area" min="0" step="0.1">
+                <span matSuffix>hectáreas</span>
+                <mat-error *ngIf="isFieldInvalid('total_area')">{{ getFieldError('total_area') }}</mat-error>
+              </mat-form-field>
+
+              <div class="form-row">
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Altitud Mínima</mat-label>
+                  <input matInput type="number" formControlName="altitude_min" min="0">
+                  <span matSuffix>m.s.n.m.</span>
+                  <mat-error *ngIf="isFieldInvalid('altitude_min')">{{ getFieldError('altitude_min') }}</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Altitud Máxima</mat-label>
+                  <input matInput type="number" formControlName="altitude_max" min="0">
+                  <span matSuffix>m.s.n.m.</span>
+                  <mat-error *ngIf="isFieldInvalid('altitude_max')">{{ getFieldError('altitude_max') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Latitud</mat-label>
+                  <input matInput type="number" formControlName="latitude" step="0.000001">
+                  <mat-error *ngIf="isFieldInvalid('latitude')">{{ getFieldError('latitude') }}</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Longitud</mat-label>
+                  <input matInput type="number" formControlName="longitude" step="0.000001">
+                  <mat-error *ngIf="isFieldInvalid('longitude')">{{ getFieldError('longitude') }}</mat-error>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- Contacto -->
+            <div class="form-section">
+              <h3 class="section-title">Información de Contacto</h3>
+              
+              <div class="form-row">
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Teléfono</mat-label>
+                  <input matInput formControlName="phone" placeholder="+57 300 123 4567">
+                  <mat-error *ngIf="isFieldInvalid('phone')">{{ getFieldError('phone') }}</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Email</mat-label>
+                  <input matInput type="email" formControlName="email">
+                  <mat-error *ngIf="isFieldInvalid('email')">{{ getFieldError('email') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>Fecha de Establecimiento</mat-label>
+                <input matInput [matDatepicker]="establishedDatePicker" formControlName="established_date">
+                <mat-datepicker-toggle matSuffix [for]="establishedDatePicker"></mat-datepicker-toggle>
+                <mat-datepicker #establishedDatePicker></mat-datepicker>
+              </mat-form-field>
+            </div>
+
+            <!-- Certificaciones -->
+            <div class="form-section" formGroupName="certifications">
+              <h3 class="section-title">Certificaciones</h3>
+              
+              <div class="certifications-grid">
+                @for (cert of certificationOptions; track cert.key) {
+                  <mat-checkbox [formControlName]="cert.key" class="certification-checkbox">
+                    <div class="certification-info">
+                      <div class="certification-label">{{ cert.label }}</div>
+                      <div class="certification-description">{{ cert.description }}</div>
+                    </div>
+                  </mat-checkbox>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button mat-stroked-button type="button" (click)="closeSidePanel()">
+              <mat-icon>close</mat-icon>
+              Cancelar
+            </button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="farmForm.invalid || isLoading()">
+              <mat-icon>{{ isLoading() ? 'hourglass_empty' : 'save' }}</mat-icon>
+              {{ isEditMode() ? 'Actualizar' : 'Crear' }} Finca
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar panel -->
+  <div 
+    class="panel-overlay" 
+    [class.visible]="showSidePanel()" 
+    (click)="closeSidePanel()"
+    tabindex="0"
+    role="button"
+    aria-label="Cerrar panel lateral"
+    [attr.aria-hidden]="!showSidePanel()">
+  </div>
+</div> 

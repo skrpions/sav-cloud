@@ -84,6 +84,9 @@
               @if (isFieldRequired('birth_date')) {
                 <mat-error>{{ 'collaborators.validation.birthDateRequired' | translate }}</mat-error>
               }
+              @if (isMinimumAgeInvalid('birth_date')) {
+                <mat-error>El colaborador debe tener al menos 5 años de edad</mat-error>
+              }
             </mat-form-field>
           </div>
 
@@ -174,18 +177,73 @@
         <!-- Información Bancaria -->
         <div class="form-section">
           <h3 class="section-title">{{ 'collaborators.form.bankingInfo' | translate }}</h3>
-          
-          <!-- Cuenta Bancaria -->
-          <mat-form-field appearance="fill" class="form-field full-width">
-            <mat-label>{{ 'collaborators.form.bankAccount' | translate }}</mat-label>
-            <input matInput formControlName="bank_account" type="text">
-            @if (isFieldRequired('bank_account')) {
-              <mat-error>{{ 'collaborators.validation.bankAccountRequired' | translate }}</mat-error>
+
+          <!-- Nueva Información Bancaria Estructurada -->
+          <div formGroupName="banking_info" class="banking-info-section">
+            <h4 class="subsection-title">Información Bancaria Detallada</h4>
+            
+            <div class="form-row">
+              <!-- Selección de Banco -->
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>Banco</mat-label>
+                <mat-select formControlName="bank" (selectionChange)="onBankChange($event.value)">
+                  @for (bank of bankOptions; track bank.value) {
+                    <mat-option [value]="bank.value">{{bank.label}}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Tipo de Producto -->
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>Tipo de Producto</mat-label>
+                <mat-select formControlName="product_type">
+                  @for (product of getProductTypeOptions(); track product.value) {
+                    <mat-option [value]="product.value">{{product.label}}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <!-- Toggle para Nequi: usar número de teléfono -->
+            @if (isNequiSelected()) {
+              <div class="nequi-phone-toggle">
+                <mat-slide-toggle 
+                  [checked]="usePhoneForNequi"
+                  (change)="onUsePhoneToggle($event.checked)"
+                  color="primary">
+                  Usar el mismo número de teléfono
+                </mat-slide-toggle>
+                <p class="toggle-description">
+                  Si está marcado, se usará automáticamente el número de teléfono como número de cuenta de Nequi.
+                </p>
+              </div>
             }
-            @if (isPatternInvalid('bank_account')) {
-              <mat-error>{{ 'collaborators.validation.bankAccountInvalid' | translate }}</mat-error>
+
+            <!-- Número de Cuenta/Producto (solo mostrar si no es Nequi con teléfono) -->
+            @if (!(isNequiSelected() && usePhoneForNequi)) {
+              <mat-form-field appearance="fill" class="form-field full-width">
+                <mat-label>
+                  @if (isNequiSelected()) {
+                    Número de Nequi
+                  } @else {
+                    Número de Cuenta
+                  }
+                </mat-label>
+                <input 
+                  matInput 
+                  formControlName="account_number" 
+                  type="text">
+              </mat-form-field>
             }
-          </mat-form-field>
+            
+            <!-- Mensaje informativo cuando se usa Nequi con teléfono -->
+            @if (isNequiSelected() && usePhoneForNequi) {
+              <div class="nequi-auto-message">
+                <mat-icon>info</mat-icon>
+                <span>Se usará automáticamente el número de teléfono como cuenta de Nequi</span>
+              </div>
+            }
+          </div>
         </div>
 
         <!-- Información Adicional -->
@@ -209,6 +267,7 @@
         class="cancel-button"
         (click)="onCancel()"
         [disabled]="isLoading">
+        <mat-icon>close</mat-icon>
         {{ 'collaborators.form.cancel' | translate }}
       </button>
       
@@ -221,7 +280,10 @@
         @if (isLoading) {
           <mat-spinner diameter="20"></mat-spinner>
         } @else {
-          <span>{{ isEditMode ? ('collaborators.form.update' | translate) : ('collaborators.form.save' | translate) }}</span>
+          <ng-container>
+            <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+            <span>{{ isEditMode ? ('collaborators.form.update' | translate) : ('collaborators.form.save' | translate) }}</span>
+          </ng-container>
         }
       </button>
     </div>

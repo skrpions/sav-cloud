@@ -2,37 +2,49 @@
 
 export interface HarvestEntity {
   id?: string;
+  farm_id: string; // Obligatorio: cosechas pertenecen a una finca específica
   collaborator_id: string;
+  plot_id?: string; // Opcional: cosecha de lote específico
+  variety_id?: string; // Opcional: variedad específica cosechada
   date: string; // ISO date
   start_time?: string; // HH:mm format
   end_time?: string; // HH:mm format
-  kilograms: number;
+  quantity: number; // Cantidad cosechada (kg, unidades, etc.)
+  unit_measure?: string; // kg, units, tons, etc. (default: 'kg')
   quality_grade: QualityGrade;
-  price_per_kilogram: number;
+  price_per_unit: number; // Precio por unidad de medida
   total_payment: number;
   humidity_percentage?: number; // 0-100
   defects_percentage?: number; // 0-100
   area_harvested?: number; // hectares or meters squared
   weather_conditions?: string;
+  processing_method?: string; // Lavado, natural, honey, fermentado, etc.
   is_sold?: boolean;
+  batch_number?: string; // Número de lote para trazabilidad
   notes?: string;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface CreateHarvestRequest {
+  farm_id: string;
   collaborator_id: string;
+  plot_id?: string;
+  variety_id?: string;
   date: string;
   start_time?: string;
   end_time?: string;
-  kilograms: number;
+  quantity: number;
+  unit_measure?: string;
   quality_grade: QualityGrade;
-  price_per_kilogram: number;
+  price_per_unit: number;
   total_payment: number;
   humidity_percentage?: number;
   defects_percentage?: number;
   area_harvested?: number;
   weather_conditions?: string;
+  processing_method?: string;
+  batch_number?: string;
   notes?: string;
 }
 
@@ -57,7 +69,7 @@ export interface HarvestResponse {
   };
 }
 
-// Tipos de calidad del café
+// Tipos de calidad del cultivo
 export type QualityGrade = 'premium' | 'standard' | 'low';
 
 // Opciones para el select de calidad
@@ -75,6 +87,23 @@ export const WEATHER_CONDITIONS_OPTIONS = [
   { value: 'windy', labelKey: 'harvest.weather.windy' },
   { value: 'humid', labelKey: 'harvest.weather.humid' },
   { value: 'dry', labelKey: 'harvest.weather.dry' }
+] as const;
+
+// Métodos de procesamiento (principalmente para café)
+export const PROCESSING_METHOD_OPTIONS = [
+  { value: 'washed', labelKey: 'harvest.processing.washed' },
+  { value: 'natural', labelKey: 'harvest.processing.natural' },
+  { value: 'honey', labelKey: 'harvest.processing.honey' },
+  { value: 'fermented', labelKey: 'harvest.processing.fermented' },
+  { value: 'other', labelKey: 'harvest.processing.other' }
+] as const;
+
+// Unidades de medida
+export const UNIT_MEASURE_OPTIONS = [
+  { value: 'kg', label: 'Kilogramos (kg)' },
+  { value: 'units', label: 'Unidades' },
+  { value: 'tons', label: 'Toneladas' },
+  { value: 'pounds', label: 'Libras' }
 ] as const;
 
 // Helper function para obtener el color de la calidad
