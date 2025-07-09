@@ -85,10 +85,6 @@ export const DEPARTMENT_OPTIONS = [
 // Opciones para certificaciones comunes
 export const CERTIFICATION_OPTIONS = [
   { key: 'organic', label: 'Orgánico', description: 'Certificación orgánica' },
-  { key: 'fair_trade', label: 'Comercio Justo', description: 'Fair Trade certified' },
-  { key: 'rainforest_alliance', label: 'Rainforest Alliance', description: 'Sostenibilidad ambiental' },
-  { key: 'utz_certified', label: 'UTZ Certified', description: 'Programa de sostenibilidad' },
-  { key: 'c_cafe_practices', label: 'C.A.F.E. Practices', description: 'Programa de Starbucks' },
   { key: 'specialty_coffee', label: 'Café de Especialidad', description: 'Calidad premium' },
   { key: '4c_association', label: '4C Association', description: 'Código común para la comunidad cafetera' }
 ] as const;

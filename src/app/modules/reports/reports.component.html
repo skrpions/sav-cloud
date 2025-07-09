@@ -1,0 +1,72 @@
+<div class="reports-layout">
+  <!-- Sidebar -->
+  <app-sidebar 
+    (itemClicked)="onSidebarItemClicked($event)"
+    (collapseChanged)="onSidebarCollapseChanged($event)">
+  </app-sidebar>
+
+  <!-- Contenido principal -->
+  <div class="reports-content">
+    <!-- Header -->
+    <app-header></app-header>
+
+    <!-- Contenedor principal -->
+    <div class="reports-main">
+      <!-- Panel de información -->
+      <div class="reports-controls">
+        <div class="controls-section">
+          <h2 class="section-title">
+            <mat-icon>analytics</mat-icon>
+            Reportes y Análisis
+          </h2>
+        </div>
+      </div>
+
+      <!-- Contenido -->
+      <div class="reports-content-area">
+        <div class="coming-soon-container">
+          <div class="coming-soon-card">
+            <mat-icon class="coming-soon-icon">bar_chart</mat-icon>
+            <h2>Módulo en Desarrollo</h2>
+            <p class="description">
+              El módulo de reportes y análisis estará disponible próximamente. 
+              Aquí podrás generar reportes detallados y análisis de tu operación agrícola.
+            </p>
+            
+            <div class="features-preview">
+              <h3>Funcionalidades que incluirá:</h3>
+              <ul>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Reportes de producción por finca, lote y período
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Análisis financiero con costos vs ingresos
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Gráficos y dashboards interactivos
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Comparativas de rendimiento entre fincas
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Exportación a PDF y Excel para compartir
+                </li>
+              </ul>
+            </div>
+
+            <div class="progress-info">
+              <p class="progress-text">Estado del desarrollo</p>
+              <mat-progress-bar mode="determinate" value="25" class="progress-bar"></mat-progress-bar>
+              <span class="progress-percentage">25% completado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

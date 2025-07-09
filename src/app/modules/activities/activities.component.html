@@ -91,8 +91,8 @@
             <button 
               mat-raised-button 
               color="primary" 
-              (click)="openSidePanel()"
-              class="add-activity-btn">
+              class="add-activity-btn"
+              (click)="openSidePanel()">
               <mat-icon>add</mat-icon>
               Nueva Actividad
             </button>
@@ -118,8 +118,9 @@
             <p *ngIf="hasFilters()">{{ 'modules.activities.emptyFiltersMessage' | translate }}</p>
             <button 
               *ngIf="!hasFilters()" 
-              mat-raised-button 
-              color="primary" 
+              mat-raised-button
+              color="primary"
+              class="first-activity-btn"
               (click)="openSidePanel()">
               <mat-icon>add</mat-icon>
               {{ 'modules.activities.firstButton' | translate }}
@@ -283,8 +284,9 @@
             <p *ngIf="hasFilters()">{{ 'modules.activities.emptyFiltersMessage' | translate }}</p>
             <button 
               *ngIf="!hasFilters()" 
-              mat-raised-button 
-              color="primary" 
+              mat-raised-button
+              color="primary"
+              class="first-activity-btn"
               (click)="openSidePanel()">
               <mat-icon>add</mat-icon>
               {{ 'modules.activities.firstButton' | translate }}
@@ -393,6 +395,17 @@
       <div class="form-container">
         <form [formGroup]="activityForm" (ngSubmit)="onSaveActivity()" class="activity-form">
           <div class="form-content">
+            <!-- Layout de dos columnas -->
+            <div class="form-columns">
+              <!-- Columna izquierda -->
+              <div class="form-column">
+                <!-- Información de la actividad -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <mat-icon>event</mat-icon>
+                    Actividad
+                  </h3>
+                  
             <mat-form-field appearance="fill" class="form-field">
               <mat-label>Colaborador</mat-label>
               <mat-select formControlName="collaborator_id" required>
@@ -420,45 +433,60 @@
               </mat-select>
             </mat-form-field>
 
-            <mat-form-field appearance="fill" class="form-field">
+                  <div class="form-row">
+                    <mat-form-field appearance="fill" class="form-field half-width">
               <mat-label>Fecha</mat-label>
-              <input matInput [matDatepicker]="activityDatePicker" formControlName="date" required>
-              <mat-datepicker-toggle matSuffix [for]="activityDatePicker"></mat-datepicker-toggle>
-              <mat-datepicker #activityDatePicker></mat-datepicker>
+                      <input matInput [matDatepicker]="datePicker" formControlName="date" required>
+                      <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
+                      <mat-datepicker #datePicker></mat-datepicker>
             </mat-form-field>
 
+                    <mat-form-field appearance="fill" class="form-field half-width">
+                      <mat-label>Días Trabajados</mat-label>
+                      <input matInput type="number" formControlName="days" min="0.5" step="0.5" required>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <!-- Costo y área -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <mat-icon>attach_money</mat-icon>
+                    Costo y Área
+                  </h3>
+
             <div class="form-row">
-              <mat-form-field appearance="fill" class="form-field">
-                <mat-label>Días</mat-label>
-                <input matInput type="number" formControlName="days" min="0.1" step="0.1" required>
+                    <mat-form-field appearance="fill" class="form-field half-width">
+                      <mat-label>Costo por Día</mat-label>
+                      <input matInput type="number" formControlName="cost_per_day" min="0" step="1000">
+                      <span matPrefix>$</span>
               </mat-form-field>
 
-              <mat-form-field appearance="fill" class="form-field">
+                    <mat-form-field appearance="fill" class="form-field half-width">
                 <mat-label>Tipo de Pago</mat-label>
-                <mat-select formControlName="payment_type" required>
-                  <mat-option value="libre">Libre (incluye comida)</mat-option>
-                  <mat-option value="grabado">Grabado (solo pago)</mat-option>
+                      <mat-select formControlName="payment_type">
+                        <mat-option value="libre">Libre</mat-option>
+                        <mat-option value="grabado">Grabado</mat-option>
                 </mat-select>
               </mat-form-field>
             </div>
 
-            <div class="form-row">
               <mat-form-field appearance="fill" class="form-field">
-                <mat-label>Tarifa por Día</mat-label>
-                <input matInput type="number" formControlName="rate_per_day" min="0" required>
-              </mat-form-field>
-
-              <mat-form-field appearance="fill" class="form-field">
-                <mat-label>Costo Total</mat-label>
-                <input matInput type="number" formControlName="total_cost" min="0" required>
-              </mat-form-field>
-            </div>
-
-            <mat-form-field appearance="fill" class="form-field">
-              <mat-label>Área Trabajada (opcional)</mat-label>
+                    <mat-label>Área Trabajada</mat-label>
               <input matInput type="number" formControlName="area_worked" min="0" step="0.1">
               <span matSuffix>hectáreas</span>
             </mat-form-field>
+                </div>
+              </div>
+
+              <!-- Columna derecha -->
+              <div class="form-column">
+                <!-- Detalles adicionales -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <mat-icon>info</mat-icon>
+                    Detalles
+                  </h3>
 
             <mat-form-field appearance="fill" class="form-field">
               <mat-label>Materiales Usados</mat-label>
@@ -485,16 +513,28 @@
               <mat-label>Notas</mat-label>
               <textarea matInput formControlName="notes" rows="3" placeholder="Observaciones adicionales..."></textarea>
             </mat-form-field>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="form-actions">
-            <button mat-stroked-button type="button" (click)="closeSidePanel()">
+            <button 
+              mat-button 
+              class="cancel-btn"
+              (click)="closeSidePanel()">
               <mat-icon>close</mat-icon>
               Cancelar
             </button>
-            <button mat-raised-button color="primary" type="submit" [disabled]="activityForm.invalid || isLoading()">
+            <button 
+              mat-raised-button 
+              color="primary"
+              class="save-btn"
+              [disabled]="activityForm.invalid || isLoading()"
+              type="submit"
+              (click)="onSaveActivity()">
               <mat-icon>{{ isLoading() ? 'hourglass_empty' : 'save' }}</mat-icon>
-              {{ isEditMode() ? 'Actualizar' : 'Crear' }} Actividad
+              {{ (isEditMode() ? 'Actualizar' : 'Crear') + ' Actividad' }}
             </button>
           </div>
         </form>

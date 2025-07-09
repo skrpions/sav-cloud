@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -25,6 +25,7 @@ export abstract class FormAuthComponent {
   hidePassword = true;
 
   protected createBaseForm(): FormGroup {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const baseControls: any = {
       email: ['sksmartinez@gmail.com', createEmailValidators()],
       password: ['Pa$$w0rd!', createPasswordValidators()]

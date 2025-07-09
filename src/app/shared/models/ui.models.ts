@@ -5,6 +5,10 @@ export interface SidebarItem {
   labelKey: string; // Clave de traducción
   route?: string;
   active?: boolean;
+  children?: SidebarItem[]; // Subitems
+  expanded?: boolean; // Para controlar si está expandido
+  parent?: boolean; // Para identificar items padre
+  disabled?: boolean; // Para deshabilitar items
 }
 
 export interface AuthFormConfig {

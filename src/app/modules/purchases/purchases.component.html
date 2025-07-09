@@ -1,0 +1,72 @@
+<div class="purchases-layout">
+  <!-- Sidebar -->
+  <app-sidebar 
+    (itemClicked)="onSidebarItemClicked($event)"
+    (collapseChanged)="onSidebarCollapseChanged($event)">
+  </app-sidebar>
+
+  <!-- Contenido principal -->
+  <div class="purchases-content">
+    <!-- Header -->
+    <app-header></app-header>
+
+    <!-- Contenedor principal -->
+    <div class="purchases-main">
+      <!-- Panel de información -->
+      <div class="purchases-controls">
+        <div class="controls-section">
+          <h2 class="section-title">
+            <mat-icon>shopping_cart</mat-icon>
+            Gestión de Compras
+          </h2>
+        </div>
+      </div>
+
+      <!-- Contenido -->
+      <div class="purchases-content-area">
+        <div class="coming-soon-container">
+          <div class="coming-soon-card">
+            <mat-icon class="coming-soon-icon">construction</mat-icon>
+            <h2>Módulo en Desarrollo</h2>
+            <p class="description">
+              El módulo de gestión de compras estará disponible próximamente. 
+              Aquí podrás registrar y gestionar todas las compras y gastos de tus fincas.
+            </p>
+            
+            <div class="features-preview">
+              <h3>Funcionalidades que incluirá:</h3>
+              <ul>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Registro de compras por categorías (fertilizantes, herramientas, equipos, etc.)
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Control de proveedores y métodos de pago
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Seguimiento de facturas y garantías
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Reportes de gastos por finca y período
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Análisis de costos de producción
+                </li>
+              </ul>
+            </div>
+
+            <div class="progress-info">
+              <p class="progress-text">Estado del desarrollo</p>
+              <mat-progress-bar mode="determinate" value="25" class="progress-bar"></mat-progress-bar>
+              <span class="progress-percentage">25% completado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

@@ -295,6 +295,7 @@ export class CollaboratorsService {
         .select(this.fieldList)
         .single()
     ).pipe(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       map(response => this.mapSingleResponse(response as any)),
       catchError(error => this.handleError(error))
     );
@@ -352,6 +353,7 @@ export class CollaboratorsService {
         .select(this.fieldList)
         .single()
     ).pipe(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       map(response => this.mapSingleResponse(response as any)),
       catchError(error => this.handleError(error))
     );
@@ -360,6 +362,7 @@ export class CollaboratorsService {
   /**
    * Mapea la respuesta de lista de Supabase al formato de nuestra aplicación
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapListResponse(response: any): CollaboratorListResponse {
     if (response.error) {
       return {
@@ -370,6 +373,7 @@ export class CollaboratorsService {
       };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const collaborators = (response.data || []).map((collaborator: any) => ({
       ...collaborator,
       contract_type: this.mapContractTypeFromDB(collaborator.contract_type) as ContractType
@@ -383,6 +387,7 @@ export class CollaboratorsService {
   /**
    * Mapea la respuesta individual de Supabase al formato de nuestra aplicación
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapSingleResponse(response: any): CollaboratorResponse {
     if (response.error) {
       return {

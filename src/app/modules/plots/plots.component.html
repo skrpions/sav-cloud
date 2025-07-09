@@ -1,0 +1,621 @@
+<div class="plots-layout">
+  <!-- Sidebar -->
+  <app-sidebar 
+    (itemClicked)="onSidebarItemClicked($event)"
+    (collapseChanged)="onSidebarCollapseChanged($event)">
+  </app-sidebar>
+
+  <!-- Contenido principal -->
+  <div class="plots-content">
+    <!-- Header -->
+    <app-header></app-header>
+
+    <!-- Contenedor principal -->
+    <div class="plots-main">
+      <!-- Panel de filtros y acciones -->
+      <div class="plots-controls">
+        <div class="controls-section">
+          <h2 class="section-title">
+            <mat-icon>landscape</mat-icon>
+            Gestión de Lotes
+          </h2>
+          
+          <div class="actions-row">
+            <!-- Filtros -->
+            <div class="filters-container">
+              <!-- Búsqueda -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Buscar lotes...</mat-label>
+                <input matInput 
+                       [value]="searchTerm" 
+                       (input)="onSearchChanged($event)"
+                       placeholder="Nombre, cultivo, tipo de suelo...">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+
+              <!-- Filtro por estado -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Estado</mat-label>
+                <mat-select [(ngModel)]="filterStatus" (ngModelChange)="updatePagination()">
+                  <mat-option value="">Todos los estados</mat-option>
+                  @for (status of statusOptions; track status.value) {
+                    <mat-option [value]="status.value">
+                      <div class="status-option">
+                        <mat-icon [style.color]="status.color">{{ status.icon }}</mat-icon>
+                        {{ status.label }}
+                      </div>
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Filtro por tipo de cultivo -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Tipo de Cultivo</mat-label>
+                <mat-select [(ngModel)]="filterCropType" (ngModelChange)="updatePagination()">
+                  <mat-option value="">Todos los cultivos</mat-option>
+                  @for (crop of cropTypeOptions; track crop.value) {
+                    <mat-option [value]="crop.value">{{ crop.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Botón limpiar filtros -->
+              <button 
+                mat-icon-button 
+                (click)="clearFilters()"
+                [disabled]="!hasFilters()"
+                matTooltip="Limpiar filtros"
+                class="clear-filters-btn">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+
+            <!-- Botones de vista -->
+            <div class="view-toggle-buttons">
+              <button 
+                mat-icon-button 
+                [class.active]="viewMode() === 'list'"
+                (click)="switchView('list')"
+                matTooltip="Vista de Lista"
+                class="view-toggle-btn">
+                <mat-icon>list</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                [class.active]="viewMode() === 'cards'"
+                (click)="switchView('cards')"
+                matTooltip="Vista de Tarjetas"
+                class="view-toggle-btn">
+                <mat-icon>view_module</mat-icon>
+              </button>
+            </div>
+
+            <!-- Botón nuevo lote -->
+            <app-action-button
+              variant="primary"
+              icon="add"
+              label="Nuevo Lote"
+              (buttonClick)="openSidePanel()">
+            </app-action-button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de Lista (tabla) -->
+      <div *ngIf="viewMode() === 'list'" class="plots-list-view">
+        <!-- Loading spinner -->
+        <div *ngIf="isLoading()" class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>Cargando lotes...</p>
+        </div>
+
+        <!-- Lista de lotes -->
+        <div *ngIf="!isLoading()" class="plots-list">
+          <!-- Mensaje cuando no hay lotes -->
+          <div *ngIf="filteredPlots.length === 0" class="no-plots-message">
+            <mat-icon>info</mat-icon>
+            <h3>No hay lotes registrados</h3>
+            <p *ngIf="!hasFilters()">Comienza registrando tu primer lote</p>
+            <p *ngIf="hasFilters()">No se encontraron lotes con los filtros aplicados</p>
+            <app-action-button
+              *ngIf="!hasFilters()"
+              variant="primary"
+              icon="add"
+              label="Registrar Primer Lote"
+              (buttonClick)="openSidePanel()">
+            </app-action-button>
+          </div>
+
+          <!-- Tabla de lotes -->
+          <div *ngIf="filteredPlots.length > 0" class="plots-table-container">
+            <table mat-table [dataSource]="paginatedPlots" class="plots-table">
+              <!-- Nombre -->
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Lote</th>
+                <td mat-cell *matCellDef="let plot" class="data-cell">
+                  <div class="plot-info">
+                    <div class="plot-name">{{ plot.name }}</div>
+                    <div class="plot-description" *ngIf="plot.description">{{ plot.description }}</div>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Estado -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Estado</th>
+                <td mat-cell *matCellDef="let plot" class="data-cell">
+                  <div class="status-badge" [style.background-color]="getStatusColor(plot.status) + '20'" 
+                       [style.color]="getStatusColor(plot.status)" [style.border-color]="getStatusColor(plot.status) + '40'">
+                    <mat-icon>{{ getStatusIcon(plot.status) }}</mat-icon>
+                    {{ getStatusLabel(plot.status) }}
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Área -->
+              <ng-container matColumnDef="area">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Área</th>
+                <td mat-cell *matCellDef="let plot" class="data-cell">
+                  <span class="area-value">{{ formatPlotArea(plot.area) }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Cultivo -->
+              <ng-container matColumnDef="crop">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Cultivo</th>
+                <td mat-cell *matCellDef="let plot" class="data-cell">
+                  <span class="crop-value">{{ getCropTypeLabel(plot.crop_type) }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Ciclo de producción -->
+              <ng-container matColumnDef="cycle">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Ciclo</th>
+                <td mat-cell *matCellDef="let plot" class="data-cell">
+                  <span class="cycle-info">{{ getProductionCycleInfo(plot) }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Salud del lote -->
+              <ng-container matColumnDef="health">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Salud</th>
+                <td mat-cell *matCellDef="let plot" class="data-cell">
+                  <div class="health-score" [class.good]="getPlotHealthScore(plot) > 80" 
+                       [class.warning]="getPlotHealthScore(plot) > 60 && getPlotHealthScore(plot) <= 80"
+                       [class.poor]="getPlotHealthScore(plot) <= 60">
+                    {{ getPlotHealthScore(plot) }}%
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Acciones -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="header-cell actions-header">Acciones</th>
+                <td mat-cell *matCellDef="let plot" class="data-cell actions-cell">
+                  <div class="action-buttons">
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Editar"
+                      class="action-btn edit-btn"
+                      (click)="openSidePanel(plot)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Eliminar"
+                      class="action-btn delete-btn"
+                      (click)="onDeletePlot(plot)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="['name', 'status', 'area', 'crop', 'cycle', 'health', 'actions']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['name', 'status', 'area', 'crop', 'cycle', 'health', 'actions']"></tr>
+            </table>
+
+            <!-- Paginación -->
+            <div class="pagination-container" *ngIf="totalPages() > 1">
+              <div class="pagination-info">
+                <span>Página {{ currentPage() + 1 }} de {{ totalPages() }}</span>
+                <span class="total-records">({{ filteredPlots.length }} lotes)</span>
+              </div>
+              
+              <div class="pagination-controls">
+                <button 
+                  mat-icon-button 
+                  [disabled]="currentPage() === 0"
+                  (click)="prevPage()"
+                  matTooltip="Página anterior">
+                  <mat-icon>chevron_left</mat-icon>
+                </button>
+                
+                <div class="page-numbers">
+                  <button 
+                    *ngFor="let page of [].constructor(totalPages()); let i = index"
+                    mat-button
+                    [class.active]="i === currentPage()"
+                    (click)="changePage(i)"
+                    class="page-btn">
+                    {{ i + 1 }}
+                  </button>
+                </div>
+                
+                <button 
+                  mat-icon-button 
+                  [disabled]="currentPage() >= totalPages() - 1"
+                  (click)="nextPage()"
+                  matTooltip="Página siguiente">
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de Tarjetas -->
+      <div *ngIf="viewMode() === 'cards'" class="plots-cards-view">
+        <!-- Loading spinner -->
+        <div *ngIf="isLoading()" class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>Cargando lotes...</p>
+        </div>
+
+        <!-- Lista de lotes -->
+        <div *ngIf="!isLoading()" class="plots-list">
+          <!-- Mensaje cuando no hay lotes -->
+          <div *ngIf="filteredPlots.length === 0" class="no-plots-message">
+            <mat-icon>info</mat-icon>
+            <h3>No hay lotes registrados</h3>
+            <p *ngIf="!hasFilters()">Comienza registrando tu primer lote</p>
+            <p *ngIf="hasFilters()">No se encontraron lotes con los filtros aplicados</p>
+            <app-action-button
+              *ngIf="!hasFilters()"
+              variant="primary"
+              icon="add"
+              label="Registrar Primer Lote"
+              (buttonClick)="openSidePanel()">
+            </app-action-button>
+          </div>
+
+          <!-- Cards de lotes -->
+          <div class="plots-cards-grid">
+            @for (plot of paginatedPlots; track trackByPlotId($index, plot)) {
+              <div class="plot-card">
+                <div class="card-header">
+                  <div class="plot-name">{{ plot.name }}</div>
+                  <div class="plot-actions">
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Editar"
+                      class="action-btn edit-btn"
+                      (click)="openSidePanel(plot)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button 
+                      mat-icon-button 
+                      matTooltip="Eliminar"
+                      class="action-btn delete-btn"
+                      (click)="onDeletePlot(plot)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="card-content">
+                  <!-- Estado y salud -->
+                  <div class="status-health-row">
+                    <div class="status-badge" [style.background-color]="getStatusColor(plot.status) + '20'" 
+                         [style.color]="getStatusColor(plot.status)" [style.border-color]="getStatusColor(plot.status) + '40'">
+                      <mat-icon>{{ getStatusIcon(plot.status) }}</mat-icon>
+                      {{ getStatusLabel(plot.status) }}
+                    </div>
+                    <div class="health-score" [class.good]="getPlotHealthScore(plot) > 80" 
+                         [class.warning]="getPlotHealthScore(plot) > 60 && getPlotHealthScore(plot) <= 80"
+                         [class.poor]="getPlotHealthScore(plot) <= 60">
+                      {{ getPlotHealthScore(plot) }}%
+                    </div>
+                  </div>
+
+                  <div class="plot-description" *ngIf="plot.description">
+                    {{ plot.description }}
+                  </div>
+
+                  <div class="plot-details">
+                    <div class="detail-item">
+                      <mat-icon>landscape</mat-icon>
+                      <div class="detail-content">
+                        <div class="detail-label">Área</div>
+                        <div class="detail-value">{{ formatPlotArea(plot.area) }}</div>
+                      </div>
+                    </div>
+
+                    <div class="detail-item" *ngIf="plot.crop_type">
+                      <mat-icon>eco</mat-icon>
+                      <div class="detail-content">
+                        <div class="detail-label">Cultivo</div>
+                        <div class="detail-value">{{ getCropTypeLabel(plot.crop_type) }}</div>
+                      </div>
+                    </div>
+
+                    <div class="detail-item" *ngIf="plot.soil_type">
+                      <mat-icon>terrain</mat-icon>
+                      <div class="detail-content">
+                        <div class="detail-label">Suelo</div>
+                        <div class="detail-value">{{ getSoilTypeLabel(plot.soil_type) }}</div>
+                      </div>
+                    </div>
+
+                    <div class="detail-item" *ngIf="plot.irrigation_type">
+                      <mat-icon>water_drop</mat-icon>
+                      <div class="detail-content">
+                        <div class="detail-label">Riego</div>
+                        <div class="detail-value">{{ getIrrigationTypeLabel(plot.irrigation_type) }}</div>
+                      </div>
+                    </div>
+
+                    <div class="detail-item" *ngIf="getProductionCycleInfo(plot)">
+                      <mat-icon>schedule</mat-icon>
+                      <div class="detail-content">
+                        <div class="detail-label">Ciclo</div>
+                        <div class="detail-value">{{ getProductionCycleInfo(plot) }}</div>
+                      </div>
+                    </div>
+
+                    <div class="detail-item" *ngIf="plot.slope_percentage">
+                      <mat-icon>trending_up</mat-icon>
+                      <div class="detail-content">
+                        <div class="detail-label">Pendiente</div>
+                        <div class="detail-value">{{ plot.slope_percentage }}%</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Factores de salud -->
+                  <div class="health-factors" *ngIf="getPlotHealthFactors(plot).length > 0">
+                    <div class="factors-label">Factores de atención:</div>
+                    <div class="factors-list">
+                      @for (factor of getPlotHealthFactors(plot); track factor) {
+                        <span class="factor-badge">{{ factor }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Paginación para cards -->
+          <div class="pagination-container" *ngIf="totalPages() > 1">
+            <div class="pagination-info">
+              <span>Página {{ currentPage() + 1 }} de {{ totalPages() }}</span>
+              <span class="total-records">({{ filteredPlots.length }} lotes)</span>
+            </div>
+            
+            <div class="pagination-controls">
+              <button 
+                mat-icon-button 
+                [disabled]="currentPage() === 0"
+                (click)="prevPage()"
+                matTooltip="Página anterior">
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+              
+              <div class="page-numbers">
+                <button 
+                  *ngFor="let page of [].constructor(totalPages()); let i = index"
+                  mat-button
+                  [class.active]="i === currentPage()"
+                  (click)="changePage(i)"
+                  class="page-btn">
+                  {{ i + 1 }}
+                </button>
+              </div>
+              
+              <button 
+                mat-icon-button 
+                [disabled]="currentPage() >= totalPages() - 1"
+                (click)="nextPage()"
+                matTooltip="Página siguiente">
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel lateral para crear/editar lote -->
+  <div class="side-panel" [class.open]="showSidePanel()">
+    <div class="side-panel-content">
+      <!-- Header del panel -->
+      <div class="panel-header">
+        <h2>
+          <mat-icon>{{ isEditMode() ? 'edit' : 'add' }}</mat-icon>
+          {{ isEditMode() ? 'Editar Lote' : 'Nuevo Lote' }}
+        </h2>
+        <button mat-icon-button (click)="closeSidePanel()" class="close-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Formulario -->
+      <div class="form-container">
+        <form [formGroup]="plotForm" (ngSubmit)="onSavePlot()" class="plot-form">
+          <div class="form-content">
+            <!-- Layout de dos columnas -->
+            <div class="form-columns">
+              <!-- Columna izquierda -->
+              <div class="form-column">
+                <!-- Información básica -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <mat-icon>info</mat-icon>
+                    Información Básica
+                  </h3>
+                  
+                  <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Nombre del Lote *</mat-label>
+                    <input matInput formControlName="name" required>
+                    <mat-error *ngIf="plotForm.get('name')?.invalid && plotForm.get('name')?.touched">
+                      El nombre es requerido
+                    </mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Descripción</mat-label>
+                    <textarea matInput formControlName="description" rows="2" placeholder="Descripción del lote..."></textarea>
+                  </mat-form-field>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="fill" class="form-field half-width">
+                      <mat-label>Área *</mat-label>
+                      <input matInput type="number" formControlName="area" min="0" step="0.01" required>
+                      <span matSuffix>hectáreas</span>
+                      <mat-error *ngIf="plotForm.get('area')?.invalid && plotForm.get('area')?.touched">
+                        El área es requerida
+                      </mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill" class="form-field half-width">
+                      <mat-label>Estado *</mat-label>
+                      <mat-select formControlName="status" required>
+                        @for (status of statusOptions; track status.value) {
+                          <mat-option [value]="status.value">
+                            <div class="status-option">
+                              <mat-icon [style.color]="status.color">{{ status.icon }}</mat-icon>
+                              {{ status.label }}
+                            </div>
+                          </mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <!-- Cultivo -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <mat-icon>eco</mat-icon>
+                    Información de Cultivo
+                  </h3>
+                  
+                  <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Tipo de Cultivo</mat-label>
+                    <mat-select formControlName="crop_type">
+                      <mat-option value="">Sin especificar</mat-option>
+                      @for (crop of cropTypeOptions; track crop.value) {
+                        <mat-option [value]="crop.value">{{ crop.label }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="fill" class="form-field half-width">
+                      <mat-label>Fecha de Siembra</mat-label>
+                      <input matInput [matDatepicker]="plantingDatePicker" formControlName="planting_date">
+                      <mat-datepicker-toggle matSuffix [for]="plantingDatePicker"></mat-datepicker-toggle>
+                      <mat-datepicker #plantingDatePicker></mat-datepicker>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill" class="form-field half-width">
+                      <mat-label>Fecha Estimada de Cosecha</mat-label>
+                      <input matInput [matDatepicker]="harvestDatePicker" formControlName="expected_harvest_date">
+                      <mat-datepicker-toggle matSuffix [for]="harvestDatePicker"></mat-datepicker-toggle>
+                      <mat-datepicker #harvestDatePicker></mat-datepicker>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Columna derecha -->
+              <div class="form-column">
+                <!-- Características físicas -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <mat-icon>terrain</mat-icon>
+                    Características Físicas
+                  </h3>
+                  
+                  <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Tipo de Suelo</mat-label>
+                    <mat-select formControlName="soil_type">
+                      <mat-option value="">Sin especificar</mat-option>
+                      @for (soil of soilTypeOptions; track soil.value) {
+                        <mat-option [value]="soil.value">{{ soil.label }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="fill" class="form-field half-width">
+                      <mat-label>Pendiente</mat-label>
+                      <input matInput type="number" formControlName="slope_percentage" min="0" max="100">
+                      <span matSuffix>%</span>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill" class="form-field half-width">
+                      <mat-label>Tipo de Riego</mat-label>
+                      <mat-select formControlName="irrigation_type">
+                        <mat-option value="">Sin especificar</mat-option>
+                        @for (irrigation of irrigationTypeOptions; track irrigation.value) {
+                          <mat-option [value]="irrigation.value">{{ irrigation.label }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <!-- Notas -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <mat-icon>note</mat-icon>
+                    Notas Adicionales
+                  </h3>
+                  
+                  <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Notas</mat-label>
+                    <textarea matInput formControlName="notes" rows="4" placeholder="Notas adicionales sobre el lote..."></textarea>
+                  </mat-form-field>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <app-action-button
+              variant="secondary"
+              icon="close"
+              label="Cancelar"
+              (buttonClick)="closeSidePanel()">
+            </app-action-button>
+            <app-action-button
+              variant="primary"
+              [icon]="isLoading() ? 'hourglass_empty' : 'save'"
+              [label]="(isEditMode() ? 'Actualizar' : 'Crear') + ' Lote'"
+              [disabled]="plotForm.invalid || isLoading()"
+              [loading]="isLoading()"
+              type="submit"
+              (buttonClick)="onSavePlot()">
+            </app-action-button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar panel -->
+  <div 
+    class="panel-overlay" 
+    [class.visible]="showSidePanel()" 
+    (click)="closeSidePanel()"
+    tabindex="0"
+    role="button"
+    aria-label="Cerrar panel lateral"
+    [attr.aria-hidden]="!showSidePanel()">
+  </div>
+</div> 

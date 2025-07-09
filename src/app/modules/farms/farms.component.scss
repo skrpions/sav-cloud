@@ -306,6 +306,47 @@
   }
 }
 
+// Botón registrar primera finca - con icono centrado
+.register-first-farm-btn {
+  height: 48px !important;
+  font-weight: 600;
+  padding: 0 24px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  
+  ::ng-deep .mdc-button__label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  mat-icon {
+    color: white !important;
+    font-size: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translateY(0) !important;
+    
+    &::before {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+  }
+}
+
 // ========================================
 // VISTA DE LISTA (TABLA)
 // ========================================
@@ -766,7 +807,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  width: 650px;
+  width: 1050px;
   height: 100vh;
   background: white;
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
@@ -831,28 +872,93 @@
   flex-direction: column;
   height: 100%;
   
+  .form-errors {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px 20px 0;
+    color: #dc2626;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #dc2626;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .error-messages {
+      flex: 1;
+
+      p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.4;
+
+        &:not(:last-child) {
+          margin-bottom: 8px;
+        }
+      }
+    }
+  }
+
   .form-content {
     flex: 1;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+    padding: 20px;
     overflow-y: auto;
+    
+    .form-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      height: 100%;
+      
+      .form-column {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+    }
     
     .form-section {
       .section-title {
-        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
         font-weight: 600;
         color: var(--holiday-teal-dark);
-        margin-bottom: 16px;
-        padding-bottom: 8px;
-        border-bottom: 2px solid rgba(0, 119, 1, 0.1);
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid rgba(0, 119, 1, 0.1);
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
       }
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
     }
     
     .form-field {
       width: 100%;
       margin-bottom: 8px !important;
+      
+      &.half-width {
+        width: 100%;
+      }
       
       // Mismos estilos de appearance="fill" transparente que los filtros
       ::ng-deep {
@@ -950,15 +1056,6 @@
         .mdc-line-ripple {
           background-color: transparent !important;
         }
-      }
-    }
-    
-    .form-row {
-      display: flex;
-      gap: 16px;
-      
-      .form-field {
-        flex: 1;
       }
     }
 

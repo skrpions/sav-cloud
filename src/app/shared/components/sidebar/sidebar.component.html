@@ -6,7 +6,9 @@
   <div class="sidebar-header">
     <div class="logo" [class.collapsed]="isCollapsed()">
       <mat-icon>cloud</mat-icon>
-      <span *ngIf="shouldShowExpandedContent()">{{ 'sidebar.appName' | translate }}</span>
+      @if (shouldShowExpandedContent()) {
+        <span>{{ 'sidebar.appName' | translate }}</span>
+      }
     </div>
     <button 
       mat-icon-button 
@@ -22,10 +24,12 @@
   <div class="user-profile-section" [class.collapsed]="isCollapsed()">
     <div class="user-profile">
       <img class="profile-avatar" src="/images/avatars/avatar-dreamcode.jpeg" alt="User Avatar" />
-      <div class="profile-info" *ngIf="shouldShowExpandedContent()">
+      @if (shouldShowExpandedContent()) {
+        <div class="profile-info">
         <h4 class="profile-name">{{ userName() }}</h4>
         <p class="profile-role">{{ userRole() }}</p>
       </div>
+      }
       <div class="profile-status">
         <div class="status-indicator online"></div>
       </div>
@@ -34,17 +38,46 @@
 
   <nav class="sidebar-nav">
     <div class="nav-section">
-      <div 
-        *ngFor="let item of sidebarItems" 
-        class="nav-item" 
-        [class.active]="item.active"
-        [class.collapsed]="isCollapsed()"
-        (click)="onItemClick(item)"
-        [matTooltip]="isCollapsed() && !isHovering() ? (item.labelKey | translate) : ''"
-        matTooltipPosition="right">
-        <mat-icon>{{ item.icon }}</mat-icon>
-        <span *ngIf="shouldShowExpandedContent()">{{ item.labelKey | translate }}</span>
-      </div>
+      @for (item of sidebarItems; track item.route) {
+        <!-- Item principal -->
+        <div 
+          class="nav-item" 
+          [class.active]="item.active"
+          [class.collapsed]="isCollapsed()"
+          [class.has-children]="item.children && item.children.length > 0"
+          [class.expanded]="item.expanded"
+          (click)="onItemClick(item)"
+          [matTooltip]="isCollapsed() && !isHovering() ? (item.labelKey | translate) : ''"
+          matTooltipPosition="right">
+          <mat-icon>{{ item.icon }}</mat-icon>
+          @if (shouldShowExpandedContent()) {
+            <span>{{ item.labelKey | translate }}</span>
+            @if (item.children && item.children.length > 0) {
+              <mat-icon class="expand-icon" [class.rotated]="item.expanded">
+                keyboard_arrow_down
+              </mat-icon>
+            }
+          }
+        </div>
+
+        <!-- Subitems -->
+        @if (item.children && item.children.length > 0 && item.expanded && shouldShowExpandedContent()) {
+          <div class="sub-items">
+            @for (child of item.children; track child.route) {
+              <div 
+                class="nav-item sub-item"
+                [class.active]="child.active"
+                [class.disabled]="child.disabled"
+                (click)="onItemClick(child)"
+                [matTooltip]="child.disabled ? 'Crea una finca primero para gestionar lotes' : ''"
+                matTooltipPosition="right">
+                <mat-icon class="sub-icon">{{ child.icon }}</mat-icon>
+                <span>{{ child.labelKey | translate }}</span>
+              </div>
+            }
+          </div>
+        }
+      }
     </div>
   </nav>
 </aside> 

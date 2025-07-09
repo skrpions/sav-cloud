@@ -26,13 +26,13 @@ export class UserInfrastructure extends UserRepository {
       }
 
       // Consultar la tabla public.users para obtener el perfil completo
-      const { data: userData, error } = await this._supabaseService.supabaseClient
+      const { data: userData, error: _error } = await this._supabaseService.supabaseClient
         .from('users')
         .select('id, email, first_name, last_name, role, is_active, created_at, updated_at')
         .eq('id', authUser.id)
         .single();
 
-      if (error || !userData) {
+      if (_error || !userData) {
         // Fallback: crear usuario básico desde auth
         const fallbackUser: User = {
           id: authUser.id,
@@ -94,7 +94,7 @@ export class UserInfrastructure extends UserRepository {
       
       return user;
 
-    } catch (error) {
+    } catch {
       this.clearUserCache();
       return null;
     }
@@ -120,33 +120,40 @@ export class UserInfrastructure extends UserRepository {
     return sessionStorage.getItem(this.STORAGE_KEY) !== null;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private extractFirstName(authUser: any): string {
-    const metadata = authUser.user_metadata;
-    return metadata?.['first_name'] || 
-      metadata?.['name']?.split(' ')[0] || 
-      metadata?.['full_name']?.split(' ')[0] || 
-      authUser.email?.split('@')[0]?.charAt(0).toUpperCase() + authUser.email?.split('@')[0]?.slice(1) ||
-      'Usuario';
-  }
-
-  private extractLastName(authUser: any): string {
-    const metadata = authUser.user_metadata;
-    const fullName = metadata?.['full_name'] || metadata?.['name'];
-    
-    if (fullName && fullName.includes(' ')) {
-      return fullName.split(' ').slice(1).join(' ');
+    // Intentar extraer de user_metadata primero
+    if (authUser.user_metadata?.first_name) {
+      return authUser.user_metadata.first_name;
     }
     
-    return metadata?.['last_name'] || '';
+    // Fallback: intentar parsear del full_name
+    const fullName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || '';
+    return fullName.split(' ')[0] || 'Usuario';
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private extractLastName(authUser: any): string {
+    // Intentar extraer de user_metadata primero
+    if (authUser.user_metadata?.last_name) {
+      return authUser.user_metadata.last_name;
+    }
+    
+    // Fallback: intentar parsear del full_name (tomar todo después del primer espacio)
+    const fullName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || '';
+    const nameParts = fullName.split(' ');
+    return nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Usuario';
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private isValidUserData(data: any): boolean {
     return data && 
-      typeof data.id === 'string' &&
-      typeof data.email === 'string' &&
-      typeof data.firstName === 'string' &&
-      typeof data.lastName === 'string' &&
-      typeof data.role === 'string' &&
-      typeof data.isActive === 'boolean';
+           typeof data === 'object' && 
+           typeof data.id === 'string' && 
+           typeof data.email === 'string' &&
+           typeof data.firstName === 'string' &&
+           typeof data.lastName === 'string' &&
+           typeof data.role === 'string' &&
+           typeof data.isActive === 'boolean';
   }
 } 

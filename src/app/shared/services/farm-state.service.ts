@@ -125,7 +125,7 @@ export class FarmStateService {
   }
 
   /**
-   * Obtiene el ID de la finca actual o el ID temporal si no hay finca
+   * Obtiene el ID de la finca actual o lanza error si no hay finca
    */
   getCurrentFarmIdOrDefault(): string {
     const currentId = this.currentFarmId();
@@ -133,7 +133,6 @@ export class FarmStateService {
       return currentId;
     }
     
-    // Si no hay finca actual, mostrar error amigable
     throw new Error('No hay una finca seleccionada. Por favor, crea o selecciona una finca primero.');
   }
 

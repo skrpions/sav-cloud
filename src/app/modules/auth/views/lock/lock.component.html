@@ -1,0 +1,101 @@
+<div class="login-page">
+  <!-- Background Image Section (solo parte superior) -->
+  <div class="login-page__background"></div>
+
+  <!-- Header Navigation -->
+  <header class="login-page__header">
+    <div class="header-nav">
+      <div class="header-nav__brand">
+        <span>{{ 'auth.brandName' | translate }}</span>
+      </div>
+      <div class="header-nav__actions">
+        <!-- <button mat-button class="header-nav__button">Buy Now</button> -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="login-page__content">
+    <div class="login-wrapper">
+      <!-- Auth Card -->
+      <mat-card class="login-card">
+        <div class="login-card__header">
+          <h1 class="login-card__title">Renovar Sesión</h1>
+          <p class="login-card__subtitle">Tu sesión ha expirado. Confirma tu contraseña para continuar.</p>
+          
+          <!-- User Email Display -->
+          @if (userEmail) {
+            <div class="user-email-display">
+              <mat-icon>account_circle</mat-icon>
+              <span>{{ userEmail }}</span>
+            </div>
+          }
+        </div>
+
+        <mat-card-content class="login-card__content">
+          <form [formGroup]="lockForm" (ngSubmit)="onSubmit()" class="login-form">
+
+            <!-- Password Field -->
+            <mat-form-field appearance="fill" class="login-form__field">
+              <mat-label>{{ 'common.password' | translate }}</mat-label>
+              <input
+                matInput
+                [type]="hidePassword ? 'password' : 'text'"
+                formControlName="password"
+                [placeholder]="'auth.form.passwordPlaceholder' | translate"
+              >
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                (click)="togglePasswordVisibility()"
+                [attr.aria-label]="'common.hidePassword' | translate"
+                [attr.aria-pressed]="hidePassword"
+              >
+                <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+              </button>
+              @if (isFieldRequired(lockForm, 'password')) {
+                <mat-error>{{ 'auth.validation.passwordRequired' | translate }}</mat-error>
+              }
+              @if (isPasswordMinLengthInvalid(lockForm)) {
+                <mat-error>{{ 'auth.validation.passwordMinLength' | translate }}</mat-error>
+              }
+              @if (isPasswordPatternInvalid(lockForm)) {
+                <mat-error>{{ 'auth.validation.passwordPattern' | translate }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Submit Button -->
+            <button type="submit" mat-raised-button color="primary" class="wide-form-field auth-submit-button" [disabled]="lockForm.invalid">
+              <span class="button-content">
+                <span class="button-text">Renovar Sesión</span>
+                <mat-icon>lock_open</mat-icon>
+              </span>
+            </button>
+
+            <!-- Alternative Login Link -->
+            <div class="login-form__signup-container">
+              <span class="login-form__signup-text">¿No eres tú?</span>
+              <button type="button" mat-button (click)="goToLogin()" class="login-form__signup-link">Iniciar sesión con otra cuenta</button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="login-page__footer page-footer">
+    <div class="page-footer__content">
+      <span>{{ 'footer.copyright' | translate }} </span>
+      <a href="#" class="page-footer__link">{{ 'footer.author' | translate }}</a>
+      <span> {{ 'footer.forBetter' | translate }}</span>
+    </div>
+    <div class="page-footer__links">
+      <a href="#" class="page-footer__link page-footer__link--secondary">{{ 'footer.links.creativeTime' | translate }}</a>
+      <a href="#" class="page-footer__link page-footer__link--secondary">{{ 'footer.links.aboutUs' | translate }}</a>
+      <a href="#" class="page-footer__link page-footer__link--secondary">{{ 'footer.links.blog' | translate }}</a>
+      <a href="#" class="page-footer__link page-footer__link--secondary">{{ 'footer.links.license' | translate }}</a>
+    </div>
+  </footer>
+</div> 

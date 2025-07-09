@@ -1,0 +1,72 @@
+<div class="sales-layout">
+  <!-- Sidebar -->
+  <app-sidebar 
+    (itemClicked)="onSidebarItemClicked($event)"
+    (collapseChanged)="onSidebarCollapseChanged($event)">
+  </app-sidebar>
+
+  <!-- Contenido principal -->
+  <div class="sales-content">
+    <!-- Header -->
+    <app-header></app-header>
+
+    <!-- Contenedor principal -->
+    <div class="sales-main">
+      <!-- Panel de información -->
+      <div class="sales-controls">
+        <div class="controls-section">
+          <h2 class="section-title">
+            <mat-icon>sell</mat-icon>
+            Gestión de Ventas
+          </h2>
+        </div>
+      </div>
+
+      <!-- Contenido -->
+      <div class="sales-content-area">
+        <div class="coming-soon-container">
+          <div class="coming-soon-card">
+            <mat-icon class="coming-soon-icon">trending_up</mat-icon>
+            <h2>Módulo en Desarrollo</h2>
+            <p class="description">
+              El módulo de gestión de ventas estará disponible próximamente. 
+              Aquí podrás registrar y gestionar todas las ventas de tus productos agrícolas.
+            </p>
+            
+            <div class="features-preview">
+              <h3>Funcionalidades que incluirá:</h3>
+              <ul>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Registro de ventas por lotes de cosecha y calidad
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Gestión de compradores y contratos de venta
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Control de precios y márgenes de ganancia
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Trazabilidad de productos desde la finca al comprador
+                </li>
+                <li>
+                  <mat-icon>check_circle</mat-icon>
+                  Reportes de ingresos y análisis de rentabilidad
+                </li>
+              </ul>
+            </div>
+
+            <div class="progress-info">
+              <p class="progress-text">Estado del desarrollo</p>
+              <mat-progress-bar mode="determinate" value="25" class="progress-bar"></mat-progress-bar>
+              <span class="progress-percentage">25% completado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

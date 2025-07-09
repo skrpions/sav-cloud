@@ -1,114 +1,185 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, firstValueFrom } from 'rxjs';
-import { AuthApplication } from '@/app/core/application/auth-application';
-import {
-  AuthCredentials,
-  AuthResponse,
-  UserEntity
-} from '@/app/core/domain/entities/auth-entity';
+import { Router } from '@angular/router';
+import { fromEvent, Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+
+import { AuthApplication } from '../auth-application';
+import { AuthCredentials, AuthResponse, UserEntity } from '@/app/core/domain/entities/auth-entity';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // * Injection following user convention
-  private _authAppSrv = inject(AuthApplication);
 
-  /**
-   * Use case: Register a new user
-   * @param credentials - User email and password
-   * @returns Promise with auth response
-   */
+  private _authAppSrv = inject(AuthApplication);
+  private _router = inject(Router);
+
+  constructor() {
+    // Escuchar eventos de sesión expirada
+    this.sessionExpired$.subscribe(() => {
+      this.handleSessionExpired();
+    });
+  }
+
+  // Observable para eventos de sesión expirada
+  get sessionExpired$(): Observable<Date> {
+    return fromEvent<CustomEvent>(window, 'sessionExpired').pipe(
+      filter(event => event.detail && event.detail.timestamp),
+      map(event => new Date(event.detail.timestamp))
+    );
+  }
+
   async signUp(credentials: AuthCredentials): Promise<AuthResponse> {
     try {
-      const request = {
-        email: credentials.email,
-        password: credentials.password,
-        options: undefined
+      const response = await this._authAppSrv.signUp(credentials).toPromise();
+      return response || { error: { message: 'Unknown error occurred' } };
+    } catch (error) {
+      console.error('SignUp error:', error);
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Error during sign up'
+        }
       };
-      return await firstValueFrom(this._authAppSrv.signUp(request));
-    } catch (error: any) {
-      console.error('AuthService - SignUp error:', error);
-      // El error ya viene formateado del infrastructure
-      throw error;
     }
   }
 
-  /**
-   * Use case: Sign in existing user
-   * @param credentials - User email and password
-   * @returns Promise with auth response
-   */
   async signIn(credentials: AuthCredentials): Promise<AuthResponse> {
     try {
-      const request = {
-        email: credentials.email,
-        password: credentials.password,
-        options: undefined
+      const response = await this._authAppSrv.signIn(credentials).toPromise();
+      return response || { error: { message: 'Unknown error occurred' } };
+    } catch (error) {
+      console.error('SignIn error:', error);
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Error during sign in'
+        }
       };
-      return await firstValueFrom(this._authAppSrv.signIn(request));
-    } catch (error: any) {
-      console.error('AuthService - SignIn error:', error);
-      // El error ya viene formateado del infrastructure
-      throw error;
     }
   }
 
-  /**
-   * Use case: Sign out current user
-   * @returns Promise with auth response
-   */
   async signOut(): Promise<AuthResponse> {
     try {
-      return await firstValueFrom(this._authAppSrv.signOut());
-    } catch (error: any) {
-      console.error('AuthService - SignOut error:', error);
-      // El error ya viene formateado del infrastructure
-      throw error;
+      const response = await this._authAppSrv.signOut().toPromise();
+      this._router.navigate(['/auth/login']);
+      return response || { error: { message: 'Unknown error occurred' } };
+    } catch (error) {
+      console.error('SignOut error:', error);
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Error during sign out'
+        }
+      };
     }
   }
 
-  /**
-   * Use case: Get current authenticated user
-   * @returns Promise with current user or null
-   */
   async getCurrentUser(): Promise<UserEntity | null> {
     try {
-      return await firstValueFrom(this._authAppSrv.getCurrentUser());
-    } catch (error: any) {
-      console.error('AuthService - GetCurrentUser error:', error);
+      const user = await this._authAppSrv.getCurrentUser().toPromise();
+      return user || null;
+    } catch (error) {
+      console.error('GetCurrentUser error:', error);
       return null;
     }
   }
 
-  /**
-   * Use case: Refresh authentication token
-   * @param token - Current refresh token
-   * @returns Promise with auth response
-   */
   async refreshToken(token: string): Promise<AuthResponse> {
     try {
-      const request = { refreshToken: token };
-      return await firstValueFrom(this._authAppSrv.refreshToken(request));
-    } catch (error: any) {
-      console.error('AuthService - RefreshToken error:', error);
-      // El error ya viene formateado del infrastructure
-      throw error;
+      const response = await this._authAppSrv.refreshToken({ refreshToken: token }).toPromise();
+      return response || { error: { message: 'Unknown error occurred' } };
+    } catch (error) {
+      console.error('RefreshToken error:', error);
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Error refreshing token'
+        }
+      };
     }
   }
 
-  /**
-   * Use case: Reset user password
-   * @param email - User email
-   * @returns Promise with auth response
-   */
   async resetPassword(email: string): Promise<AuthResponse> {
     try {
-      return await firstValueFrom(this._authAppSrv.resetPassword(email));
-    } catch (error: any) {
-      console.error('AuthService - ResetPassword error:', error);
-      // El error ya viene formateado del infrastructure
-      throw error;
+      const response = await this._authAppSrv.resetPassword(email).toPromise();
+      return response || { error: { message: 'Unknown error occurred' } };
+    } catch (error) {
+      console.error('ResetPassword error:', error);
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Error resetting password'
+        }
+      };
     }
+  }
+
+  // Nuevo método para renovar sesión con contraseña
+  async renewSessionWithPassword(password: string): Promise<AuthResponse> {
+    try {
+      const user = await this.getCurrentUser();
+      if (!user?.email) {
+        throw new Error('No se pudo obtener el email del usuario');
+      }
+
+      const response = await this.signIn({ 
+        email: user.email, 
+        password 
+      });
+      
+      if (!response.error) {
+        // Redireccionar a donde estaba antes
+        const returnUrl = sessionStorage.getItem('preSessionExpiredUrl') || '/dashboard';
+        sessionStorage.removeItem('preSessionExpiredUrl');
+        this._router.navigateByUrl(returnUrl);
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('RenewSession error:', error);
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Error renovando sesión'
+        }
+      };
+    }
+  }
+
+  // Método para verificar si la sesión es válida
+  async isSessionValid(): Promise<boolean> {
+    try {
+      const user = await this.getCurrentUser();
+      return !!user;
+    } catch {
+      return false;
+    }
+  }
+
+  // Manejar sesión expirada
+  private handleSessionExpired(): void {
+    // Guardar la URL actual para redireccionar después
+    const currentUrl = this._router.url;
+    if (currentUrl && !currentUrl.includes('/auth/')) {
+      sessionStorage.setItem('preSessionExpiredUrl', currentUrl);
+    }
+
+    // Intentar obtener el email del usuario para la pantalla de lock
+    this.getCurrentUser().then(user => {
+      const queryParams: Record<string, string> = { sessionExpired: 'true' };
+      
+      if (user?.email) {
+        queryParams['email'] = user.email;
+        queryParams['returnUrl'] = currentUrl || '/dashboard';
+        
+        // Redireccionar al componente Lock
+        this._router.navigate(['/auth/lock'], { queryParams });
+      } else {
+        // Si no hay usuario, ir al login normal
+        this._router.navigate(['/auth/login'], { 
+          queryParams: { sessionExpired: 'true' } 
+        });
+      }
+    }).catch(() => {
+      // Error al obtener usuario, ir al login normal
+      this._router.navigate(['/auth/login'], { 
+        queryParams: { sessionExpired: 'true' } 
+      });
+    });
   }
 } 

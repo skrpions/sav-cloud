@@ -111,6 +111,7 @@ export class SupabaseService {
   }
 
   // Método auxiliar para manejar errores de lock con retry logic
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async handleAuthOperation(operation: () => Promise<any>): Promise<any> {
     const maxRetries = 3;
     const retryDelay = 1000;
@@ -118,6 +119,7 @@ export class SupabaseService {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await operation();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         const isLockError = error.message?.includes('NavigatorLockAcquireTimeoutError') || 
                            error.message?.includes('lock') ||

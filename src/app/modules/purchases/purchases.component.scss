@@ -1,0 +1,267 @@
+// ========================================
+// PURCHASES COMPONENT STYLES
+// Layout y estilos para el módulo de compras
+// ========================================
+
+:host {
+  display: block;
+  height: 100vh;
+  overflow: hidden;
+}
+
+// ========================================
+// LAYOUT PRINCIPAL
+// ========================================
+
+.purchases-layout {
+  display: flex;
+  height: 100vh;
+  background-color: #f8f9fa;
+  overflow: hidden;
+}
+
+.purchases-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+// ========================================
+// CONTENIDO PRINCIPAL
+// ========================================
+
+.purchases-main {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+// ========================================
+// CONTROLES Y FILTROS
+// ========================================
+
+.purchases-controls {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.controls-section {
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--holiday-teal-dark);
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: var(--holiday-green-medium);
+    }
+  }
+}
+
+// ========================================
+// ÁREA DE CONTENIDO
+// ========================================
+
+.purchases-content-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+}
+
+// ========================================
+// COMING SOON CARD
+// ========================================
+
+.coming-soon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.coming-soon-card {
+  background: white;
+  border-radius: 16px;
+  padding: 48px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  width: 100%;
+
+  .coming-soon-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: var(--holiday-green-medium);
+    margin-bottom: 24px;
+  }
+
+  h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--holiday-teal-dark);
+    margin: 0 0 16px 0;
+  }
+
+  .description {
+    font-size: 16px;
+    color: var(--holiday-sage-green);
+    line-height: 1.6;
+    margin: 0 0 32px 0;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .features-preview {
+    margin: 32px 0;
+    text-align: left;
+
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--holiday-teal-dark);
+      margin: 0 0 20px 0;
+      text-align: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+
+      li {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--holiday-sage-green);
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+          color: var(--holiday-green-medium);
+          margin-top: 2px;
+          flex-shrink: 0;
+        }
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+
+  .progress-info {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e9ecef;
+
+    .progress-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--holiday-teal-dark);
+      margin: 0 0 12px 0;
+    }
+
+    .progress-bar {
+      margin-bottom: 8px;
+      height: 8px;
+      border-radius: 4px;
+      
+      ::ng-deep {
+        .mdc-linear-progress__buffer {
+          background-color: #e9ecef;
+        }
+        
+        .mdc-linear-progress__bar-inner {
+          background-color: var(--holiday-green-medium);
+        }
+      }
+    }
+
+    .progress-percentage {
+      font-size: 12px;
+      color: var(--holiday-sage-green);
+      font-weight: 500;
+    }
+  }
+}
+
+// ========================================
+// RESPONSIVE DESIGN
+// ========================================
+
+@media (max-width: 768px) {
+  .purchases-main {
+    padding: 16px;
+  }
+
+  .coming-soon-card {
+    padding: 32px 24px;
+    margin: 16px;
+
+    .coming-soon-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+    }
+
+    h2 {
+      font-size: 24px;
+    }
+
+    .description {
+      font-size: 14px;
+    }
+
+    .features-preview {
+      ul li {
+        font-size: 13px;
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .coming-soon-card {
+    padding: 24px 16px;
+    
+    h2 {
+      font-size: 20px;
+    }
+    
+    .features-preview ul {
+      text-align: left;
+    }
+  }
+} 

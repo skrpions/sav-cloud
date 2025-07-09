@@ -8,6 +8,7 @@ import { toast } from 'ngx-sonner';
 import { MaterialModule } from '@/app/shared/material.module';
 import { SidebarComponent } from '@/app/shared/components/sidebar/sidebar.component';
 import { HeaderComponent } from '@/app/shared/components/header/header.component';
+import { ActionButtonComponent } from '@/app/shared/components/action-button/action-button.component';
 import { FarmsService } from './services/farms.service';
 import { 
   FarmEntity, 
@@ -34,7 +35,8 @@ export type ViewMode = 'list' | 'cards';
     MaterialModule,
     TranslateModule,
     SidebarComponent,
-    HeaderComponent
+    HeaderComponent,
+    ActionButtonComponent
   ],
   templateUrl: './farms.component.html',
   styleUrl: './farms.component.scss'
@@ -52,6 +54,7 @@ export class FarmsComponent implements OnInit {
   isEditMode = signal(false);
   selectedFarm = signal<FarmEntity | null>(null);
   searchTerm = signal('');
+  formSubmitted = signal(false); // Nuevo signal para controlar cuando se ha intentado enviar
 
   // Vista y paginación
   viewMode = signal<ViewMode>('cards');
@@ -139,24 +142,32 @@ export class FarmsComponent implements OnInit {
   }
 
   // Validador personalizado para coordenadas de Colombia
-  private coordinatesValidator(control: FormGroup) {
+  private coordinatesValidator = (control: FormGroup) => {
     const lat = control.get('latitude')?.value;
     const lng = control.get('longitude')?.value;
     
+    // Si no hay coordenadas, no hay error (son opcionales)
+    if (!lat && !lng) return null;
+    
+    // Si solo hay una coordenada, es inválido
+    if ((lat && !lng) || (!lat && lng)) {
+      return { coordinatesIncomplete: true };
+    }
+    
     if ((lat || lng) && !isValidColombianCoordinates(lat, lng)) {
-      return { invalidColombianCoordinates: true };
+      return { invalidColombianCoordinates: { lat, lng } };
     }
     
     return null;
   }
 
   // Validador para rango de altitud
-  private altitudeRangeValidator(control: FormGroup) {
+  private altitudeRangeValidator = (control: FormGroup) => {
     const min = control.get('altitude_min')?.value;
     const max = control.get('altitude_max')?.value;
     
     if (min && max && min >= max) {
-      return { invalidAltitudeRange: true };
+      return { invalidAltitudeRange: { min, max } };
     }
     
     return null;
@@ -224,6 +235,8 @@ export class FarmsComponent implements OnInit {
   }
 
   openSidePanel(farm?: FarmEntity): void {
+    this.formSubmitted.set(false); // Resetear el estado del formulario
+    
     if (farm) {
       // Modo edición
       this.selectedFarm.set(farm);
@@ -282,6 +295,7 @@ export class FarmsComponent implements OnInit {
     this.showSidePanel.set(false);
     this.selectedFarm.set(null);
     this.isEditMode.set(false);
+    this.formSubmitted.set(false); // Resetear el estado del formulario
     this.farmForm.reset({
       country: 'Colombia',
       certifications: {
@@ -297,8 +311,10 @@ export class FarmsComponent implements OnInit {
   }
 
   async onSaveFarm(): Promise<void> {
+    this.formSubmitted.set(true); // Marcar el formulario como tocado
     if (this.farmForm.invalid) {
       this.markFormGroupTouched(this.farmForm);
+      this.logFormDebugInfo(); // Debug para identificar problemas
       toast.error('Formulario inválido', { 
         description: 'Por favor revisa los campos marcados en rojo.' 
       });
@@ -310,9 +326,15 @@ export class FarmsComponent implements OnInit {
     try {
       const formData = this.farmForm.value;
       
-      // Formatear la fecha
-      if (formData.established_date) {
+      // Formatear la fecha solo si existe
+      if (formData.established_date && formData.established_date instanceof Date) {
         formData.established_date = formData.established_date.toISOString().split('T')[0];
+      } else if (formData.established_date && typeof formData.established_date === 'string') {
+        // Si ya es string, mantenerla como está (puede venir de un datepicker)
+        formData.established_date = formData.established_date;
+      } else {
+        // Si es null o undefined, remover el campo
+        delete formData.established_date;
       }
 
       if (this.isEditMode() && this.selectedFarm()?.id) {
@@ -468,7 +490,41 @@ export class FarmsComponent implements OnInit {
 
   isFieldInvalid(fieldName: string): boolean {
     const field = this.farmForm.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
+    const isInvalid = !!(field && field.invalid && (field.dirty || field.touched || this.formSubmitted()));
+    
+    // Verificar también errores del formulario completo
+    let hasFormError = false;
+    if (this.formSubmitted() && this.farmForm.errors) {
+      // Para campos de coordenadas
+      if ((fieldName === 'latitude' || fieldName === 'longitude') && 
+          (this.farmForm.errors['coordinatesIncomplete'] || this.farmForm.errors['invalidColombianCoordinates'])) {
+        hasFormError = true;
+      }
+      
+      // Para campos de altitud
+      if ((fieldName === 'altitude_min' || fieldName === 'altitude_max') && 
+          this.farmForm.errors['invalidAltitudeRange']) {
+        hasFormError = true;
+      }
+    }
+    
+    // Debug para ayudar a identificar problemas de validación
+    if (fieldName === 'name' && this.formSubmitted()) {
+      console.log('Debug validación campo name:', {
+        fieldExists: !!field,
+        fieldValue: field?.value,
+        fieldErrors: field?.errors,
+        fieldInvalid: field?.invalid,
+        fieldDirty: field?.dirty,
+        fieldTouched: field?.touched,
+        formSubmitted: this.formSubmitted(),
+        isInvalid,
+        hasFormError,
+        finalResult: isInvalid || hasFormError
+      });
+    }
+    
+    return isInvalid || hasFormError;
   }
 
   getFieldError(fieldName: string): string {
@@ -483,17 +539,88 @@ export class FarmsComponent implements OnInit {
       if (field.errors['pattern']) return 'Formato inválido';
     }
 
-    // Errores del formulario completo
-    if (this.farmForm.errors) {
+    // Errores específicos para campos individuales basados en errores del formulario
+    if (this.formSubmitted() && this.farmForm.errors) {
+      // Para campos de coordenadas
+      if (fieldName === 'latitude' || fieldName === 'longitude') {
+        if (this.farmForm.errors['coordinatesIncomplete']) {
+          return 'Completa ambas coordenadas (latitud y longitud)';
+        }
+        if (this.farmForm.errors['invalidColombianCoordinates']) {
+          const error = this.farmForm.errors['invalidColombianCoordinates'];
+          return `Coordenadas fuera de Colombia (${error.lat}, ${error.lng})`;
+        }
+      }
+      
+      // Para campos de altitud
+      if (fieldName === 'altitude_min' || fieldName === 'altitude_max') {
+        if (this.farmForm.errors['invalidAltitudeRange']) {
+          const error = this.farmForm.errors['invalidAltitudeRange'];
+          return `Rango inválido: mín(${error.min}m) ≥ máx(${error.max}m)`;
+        }
+      }
+    }
+
+    // Errores del formulario completo (para mostrar en la sección de errores generales)
+    if (!fieldName && this.farmForm.errors) {
+      if (this.farmForm.errors['coordinatesIncomplete']) {
+        return 'Si ingresas coordenadas, debes completar tanto latitud como longitud';
+      }
       if (this.farmForm.errors['invalidColombianCoordinates']) {
-        return 'Las coordenadas deben estar dentro de Colombia';
+        const error = this.farmForm.errors['invalidColombianCoordinates'];
+        return `Las coordenadas (${error.lat}, ${error.lng}) están fuera de Colombia. Verifica los valores.`;
       }
       if (this.farmForm.errors['invalidAltitudeRange']) {
-        return 'La altitud mínima debe ser menor que la máxima';
+        const error = this.farmForm.errors['invalidAltitudeRange'];
+        return `La altitud mínima (${error.min}m) debe ser menor que la máxima (${error.max}m)`;
       }
     }
 
     return '';
+  }
+
+  // Debug method para revisar estado del formulario
+  logFormDebugInfo(): void {
+    console.log('=== DEBUG FORMULARIO FINCAS ===');
+    console.log('Form valid:', this.farmForm.valid);
+    console.log('Form submitted:', this.formSubmitted());
+    console.log('Form errors:', this.farmForm.errors);
+    console.log('Form value:', this.farmForm.value);
+    
+    Object.keys(this.farmForm.controls).forEach(key => {
+      const control = this.farmForm.get(key);
+      if (control?.invalid) {
+        console.log(`Campo ${key}:`, {
+          value: control.value,
+          errors: control.errors,
+          dirty: control.dirty,
+          touched: control.touched
+        });
+      }
+    });
+    console.log('=== FIN DEBUG ===');
+  }
+
+  getCertificationsList(certifications: Record<string, boolean> | undefined): string[] {
+    if (!certifications) return [];
+    
+    return Object.keys(certifications)
+      .filter(key => certifications[key])
+      .map(key => {
+        const cert = this.certificationOptions.find(c => c.key === key);
+        return cert ? cert.label : key;
+      });
+  }
+
+  getLocationString(farm: FarmEntity): string {
+    const parts = [];
+    if (farm.municipality) parts.push(farm.municipality);
+    if (farm.department) parts.push(farm.department);
+    return parts.join(', ');
+  }
+
+  trackByFarmId(index: number, farm: FarmEntity): string {
+    return farm.id || index.toString();
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
@@ -519,24 +646,5 @@ export class FarmsComponent implements OnInit {
     } catch {
       return 'Fecha inválida';
     }
-  }
-
-  getCertificationsList(certifications?: Record<string, boolean>): string[] {
-    if (!certifications) return [];
-    
-    return Object.entries(certifications)
-      .filter(([, value]) => value)
-      .map(([key]) => {
-        const cert = this.certificationOptions.find(c => c.key === key);
-        return cert?.label || key;
-      });
-  }
-
-  trackByFarmId(index: number, item: FarmEntity): string {
-    return item.id || index.toString();
-  }
-
-  getLocationString(farm: FarmEntity): string {
-    return [farm.municipality, farm.department].filter(Boolean).join(', ');
   }
 }

@@ -100,14 +100,12 @@
             </div>
 
             <!-- Botón nueva cosecha -->
-            <button 
-              mat-raised-button 
-              color="primary" 
-              (click)="openSidePanel()"
-              class="add-harvest-btn">
-              <mat-icon>add</mat-icon>
-              Nueva Cosecha
-            </button>
+            <app-action-button
+              variant="primary"
+              icon="add"
+              label="Nueva Cosecha"
+              (buttonClick)="openSidePanel()">
+            </app-action-button>
           </div>
         </div>
       </div>
@@ -128,14 +126,13 @@
             <h3>{{ 'modules.harvest.emptyTitle' | translate }}</h3>
             <p *ngIf="!hasFilters()">{{ 'modules.harvest.emptyMessage' | translate }}</p>
             <p *ngIf="hasFilters()">{{ 'modules.harvest.emptyFiltersMessage' | translate }}</p>
-            <button 
+            <app-action-button
               *ngIf="!hasFilters()" 
-              mat-raised-button 
-              color="primary" 
-              (click)="openSidePanel()">
-              <mat-icon>add</mat-icon>
-              {{ 'modules.harvest.firstButton' | translate }}
-            </button>
+              variant="primary"
+              icon="add"
+              [label]="'modules.harvest.firstButton' | translate"
+              (buttonClick)="openSidePanel()">
+            </app-action-button>
           </div>
 
           <!-- Tabla de cosechas -->
@@ -302,14 +299,13 @@
             <h3>{{ 'modules.harvest.emptyTitle' | translate }}</h3>
             <p *ngIf="!hasFilters()">{{ 'modules.harvest.emptyMessage' | translate }}</p>
             <p *ngIf="hasFilters()">{{ 'modules.harvest.emptyFiltersMessage' | translate }}</p>
-            <button 
+            <app-action-button
               *ngIf="!hasFilters()" 
-              mat-raised-button 
-              color="primary" 
-              (click)="openSidePanel()">
-              <mat-icon>add</mat-icon>
-              {{ 'modules.harvest.firstButton' | translate }}
-            </button>
+              variant="primary"
+              icon="add"
+              [label]="'modules.harvest.firstButton' | translate"
+              (buttonClick)="openSidePanel()">
+            </app-action-button>
           </div>
 
           <!-- Cards de cosechas -->
@@ -452,12 +448,19 @@
 
       <!-- Formulario -->
       <form [formGroup]="harvestForm" (ngSubmit)="onSaveHarvest()" class="harvest-form">
+        <div class="form-content">
+          <!-- Layout de dos columnas -->
+          <div class="form-columns">
+            <!-- Columna izquierda -->
+            <div class="form-column">
         <!-- Información básica -->
         <div class="form-section">
-          <h3>Información Básica</h3>
+                <h3 class="section-title">
+                  <mat-icon>agriculture</mat-icon>
+                  Información Básica
+                </h3>
           
-          <!-- Colaborador -->
-          <mat-form-field appearance="fill" class="full-width">
+                <mat-form-field appearance="fill" class="form-field">
             <mat-label>Colaborador</mat-label>
             <mat-select formControlName="collaborator_id" required>
               <mat-option 
@@ -471,8 +474,7 @@
             </mat-error>
           </mat-form-field>
 
-          <!-- Fecha -->
-          <mat-form-field appearance="fill" class="full-width">
+                <mat-form-field appearance="fill" class="form-field">
             <mat-label>Fecha de Cosecha</mat-label>
             <input matInput [matDatepicker]="harvestPicker" formControlName="date" required>
             <mat-datepicker-toggle matSuffix [for]="harvestPicker"></mat-datepicker-toggle>
@@ -482,45 +484,36 @@
             </mat-error>
           </mat-form-field>
 
-          <!-- Horarios -->
-          <div class="time-row">
-            <mat-form-field appearance="fill">
+                <div class="form-row">
+                  <mat-form-field appearance="fill" class="form-field half-width">
               <mat-label>Hora Inicio</mat-label>
               <input matInput type="time" formControlName="start_time">
             </mat-form-field>
 
-            <mat-form-field appearance="fill">
+                  <mat-form-field appearance="fill" class="form-field half-width">
               <mat-label>Hora Fin</mat-label>
               <input matInput type="time" formControlName="end_time">
             </mat-form-field>
           </div>
         </div>
 
-        <!-- Información de cantidad y calidad -->
+              <!-- Calidad -->
         <div class="form-section">
-          <h3>Cantidad y Calidad</h3>
-          
-          <!-- Kilos y calidad -->
-          <div class="quantity-row">
-            <mat-form-field appearance="fill">
-              <mat-label>Kilos</mat-label>
-              <input 
-                matInput 
-                type="number" 
-                formControlName="quantity" 
-                (input)="onQuantityChange()"
-                min="0" 
-                step="0.1" 
-                required>
+                <h3 class="section-title">
+                  <mat-icon>star</mat-icon>
+                  Calidad
+                </h3>
+                
+                <div class="form-row">
+                  <mat-form-field appearance="fill" class="form-field half-width">
+                    <mat-label>Cantidad (Kg)</mat-label>
+                    <input matInput type="number" formControlName="quantity" min="0" step="0.1" required (input)="onQuantityChange()">
               <mat-error *ngIf="harvestForm.get('quantity')?.hasError('required')">
-                Los kilos son requeridos
-              </mat-error>
-              <mat-error *ngIf="harvestForm.get('quantity')?.hasError('min')">
-                Debe ser mayor a 0
+                      La cantidad es requerida
               </mat-error>
             </mat-form-field>
 
-            <mat-form-field appearance="fill">
+                  <mat-form-field appearance="fill" class="form-field half-width">
               <mat-label>Calidad</mat-label>
               <mat-select formControlName="quality_grade" required>
                 <mat-option 
@@ -529,38 +522,39 @@
                   {{getQualityGradeLabel(grade.value)}}
                 </mat-option>
               </mat-select>
-              <mat-error *ngIf="harvestForm.get('quality_grade')?.hasError('required')">
-                La calidad es requerida
-              </mat-error>
             </mat-form-field>
           </div>
 
-          <!-- Porcentajes -->
-          <div class="percentage-row">
-            <mat-form-field appearance="fill">
-              <mat-label>Humedad</mat-label>
+                <div class="form-row">
+                  <mat-form-field appearance="fill" class="form-field half-width">
+                    <mat-label>Humedad (%)</mat-label>
               <input matInput type="number" formControlName="humidity_percentage" min="0" max="100">
             </mat-form-field>
 
-            <mat-form-field appearance="fill">
-              <mat-label>Defectos</mat-label>
+                  <mat-form-field appearance="fill" class="form-field half-width">
+                    <mat-label>Defectos (%)</mat-label>
               <input matInput type="number" formControlName="defects_percentage" min="0" max="100">
             </mat-form-field>
           </div>
 
-          <!-- Área cosechada -->
-          <mat-form-field appearance="fill" class="full-width">
-            <mat-label>Área Cosechada</mat-label>
+                <mat-form-field appearance="fill" class="form-field">
+                  <mat-label>Área Cosechada (ha)</mat-label>
             <input matInput type="number" formControlName="area_harvested" min="0" step="0.01">
           </mat-form-field>
+              </div>
         </div>
 
+            <!-- Columna derecha -->
+            <div class="form-column">
         <!-- Información económica -->
         <div class="form-section">
-          <h3>Información Económica</h3>
+                <h3 class="section-title">
+                  <mat-icon>attach_money</mat-icon>
+                  Información Económica
+                </h3>
           
-          <div class="payment-row">
-            <mat-form-field appearance="fill">
+                <div class="form-row">
+                  <mat-form-field appearance="fill" class="form-field half-width">
               <mat-label>Precio por Kg</mat-label>
               <input 
                 matInput 
@@ -570,6 +564,7 @@
                 min="0" 
                 step="100" 
                 required>
+                    <span matPrefix>$</span>
               <mat-error *ngIf="harvestForm.get('price_per_unit')?.hasError('required')">
                 El precio es requerido
               </mat-error>
@@ -578,19 +573,22 @@
               </mat-error>
             </mat-form-field>
 
-            <mat-form-field appearance="fill">
+                  <mat-form-field appearance="fill" class="form-field half-width">
               <mat-label>Pago Total</mat-label>
               <input matInput type="number" formControlName="total_payment" readonly>
+                    <span matPrefix>$</span>
             </mat-form-field>
           </div>
         </div>
 
         <!-- Información adicional -->
         <div class="form-section">
-          <h3>Información Adicional</h3>
+                <h3 class="section-title">
+                  <mat-icon>info</mat-icon>
+                  Información Adicional
+                </h3>
           
-          <!-- Condiciones climáticas -->
-          <mat-form-field appearance="fill" class="full-width">
+                <mat-form-field appearance="fill" class="form-field">
             <mat-label>Condiciones Climáticas</mat-label>
             <mat-select formControlName="weather_conditions">
               <mat-option value="">Seleccionar...</mat-option>
@@ -602,37 +600,39 @@
             </mat-select>
           </mat-form-field>
 
-          <!-- Notas -->
-          <mat-form-field appearance="fill" class="full-width">
+                <mat-form-field appearance="fill" class="form-field">
             <mat-label>Notas</mat-label>
             <textarea 
               matInput 
               formControlName="notes" 
-              rows="3" 
+                    rows="4" 
               placeholder="Observaciones adicionales...">
             </textarea>
           </mat-form-field>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Botones de acción -->
         <div class="form-actions">
-          <button 
-            type="button" 
-            mat-stroked-button 
-            (click)="closeSidePanel()"
-            [disabled]="isLoading()">
-            Cancelar
-          </button>
+          <app-action-button
+            variant="secondary"
+            icon="close"
+            label="Cancelar"
+            [disabled]="isLoading()"
+            (buttonClick)="closeSidePanel()">
+          </app-action-button>
           
-          <button 
+          <app-action-button
+            variant="primary"
+            [icon]="isLoading() ? 'hourglass_empty' : (isEditMode() ? 'save' : 'add')"
+            [label]="(isEditMode() ? 'Actualizar' : 'Guardar') + ' Cosecha'"
+            [disabled]="harvestForm.invalid || isLoading()"
+            [loading]="isLoading()"
             type="submit" 
-            mat-raised-button 
-            color="primary"
-            [disabled]="harvestForm.invalid || isLoading()">
-            <mat-icon *ngIf="!isLoading()">{{isEditMode() ? 'save' : 'add'}}</mat-icon>
-            <mat-spinner *ngIf="isLoading()" diameter="20"></mat-spinner>
-            {{isEditMode() ? 'Actualizar' : 'Guardar'}} Cosecha
-          </button>
+            (buttonClick)="onSaveHarvest()">
+          </app-action-button>
         </div>
       </form>
     </div>

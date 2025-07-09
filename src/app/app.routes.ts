@@ -31,6 +31,10 @@ export const routes: Routes = [
     loadComponent: () => import('./modules/harvest/harvest.component').then(c => c.HarvestComponent)
   },
   {
+    path: 'plots',
+    loadComponent: () => import('./modules/plots/plots.component').then(c => c.PlotsComponent)
+  },
+  {
     path: 'settings',
     loadComponent: () => import('./modules/settings/settings.component').then(c => c.SettingsComponent)
   },

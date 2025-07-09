@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { catchError, Observable, throwError, from, map } from 'rxjs';
+import { catchError, Observable, throwError, from, map, switchMap, of } from 'rxjs';
 
 import { 
   AuthResponse, 
@@ -86,6 +86,7 @@ export class AuthInfrastructure implements AuthRepository {
   /**
    * Mapea la respuesta de Supabase al formato de nuestra entidad AuthResponse
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapSupabaseResponse(response: any): AuthResponse {
     console.log('Supabase response:', response);
     
@@ -125,6 +126,7 @@ export class AuthInfrastructure implements AuthRepository {
   /**
    * Mapea la respuesta de signOut de Supabase
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapSupabaseSignOutResponse(response: any): AuthResponse {
     if (response.error) {
       return {
@@ -145,6 +147,7 @@ export class AuthInfrastructure implements AuthRepository {
   /**
    * Mapea la respuesta de resetPassword de Supabase
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapSupabaseResetResponse(response: any): AuthResponse {
     if (response.error) {
       return {
@@ -165,6 +168,7 @@ export class AuthInfrastructure implements AuthRepository {
   /**
    * Mapea el usuario de Supabase al formato de nuestra entidad UserEntity
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapSupabaseUser(user: any): UserEntity {
     return {
       id: user.id,
@@ -177,39 +181,69 @@ export class AuthInfrastructure implements AuthRepository {
     };
   }
 
-  private handleError(error: any): Observable<never> {
-    console.error('AuthInfrastructure Error:', error);
-
-    let errorMessage = 'Unknown error occurred';
-    let errorCode = 'UNKNOWN_ERROR';
-
-    if (error?.message) {
-      errorMessage = error.message;
-    }
-
-    if (error?.code) {
-      errorCode = error.code;
-    }
-
-    // Manejar errores específicos de Supabase
-    switch (error?.message) {
-      case 'Invalid login credentials':
-        errorMessage = 'Invalid email or password';
-        errorCode = 'INVALID_CREDENTIALS';
-        break;
-      case 'Email rate limit exceeded':
-        errorMessage = 'Too many attempts. Please try again later.';
-        errorCode = 'RATE_LIMIT_EXCEEDED';
-        break;
-      case 'signup_disabled':
-        errorMessage = 'Sign up is currently disabled';
-        errorCode = 'SIGNUP_DISABLED';
-        break;
+  private handleError(error: unknown): Observable<never> {
+    console.error('AuthInfrastructure error:', error);
+    
+    // Verificar si es un error de sesión expirada
+    if (this.isSessionExpiredError(error)) {
+      // Emitir evento de sesión expirada
+      this.handleSessionExpired();
     }
 
     return throwError(() => ({
-      message: errorMessage,
-      code: errorCode
+      message: (error as { message?: string })?.message || 'Error de autenticación',
+      code: (error as { status?: string })?.status || 'AUTH_ERROR',
+      original: error
     }));
+  }
+
+  private isSessionExpiredError(error: unknown): boolean {
+    const errorObj = error as { status?: number; message?: string };
+    return !!(errorObj?.status === 401 || 
+           errorObj?.message?.includes('jwt expired') ||
+           errorObj?.message?.includes('invalid token') ||
+           errorObj?.message?.includes('session expired') ||
+           errorObj?.message?.includes('not authenticated'));
+  }
+
+  private handleSessionExpired(): void {
+    // Limpiar la sesión local
+    this._supabaseService.clearSession();
+    
+    // Emitir evento personalizado para notificar a la aplicación
+    window.dispatchEvent(new CustomEvent('sessionExpired', {
+      detail: { timestamp: new Date().toISOString() }
+    }));
+  }
+
+  // Método para verificar si la sesión actual es válida
+  isSessionValid(): Observable<boolean> {
+    return from(this._supabaseService.supabaseClient.auth.getSession()).pipe(
+      map(({ data: { session }, error }) => {
+        if (error || !session) return false;
+        
+        // Verificar si el token está cerca de expirar (dentro de 5 minutos)
+        const expiresAt = session.expires_at;
+        const now = Math.floor(Date.now() / 1000);
+        const fiveMinutes = 5 * 60;
+        
+        return expiresAt ? (expiresAt - now) > fiveMinutes : false;
+      }),
+      catchError(() => of(false))
+    );
+  }
+
+  // Método para renovar la sesión con contraseña
+  renewSessionWithPassword(password: string): Observable<AuthResponse> {
+    return from(this._supabaseService.supabaseClient.auth.getUser()).pipe(
+      switchMap(({ data: { user } }) => {
+        if (!user?.email) {
+          throw new Error('No se pudo obtener el email del usuario');
+        }
+        
+        return this.signIn({ email: user.email, password });
+      }),
+      catchError(error => this.handleError(error))
+    );
   }
 } 

@@ -1,18 +1,17 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { toast } from 'ngx-sonner';
 
 import { MaterialModule } from '@/app/shared/material.module';
-import { AuthFormConfig } from '@/app/shared/models/ui.models';
 import { SupabaseService } from '@/app/shared/services/supabase.service';
 import { AuthService } from '@/app/core/application/services/auth.service';
-import { createEmailValidators, createPasswordValidators } from '@/app/shared/utils/validators';
+import { createPasswordValidators } from '@/app/shared/utils/validators';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-lock',
   standalone: true,
   imports: [
     CommonModule,
@@ -21,86 +20,99 @@ import { createEmailValidators, createPasswordValidators } from '@/app/shared/ut
     TranslateModule,
     RouterModule
   ],
-  templateUrl: '../shared/components/form-auth/form-auth.component.html',
+  templateUrl: './lock.component.html',
   styleUrl: '../shared/components/form-auth/form-auth.component.scss'
 })
-export class LoginComponent implements OnInit {
+export class LockComponent implements OnInit {
   private _supabaseService = inject(SupabaseService);
   private _authService = inject(AuthService);
+  private _route = inject(ActivatedRoute);
   private _router = inject(Router);
   private _formBuilder = inject(FormBuilder);
   private _cdr = inject(ChangeDetectorRef);
 
-  authForm: FormGroup;
-  config: AuthFormConfig = {} as AuthFormConfig;
+  lockForm: FormGroup;
+  userEmail = '';
   hidePassword = true;
 
   constructor() {
-    this.authForm = this.createBaseForm();
+    this.lockForm = this.createLockForm();
   }
 
   ngOnInit(): void {
-    this.initializeConfig();
+    this.setupSessionRenewal();
   }
 
-  private createBaseForm(): FormGroup {
+  private createLockForm(): FormGroup {
     return this._formBuilder.group({
-      email: ['sksmartinez@gmail.com', createEmailValidators()],
-      password: ['Pa$$w0rd!', createPasswordValidators()],
-      rememberMe: [false]
+      password: ['Pa$$w0rd!', createPasswordValidators()]
     });
   }
 
-  private initializeConfig(): void {
-    this.config = {
-      title: 'Iniciar Sesión',
-      subtitle: 'Accede a tu cuenta SAV Cloud',
-      submitButtonText: 'Iniciar Sesión',
-      linkText: '¿No tienes cuenta?',
-      linkRoute: '/auth/register',
-      linkLabel: 'Regístrate aquí',
-      showRememberMe: true
-    };
+  private async setupSessionRenewal(): Promise<void> {
+    try {
+      // Intentar obtener el email del usuario desde el token expirado
+      const user = await this._authService.getCurrentUser();
+      if (user?.email) {
+        this.userEmail = user.email;
+      } else {
+        // Si no hay usuario, obtener de query params o redirigir al login
+        this._route.queryParams.subscribe(params => {
+          if (params['email']) {
+            this.userEmail = params['email'];
+          } else {
+            // No hay información del usuario, redirigir al login
+            this._router.navigate(['/auth/login']);
+          }
+        });
+      }
+    } catch {
+      // Si no se puede obtener el usuario, redirigir al login normal
+      this._router.navigate(['/auth/login']);
+    }
   }
 
   async onSubmit(): Promise<void> {
-    if (this.authForm.invalid) {
-      this.markFormGroupTouched(this.authForm);
+    if (this.lockForm.invalid) {
+      this.markFormGroupTouched(this.lockForm);
       return;
     }
 
-    const formData = this.authForm.value;
+    const formData = this.lockForm.value;
     
     try {
-      const response = await this._authService.signIn({
-        email: formData.email,
-        password: formData.password
-      });
+      const response = await this._authService.renewSessionWithPassword(formData.password);
 
       if (response.error) {
-        console.error('Login error:', response.error);
-        toast.error('Error de autenticación', {
-          description: response.error.message
+        console.error('Session renewal error:', response.error);
+        toast.error('Error al renovar sesión', {
+          description: response.error.message || 'Verifica tu contraseña'
         });
         return;
       }
 
-      toast.success('Bienvenido', {
-        description: 'Has iniciado sesión correctamente'
+      toast.success('Sesión renovada', {
+        description: 'Has accedido nuevamente a tu cuenta'
       });
       
-      this._router.navigate(['/dashboard']);
+      // Redirigir de vuelta o al dashboard
+      const returnUrl = this._route.snapshot.queryParams['returnUrl'] || '/dashboard';
+      this._router.navigateByUrl(returnUrl);
         
     } catch (error) {
-      console.error('Unexpected login error:', error);
+      console.error('Unexpected session renewal error:', error);
       toast.error('Error inesperado', {
-        description: 'Ocurrió un error durante el inicio de sesión'
+        description: 'Ocurrió un error durante la renovación de sesión'
       });
     }
   }
 
   togglePasswordVisibility(): void {
     this.hidePassword = !this.hidePassword;
+  }
+
+  goToLogin(): void {
+    this._router.navigate(['/auth/login']);
   }
 
   private markFormGroupTouched(form: FormGroup): void {
@@ -113,11 +125,6 @@ export class LoginComponent implements OnInit {
   isFieldRequired(form: FormGroup, field: string): boolean {
     const control = form.get(field);
     return !!(control?.hasError('required') && (control?.dirty || control?.touched));
-  }
-
-  isEmailInvalid(form: FormGroup): boolean {
-    const emailControl = form.get('email');
-    return !!(emailControl?.hasError('email') && (emailControl?.dirty || emailControl?.touched));
   }
 
   isPasswordMinLengthInvalid(form: FormGroup): boolean {

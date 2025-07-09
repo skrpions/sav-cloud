@@ -13,5 +13,9 @@ export const authRoutes: Routes = [
   {
     path: 'register',
     loadComponent: () => import('./views/register/register.component').then(c => c.RegisterComponent)
+  },
+  {
+    path: 'lock',
+    loadComponent: () => import('./views/lock/lock.component').then(c => c.LockComponent)
   }
 ]; 

@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MaterialModule } from '@/app/shared/material.module';
 import { SidebarComponent } from '@/app/shared/components/sidebar/sidebar.component';
 import { HeaderComponent } from '@/app/shared/components/header/header.component';
+import { ActionButtonComponent } from '@/app/shared/components/action-button/action-button.component';
 import { HarvestService } from './services/harvest.service';
 import { HarvestEntity, QualityGrade, QUALITY_GRADE_OPTIONS, WEATHER_CONDITIONS_OPTIONS, getQualityGradeColor, getQualityGradeLabel } from '@/app/shared/models/harvest.models';
 import { CollaboratorsService } from '../collaborators/services/collaborators.service';
@@ -35,7 +36,8 @@ export type ViewMode = 'list' | 'cards';
     FormsModule,
     TranslateModule,
     SidebarComponent,
-    HeaderComponent
+    HeaderComponent,
+    ActionButtonComponent
   ],
   templateUrl: './harvest.component.html',
   styleUrl: './harvest.component.scss'

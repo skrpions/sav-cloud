@@ -57,6 +57,13 @@
     },
 
     "modules": {
+        "plots": {
+            "title": "Gestión de Lotes",
+            "emptyTitle": "No hay lotes registrados",
+            "emptyMessage": "Comienza registrando tu primer lote",
+            "emptyFiltersMessage": "No se encontraron lotes con los filtros aplicados",
+            "firstButton": "Registrar Primer Lote"
+        },
         "activities": {
             "title": "Gestión de Actividades",
             "emptyTitle": "No hay actividades registradas",
@@ -90,6 +97,9 @@
         "viewAllNotifications": "Ver todas las notificaciones",
         "expandSidebar": "Expandir barra lateral",
         "collapseSidebar": "Contraer barra lateral",
+        "plots": {
+            "description": "Gestiona y administra los lotes de la finca"
+        },
         "activities": {
             "description": "Gestiona y monitorea todas las actividades de la finca"
         },
@@ -119,6 +129,8 @@
         "navigation": {
         "dashboard": "Dashboard",
         "farms": "Fincas",
+        "farmManagement": "Gestión de Fincas",
+        "plots": "Lotes",
         "activities": "Actividades",
         "collaborators": "Colaboradores",
         "harvest": "Cosecha",
