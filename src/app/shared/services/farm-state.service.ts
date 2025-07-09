@@ -32,15 +32,16 @@ export class FarmStateService {
   readonly currentFarmName = computed(() => this.currentFarm()?.name || 'Sin finca seleccionada');
 
   constructor() {
-    this.loadInitialState();
+    // No cargar automáticamente en el constructor
+    // Solo cargar la finca actual desde localStorage
+    this.loadCurrentFarmFromStorage();
   }
 
   /**
-   * Carga el estado inicial: fincas del usuario y finca actual desde localStorage
+   * Inicializa el servicio cargando las fincas (debe llamarse cuando hay usuario autenticado)
    */
-  private async loadInitialState(): Promise<void> {
+  async initialize(): Promise<void> {
     await this.loadFarms();
-    this.loadCurrentFarmFromStorage();
   }
 
   /**
@@ -60,19 +61,15 @@ export class FarmStateService {
       const farmsList = response?.data || [];
       this._farms.set(farmsList);
 
+      console.log('🚜 FarmStateService: loadFarms completed -', farmsList.length, 'farms loaded');
+
       // Si no hay finca actual pero hay fincas disponibles, seleccionar la primera
       if (!this._currentFarm() && farmsList.length > 0) {
         this.setCurrentFarm(farmsList[0]);
       }
 
-      // Si la finca actual ya no está en la lista (eliminada), limpiar selección
-      const currentFarmId = this._currentFarm()?.id;
-      if (currentFarmId && !farmsList.find(f => f.id === currentFarmId)) {
-        this.clearCurrentFarm();
-      }
-
-    } catch (error: unknown) {
-      console.error('Error loading farms:', error);
+    } catch (error) {
+      console.error('🚜 FarmStateService: Error loading farms:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al cargar las fincas';
       this._error.set(errorMessage);
     } finally {
@@ -160,13 +157,33 @@ export class FarmStateService {
    * Agrega una nueva finca a la lista local
    */
   addFarmToList(newFarm: FarmEntity): void {
-    const farms = this._farms();
-    this._farms.set([...farms, newFarm]);
-
-    // Si no hay finca actual, establecer esta como actual
+    console.log('🚜 FarmStateService: addFarmToList called with:', newFarm);
+    
+    const currentFarms = this._farms();
+    console.log('🚜 FarmStateService: Current farms before adding:', currentFarms.length, currentFarms.map(f => ({ id: f.id, name: f.name })));
+    
+    // Verificar que no exista ya (por si acaso)
+    const existingIndex = currentFarms.findIndex(farm => farm.id === newFarm.id);
+    
+    if (existingIndex >= 0) {
+      console.log('🚜 FarmStateService: Farm already exists, updating instead');
+      this.updateFarmInList(newFarm);
+      return;
+    }
+    
+    // Agregar la nueva finca al principio de la lista
+    const updatedFarms = [newFarm, ...currentFarms];
+    this._farms.set(updatedFarms);
+    
+    console.log('🚜 FarmStateService: Updated farms after adding:', updatedFarms.length, updatedFarms.map(f => ({ id: f.id, name: f.name })));
+    
+    // Si no hay finca actual seleccionada, seleccionar esta nueva
     if (!this._currentFarm()) {
+      console.log('🚜 FarmStateService: No current farm selected, setting new farm as current');
       this.setCurrentFarm(newFarm);
     }
+    
+    console.log('🚜 FarmStateService: Final state - farms:', this.farms().length, 'current farm:', this.currentFarmName());
   }
 
   /**

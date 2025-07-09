@@ -19,7 +19,7 @@ import {
   PLOT_STATUS_OPTIONS,
   CROP_TYPE_OPTIONS,
   SOIL_TYPE_OPTIONS,
-  IRRIGATION_TYPE_OPTIONS,
+  IRRIGATION_SYSTEM_OPTIONS,
   PLOT_CONSTRAINTS,
   formatPlotArea,
   getPlotStatusConfig,
@@ -82,7 +82,7 @@ export class PlotsComponent implements OnInit {
   statusOptions = PLOT_STATUS_OPTIONS;
   cropTypeOptions = CROP_TYPE_OPTIONS;
   soilTypeOptions = SOIL_TYPE_OPTIONS;
-  irrigationTypeOptions = IRRIGATION_TYPE_OPTIONS;
+  irrigationSystemOptions = IRRIGATION_SYSTEM_OPTIONS;
   constraints = PLOT_CONSTRAINTS;
 
   constructor() {
@@ -102,7 +102,7 @@ export class PlotsComponent implements OnInit {
         Validators.maxLength(this.constraints.name.maxLength),
         Validators.pattern(this.constraints.name.pattern)
       ]],
-      description: ['', [Validators.maxLength(this.constraints.description.maxLength)]],
+      code: ['', [Validators.maxLength(50)]],
       area: [null, [
         Validators.required,
         Validators.min(this.constraints.area.min),
@@ -110,14 +110,15 @@ export class PlotsComponent implements OnInit {
       ]],
       crop_type: [''],
       planting_date: [null],
-      expected_harvest_date: [null],
+      last_renovation_date: [null],
       status: ['preparation', Validators.required],
       soil_type: [''],
       slope_percentage: [null, [
         Validators.min(this.constraints.slope.min),
         Validators.max(this.constraints.slope.max)
       ]],
-      irrigation_type: [''],
+      irrigation_system: [''],
+      altitude: [null],
       notes: ['', [Validators.maxLength(this.constraints.notes.maxLength)]]
     });
   }
@@ -193,15 +194,16 @@ export class PlotsComponent implements OnInit {
       // Cargar datos en el formulario
       this.plotForm.patchValue({
         name: plot.name,
-        description: plot.description || '',
+        code: plot.code || '',
         area: plot.area,
         crop_type: plot.crop_type || '',
         planting_date: plot.planting_date ? new Date(plot.planting_date) : null,
-        expected_harvest_date: plot.expected_harvest_date ? new Date(plot.expected_harvest_date) : null,
+        last_renovation_date: plot.last_renovation_date ? new Date(plot.last_renovation_date) : null,
         status: plot.status,
         soil_type: plot.soil_type || '',
         slope_percentage: plot.slope_percentage || null,
-        irrigation_type: plot.irrigation_type || '',
+        irrigation_system: plot.irrigation_system || '',
+        altitude: plot.altitude || null,
         notes: plot.notes || ''
       });
     } else {
@@ -240,12 +242,18 @@ export class PlotsComponent implements OnInit {
       const formData = this.plotForm.value;
       const currentFarmId = this.farmStateService.getCurrentFarmIdOrDefault();
 
-      // Formatear fechas
+      // Formatear fechas de manera segura
       if (formData.planting_date) {
-        formData.planting_date = formData.planting_date.toISOString().split('T')[0];
+        const plantingDate = formData.planting_date instanceof Date 
+          ? formData.planting_date 
+          : new Date(formData.planting_date);
+        formData.planting_date = plantingDate.toISOString().split('T')[0];
       }
-      if (formData.expected_harvest_date) {
-        formData.expected_harvest_date = formData.expected_harvest_date.toISOString().split('T')[0];
+      if (formData.last_renovation_date) {
+        const renovationDate = formData.last_renovation_date instanceof Date 
+          ? formData.last_renovation_date 
+          : new Date(formData.last_renovation_date);
+        formData.last_renovation_date = renovationDate.toISOString().split('T')[0];
       }
 
       if (this.isEditMode() && this.selectedPlot()?.id) {
@@ -384,7 +392,7 @@ export class PlotsComponent implements OnInit {
       const search = this.searchTerm.toLowerCase().trim();
       filtered = filtered.filter(plot =>
         plot.name.toLowerCase().includes(search) ||
-        plot.description?.toLowerCase().includes(search) ||
+        plot.notes?.toLowerCase().includes(search) ||
         plot.crop_type?.toLowerCase().includes(search) ||
         plot.soil_type?.toLowerCase().includes(search)
       );
@@ -441,10 +449,9 @@ export class PlotsComponent implements OnInit {
     return option?.label || soilType;
   }
 
-  getIrrigationTypeLabel(irrigationType?: string): string {
-    if (!irrigationType) return 'Sin especificar';
-    const option = this.irrigationTypeOptions.find(opt => opt.value === irrigationType);
-    return option?.label || irrigationType;
+  getIrrigationSystemLabel(irrigation_system: string): string {
+    const option = this.irrigationSystemOptions.find(opt => opt.value === irrigation_system);
+    return option ? option.label : irrigation_system;
   }
 
   formatDate(dateString?: string): string {
@@ -462,21 +469,26 @@ export class PlotsComponent implements OnInit {
   }
 
   getProductionCycleInfo(plot: PlotEntity): string {
-    const cycle = calculatePlotProductionCycle(plot.planting_date, plot.expected_harvest_date);
+    if (!plot.planting_date) {
+      return 'Sin información de siembra';
+    }
+
+    const cycle = calculatePlotProductionCycle(plot.planting_date, plot.last_renovation_date);
     
-    if (!cycle.daysSincePlanting) return '';
-    
-    if (cycle.daysToHarvest !== undefined) {
-      if (cycle.daysToHarvest > 0) {
-        return `${cycle.daysToHarvest} días para cosecha`;
-      } else if (cycle.daysToHarvest === 0) {
-        return 'Listo para cosecha';
+    if (cycle.daysSincePlanting !== undefined) {
+      const days = cycle.daysSincePlanting;
+      if (days < 30) {
+        return `${days} días desde siembra`;
+      } else if (days < 365) {
+        const months = Math.floor(days / 30);
+        return `${months} ${months === 1 ? 'mes' : 'meses'} desde siembra`;
       } else {
-        return `Cosecha tardía (${Math.abs(cycle.daysToHarvest)} días)`;
+        const years = Math.floor(days / 365);
+        return `${years} ${years === 1 ? 'año' : 'años'} desde siembra`;
       }
     }
-    
-    return `${cycle.daysSincePlanting} días desde siembra`;
+
+    return 'Sin información disponible';
   }
 
   getPlotHealthScore(plot: PlotEntity): number {

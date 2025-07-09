@@ -11,9 +11,10 @@ export class UserApplication {
 
   async getCurrentUser(): Promise<User | null> {
     try {
-      return await this._userRepository.getCurrentUser();
+      const user = await this._userRepository.getCurrentUser();
+      return user;
     } catch (error) {
-      console.error('Error in UserApplication.getCurrentUser:', error);
+      console.error('❌ Error in UserApplication.getCurrentUser:', error);
       return null;
     }
   }
@@ -24,7 +25,10 @@ export class UserApplication {
     }
     
     const fullName = `${user.firstName} ${user.lastName}`.trim();
-    return fullName || user.email.split('@')[0] || 'Usuario';
+    const fallbackName = user.email.split('@')[0] || 'Usuario';
+    const result = fullName || fallbackName;
+    
+    return result;
   }
 
   getRoleDisplayName(user: User | null): string {
@@ -32,22 +36,26 @@ export class UserApplication {
       return 'Usuario';
     }
     
-    switch (user.role) {
-      case 'admin':
-        return 'Administrador';
-      case 'collaborator':
-        return 'Colaborador';
-      default:
-        return 'Usuario';
-    }
+    const roleNames: Record<string, string> = {
+      'admin': 'Administrador',
+      'farm_owner': 'Propietario de Finca',
+      'farm_manager': 'Administrador de Finca', 
+      'collaborator': 'Colaborador'
+    };
+    
+    const result = roleNames[user.role] || 'Usuario';
+    
+    return result;
   }
 
   isUserCached(): boolean {
-    return this._userRepository.isUserCached();
+    const cached = this._userRepository.isUserCached();
+    return cached;
   }
 
   getCachedUser(): User | null {
-    return this._userRepository.getUserFromCache();
+    const cachedUser = this._userRepository.getUserFromCache();
+    return cachedUser;
   }
 
   async refreshUser(): Promise<User | null> {
@@ -61,10 +69,22 @@ export class UserApplication {
   }
 
   isAdmin(user: User | null): boolean {
-    return user?.role === 'admin';
+    const result = user?.role === 'admin';
+    return result;
+  }
+
+  isFarmOwner(user: User | null): boolean {
+    const result = user?.role === 'farm_owner' || user?.role === 'admin';
+    return result;
+  }
+
+  isFarmManager(user: User | null): boolean {
+    const result = user?.role === 'farm_manager' || user?.role === 'admin';
+    return result;
   }
 
   isCollaborator(user: User | null): boolean {
-    return user?.role === 'collaborator';
+    const result = user?.role === 'collaborator';
+    return result;
   }
 } 

@@ -28,17 +28,18 @@ export class PlotsService {
     id,
     farm_id,
     name,
-    description,
+    code,
     area,
     crop_type,
     planting_date,
-    expected_harvest_date,
+    last_renovation_date,
     status,
     soil_type,
     slope_percentage,
-    irrigation_type,
+    irrigation_system,
     coordinates,
     notes,
+    altitude,
     is_active,
     created_at,
     updated_at
@@ -143,19 +144,22 @@ export class PlotsService {
   createPlot(request: CreatePlotRequest): Observable<PlotResponse> {
     const plotData = {
       farm_id: request.farm_id,
-      name: request.name.trim(),
-      description: request.description?.trim() || null,
+      name: request.name?.trim(),
+      code: request.code?.trim() || null,
       area: request.area,
       crop_type: request.crop_type || null,
       planting_date: request.planting_date || null,
-      expected_harvest_date: request.expected_harvest_date || null,
+      last_renovation_date: request.last_renovation_date || null,
       status: request.status,
       soil_type: request.soil_type || null,
       slope_percentage: request.slope_percentage || null,
-      irrigation_type: request.irrigation_type || null,
+      irrigation_system: request.irrigation_system || null,
+      altitude: request.altitude || null,
       coordinates: request.coordinates || null,
       notes: request.notes?.trim() || null,
-      is_active: true
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     const query = this._supabaseService.supabaseClient
@@ -173,15 +177,16 @@ export class PlotsService {
   updatePlot(request: UpdatePlotRequest): Observable<PlotResponse> {
     const plotData = {
       name: request.name.trim(),
-      description: request.description?.trim() || null,
+      code: request.code?.trim() || null,
       area: request.area,
       crop_type: request.crop_type || null,
       planting_date: request.planting_date || null,
-      expected_harvest_date: request.expected_harvest_date || null,
+      last_renovation_date: request.last_renovation_date || null,
       status: request.status,
       soil_type: request.soil_type || null,
       slope_percentage: request.slope_percentage || null,
-      irrigation_type: request.irrigation_type || null,
+      irrigation_system: request.irrigation_system || null,
+      altitude: request.altitude || null,
       coordinates: request.coordinates || null,
       notes: request.notes?.trim() || null,
       is_active: request.is_active !== undefined ? request.is_active : true,
@@ -241,7 +246,7 @@ export class PlotsService {
       .from(this.tableName)
       .select(this.fieldList)
       .eq('is_active', true)
-      .or(`name.ilike.${searchPattern},description.ilike.${searchPattern},crop_type.ilike.${searchPattern}`)
+      .or(`name.ilike.${searchPattern},notes.ilike.${searchPattern},crop_type.ilike.${searchPattern}`)
       .order('name', { ascending: true });
 
     // Filtrar por finca si se proporciona

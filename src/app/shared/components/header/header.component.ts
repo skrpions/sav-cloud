@@ -7,6 +7,7 @@ import { Subject, takeUntil, filter } from 'rxjs';
 
 import { MaterialModule } from '@/app/shared/material.module';
 import { SupabaseService } from '@/app/shared/services/supabase.service';
+import { UserService } from '@/app/shared/services/user.service';
 import { ROUTES } from '@/app/shared/constants/routes';
 
 interface PageMetadata {
@@ -27,6 +28,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @Output() searchChanged = new EventEmitter<string>();
   
   private _supabaseService = inject(SupabaseService);
+  private _userService = inject(UserService);
   private _router = inject(Router);
   private _translateService = inject(TranslateService);
   private _destroy$ = new Subject<void>();
@@ -130,6 +132,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     try {
       console.log('Logging out...');
       
+      // Clear user cache and sessionStorage first
+      this._userService.clearCache();
+      
       const { error } = await this._supabaseService.supabaseClient.auth.signOut();
 
       if (error) {
@@ -150,6 +155,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Logout error:', error);
+      
+      // Clear cache even if logout fails
+      this._userService.clearCache();
       
       // Show error toast
       toast.error(this._translateService.instant('toasts.logout.error.title'), {

@@ -320,9 +320,11 @@
                     </div>
                   </div>
 
-                  <div class="plot-description" *ngIf="plot.description">
-                    {{ plot.description }}
-                  </div>
+                  @if (plot.notes) {
+                    <div class="plot-notes">
+                      {{ plot.notes }}
+                    </div>
+                  }
 
                   <div class="plot-details">
                     <div class="detail-item">
@@ -333,97 +335,112 @@
                       </div>
                     </div>
 
-                    <div class="detail-item" *ngIf="plot.crop_type">
-                      <mat-icon>eco</mat-icon>
-                      <div class="detail-content">
-                        <div class="detail-label">Cultivo</div>
-                        <div class="detail-value">{{ getCropTypeLabel(plot.crop_type) }}</div>
+                    @if (plot.crop_type) {
+                      <div class="detail-item">
+                        <mat-icon>eco</mat-icon>
+                        <div class="detail-content">
+                          <div class="detail-label">Cultivo</div>
+                          <div class="detail-value">{{ getCropTypeLabel(plot.crop_type) }}</div>
+                        </div>
                       </div>
-                    </div>
+                    }
 
-                    <div class="detail-item" *ngIf="plot.soil_type">
-                      <mat-icon>terrain</mat-icon>
-                      <div class="detail-content">
-                        <div class="detail-label">Suelo</div>
-                        <div class="detail-value">{{ getSoilTypeLabel(plot.soil_type) }}</div>
+                    @if (plot.soil_type) {
+                      <div class="detail-item">
+                        <mat-icon>terrain</mat-icon>
+                        <div class="detail-content">
+                          <div class="detail-label">Suelo</div>
+                          <div class="detail-value">{{ getSoilTypeLabel(plot.soil_type) }}</div>
+                        </div>
                       </div>
-                    </div>
+                    }
 
-                    <div class="detail-item" *ngIf="plot.irrigation_type">
-                      <mat-icon>water_drop</mat-icon>
-                      <div class="detail-content">
-                        <div class="detail-label">Riego</div>
-                        <div class="detail-value">{{ getIrrigationTypeLabel(plot.irrigation_type) }}</div>
+                    @if (plot.irrigation_system) {
+                      <div class="detail-item">
+                        <mat-icon>water_drop</mat-icon>
+                        <div class="detail-content">
+                          <div class="detail-label">Riego</div>
+                          <div class="detail-value">{{ getIrrigationSystemLabel(plot.irrigation_system) }}</div>
+                        </div>
                       </div>
-                    </div>
+                    }
 
-                    <div class="detail-item" *ngIf="getProductionCycleInfo(plot)">
-                      <mat-icon>schedule</mat-icon>
-                      <div class="detail-content">
-                        <div class="detail-label">Ciclo</div>
-                        <div class="detail-value">{{ getProductionCycleInfo(plot) }}</div>
+                    @if (getProductionCycleInfo(plot)) {
+                      <div class="detail-item">
+                        <mat-icon>schedule</mat-icon>
+                        <div class="detail-content">
+                          <div class="detail-label">Ciclo</div>
+                          <div class="detail-value">{{ getProductionCycleInfo(plot) }}</div>
+                        </div>
                       </div>
-                    </div>
+                    }
 
-                    <div class="detail-item" *ngIf="plot.slope_percentage">
-                      <mat-icon>trending_up</mat-icon>
-                      <div class="detail-content">
-                        <div class="detail-label">Pendiente</div>
-                        <div class="detail-value">{{ plot.slope_percentage }}%</div>
+                    @if (plot.slope_percentage) {
+                      <div class="detail-item">
+                        <mat-icon>trending_up</mat-icon>
+                        <div class="detail-content">
+                          <div class="detail-label">Pendiente</div>
+                          <div class="detail-value">{{ plot.slope_percentage }}%</div>
+                        </div>
                       </div>
-                    </div>
+                    }
                   </div>
 
                   <!-- Factores de salud -->
-                  <div class="health-factors" *ngIf="getPlotHealthFactors(plot).length > 0">
-                    <div class="factors-label">Factores de atención:</div>
-                    <div class="factors-list">
-                      @for (factor of getPlotHealthFactors(plot); track factor) {
-                        <span class="factor-badge">{{ factor }}</span>
-                      }
+                  @if (getPlotHealthFactors(plot).length > 0) {
+                    <div class="health-factors">
+                      <div class="factors-label">Factores de atención:</div>
+                      <div class="factors-list">
+                        @for (factor of getPlotHealthFactors(plot); track factor) {
+                          <span class="factor-badge">{{ factor }}</span>
+                        }
+                      </div>
                     </div>
-                  </div>
+                  }
                 </div>
               </div>
             }
           </div>
 
           <!-- Paginación para cards -->
-          <div class="pagination-container" *ngIf="totalPages() > 1">
-            <div class="pagination-info">
-              <span>Página {{ currentPage() + 1 }} de {{ totalPages() }}</span>
-              <span class="total-records">({{ filteredPlots.length }} lotes)</span>
-            </div>
-            
-            <div class="pagination-controls">
-              <button 
-                mat-icon-button 
-                [disabled]="currentPage() === 0"
-                (click)="prevPage()"
-                matTooltip="Página anterior">
-                <mat-icon>chevron_left</mat-icon>
-              </button>
-              
-              <div class="page-numbers">
-                <button 
-                  *ngFor="let page of [].constructor(totalPages()); let i = index"
-                  mat-button
-                  [class.active]="i === currentPage()"
-                  (click)="changePage(i)"
-                  class="page-btn">
-                  {{ i + 1 }}
-                </button>
+          @if (totalPages() > 1) {
+            <div class="pagination-container">
+              <div class="pagination-info">
+                <span>Página {{ currentPage() + 1 }} de {{ totalPages() }}</span>
+                <span class="total-records">({{ filteredPlots.length }} lotes)</span>
               </div>
               
-              <button 
-                mat-icon-button 
-                [disabled]="currentPage() >= totalPages() - 1"
-                (click)="nextPage()"
-                matTooltip="Página siguiente">
-                <mat-icon>chevron_right</mat-icon>
-              </button>
+              <div class="pagination-controls">
+                <button 
+                  mat-icon-button 
+                  [disabled]="currentPage() === 0"
+                  (click)="prevPage()"
+                  matTooltip="Página anterior">
+                  <mat-icon>chevron_left</mat-icon>
+                </button>
+                
+                <div class="page-numbers">
+                  @for (page of [].constructor(totalPages()); track $index; let i = $index) {
+                    <button 
+                      mat-button
+                      [class.active]="i === currentPage()"
+                      (click)="changePage(i)"
+                      class="page-btn">
+                      {{ i + 1 }}
+                    </button>
+                  }
+                </div>
+                
+                <button 
+                  mat-icon-button 
+                  [disabled]="currentPage() >= totalPages() - 1"
+                  (click)="nextPage()"
+                  matTooltip="Página siguiente">
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </div>
             </div>
-          </div>
+          }
         </div>
       </div>
     </div>
@@ -461,14 +478,21 @@
                   <mat-form-field appearance="fill" class="form-field">
                     <mat-label>Nombre del Lote *</mat-label>
                     <input matInput formControlName="name" required>
-                    <mat-error *ngIf="plotForm.get('name')?.invalid && plotForm.get('name')?.touched">
-                      El nombre es requerido
-                    </mat-error>
+                    @if (plotForm.get('name')?.invalid && plotForm.get('name')?.touched) {
+                      <mat-error>
+                        El nombre es requerido
+                      </mat-error>
+                    }
                   </mat-form-field>
 
                   <mat-form-field appearance="fill" class="form-field">
-                    <mat-label>Descripción</mat-label>
-                    <textarea matInput formControlName="description" rows="2" placeholder="Descripción del lote..."></textarea>
+                    <mat-label>Código del Lote</mat-label>
+                    <input matInput formControlName="code" placeholder="Código identificador">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Notas</mat-label>
+                    <textarea matInput formControlName="notes" rows="2" placeholder="Descripción del lote..."></textarea>
                   </mat-form-field>
 
                   <div class="form-row">
@@ -476,9 +500,11 @@
                       <mat-label>Área *</mat-label>
                       <input matInput type="number" formControlName="area" min="0" step="0.01" required>
                       <span matSuffix>hectáreas</span>
-                      <mat-error *ngIf="plotForm.get('area')?.invalid && plotForm.get('area')?.touched">
-                        El área es requerida
-                      </mat-error>
+                      @if (plotForm.get('area')?.invalid && plotForm.get('area')?.touched) {
+                        <mat-error>
+                          El área es requerida
+                        </mat-error>
+                      }
                     </mat-form-field>
 
                     <mat-form-field appearance="fill" class="form-field half-width">
@@ -523,10 +549,10 @@
                     </mat-form-field>
 
                     <mat-form-field appearance="fill" class="form-field half-width">
-                      <mat-label>Fecha Estimada de Cosecha</mat-label>
-                      <input matInput [matDatepicker]="harvestDatePicker" formControlName="expected_harvest_date">
-                      <mat-datepicker-toggle matSuffix [for]="harvestDatePicker"></mat-datepicker-toggle>
-                      <mat-datepicker #harvestDatePicker></mat-datepicker>
+                      <mat-label>Fecha de Última Renovación</mat-label>
+                      <input matInput [matDatepicker]="renovationDatePicker" formControlName="last_renovation_date">
+                      <mat-datepicker-toggle matSuffix [for]="renovationDatePicker"></mat-datepicker-toggle>
+                      <mat-datepicker #renovationDatePicker></mat-datepicker>
                     </mat-form-field>
                   </div>
                 </div>
@@ -559,27 +585,20 @@
                     </mat-form-field>
 
                     <mat-form-field appearance="fill" class="form-field half-width">
-                      <mat-label>Tipo de Riego</mat-label>
-                      <mat-select formControlName="irrigation_type">
-                        <mat-option value="">Sin especificar</mat-option>
-                        @for (irrigation of irrigationTypeOptions; track irrigation.value) {
-                          <mat-option [value]="irrigation.value">{{ irrigation.label }}</mat-option>
-                        }
-                      </mat-select>
+                      <mat-label>Altitud</mat-label>
+                      <input matInput type="number" formControlName="altitude" min="0">
+                      <span matSuffix>m.s.n.m.</span>
                     </mat-form-field>
                   </div>
-                </div>
 
-                <!-- Notas -->
-                <div class="form-section">
-                  <h3 class="section-title">
-                    <mat-icon>note</mat-icon>
-                    Notas Adicionales
-                  </h3>
-                  
                   <mat-form-field appearance="fill" class="form-field">
-                    <mat-label>Notas</mat-label>
-                    <textarea matInput formControlName="notes" rows="4" placeholder="Notas adicionales sobre el lote..."></textarea>
+                    <mat-label>Sistema de Riego</mat-label>
+                    <mat-select formControlName="irrigation_system">
+                      <mat-option value="">Sin especificar</mat-option>
+                      @for (irrigation of irrigationSystemOptions; track irrigation.value) {
+                        <mat-option [value]="irrigation.value">{{ irrigation.label }}</mat-option>
+                      }
+                    </mat-select>
                   </mat-form-field>
                 </div>
               </div>

@@ -7,15 +7,16 @@ export interface PlotEntity {
   id?: string;
   farm_id: string; // Obligatorio: lotes pertenecen a una finca específica
   name: string;
-  description?: string;
+  code?: string;
   area: number; // Área en hectáreas
   crop_type?: string; // Tipo de cultivo principal
   planting_date?: string; // ISO date string - fecha de siembra
-  expected_harvest_date?: string; // ISO date string - fecha estimada de cosecha
+  last_renovation_date?: string; // ISO date string - fecha de última renovación
   status: PlotStatus;
   soil_type?: string; // Tipo de suelo (arcilloso, arenoso, franco, etc.)
   slope_percentage?: number; // Porcentaje de pendiente (0-100)
-  irrigation_type?: string; // Tipo de riego (goteo, aspersión, natural, etc.)
+  irrigation_system?: string; // Sistema de riego (goteo, aspersión, natural, etc.)
+  altitude?: number; // Altitud en metros sobre el nivel del mar
   coordinates?: PlotCoordinates; // JSONB field para coordenadas del polígono
   notes?: string;
   is_active?: boolean;
@@ -31,15 +32,16 @@ export interface PlotCoordinates {
 export interface CreatePlotRequest {
   farm_id: string;
   name: string;
-  description?: string;
+  code?: string;
   area: number;
   crop_type?: string;
   planting_date?: string;
-  expected_harvest_date?: string;
+  last_renovation_date?: string;
   status: PlotStatus;
   soil_type?: string;
   slope_percentage?: number;
-  irrigation_type?: string;
+  irrigation_system?: string;
+  altitude?: number;
   coordinates?: PlotCoordinates;
   notes?: string;
 }
@@ -114,7 +116,7 @@ export const SOIL_TYPE_OPTIONS = [
   { value: 'mixed', label: 'Mixto' }
 ] as const;
 
-export const IRRIGATION_TYPE_OPTIONS = [
+export const IRRIGATION_SYSTEM_OPTIONS = [
   { value: 'drip', label: 'Goteo' },
   { value: 'sprinkler', label: 'Aspersión' },
   { value: 'flood', label: 'Inundación' },
@@ -203,35 +205,38 @@ export function getPlotHealthScore(plot: PlotEntity): {
   const factors: string[] = [];
   
   // Verificar fechas
-  if (plot.planting_date && plot.expected_harvest_date) {
-    const cycle = calculatePlotProductionCycle(plot.planting_date, plot.expected_harvest_date);
+  if (plot.planting_date && plot.last_renovation_date) {
+    const cycle = calculatePlotProductionCycle(plot.planting_date, plot.last_renovation_date);
     
     if (cycle.daysToHarvest && cycle.daysToHarvest < 0) {
       score -= 20;
-      factors.push('Cosecha tardía');
+      factors.push('Fecha de cosecha pasada');
     }
   }
   
-  // Verificar pendiente
-  if (plot.slope_percentage && plot.slope_percentage > 45) {
+  // Verificar estado del cultivo
+  if (plot.status === 'maintenance') {
     score -= 15;
-    factors.push('Pendiente muy pronunciada');
+    factors.push('En mantenimiento');
+  } else if (plot.status === 'resting') {
+    score -= 10;
+    factors.push('En descanso');
   }
   
-  // Verificar área vs tipo de cultivo
-  if (plot.area && plot.area < 0.1) {
+  // Verificar pendiente excesiva
+  if (plot.slope_percentage && plot.slope_percentage > 30) {
     score -= 10;
+    factors.push('Pendiente elevada');
+  }
+  
+  // Verificar área muy pequeña
+  if (plot.area < 0.5) {
+    score -= 5;
     factors.push('Área muy pequeña');
   }
   
-  // Verificar estado
-  if (plot.status === 'maintenance') {
-    score -= 25;
-    factors.push('En mantenimiento');
-  }
-  
   return {
-    score: Math.max(0, score),
+    score: Math.max(0, Math.min(100, score)),
     factors
   };
 } 

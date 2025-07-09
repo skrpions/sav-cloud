@@ -18,61 +18,44 @@ export class UserService {
   private currentUser: User | null = null;
   
   async loadCurrentUser(): Promise<void> {
-    // Si ya se cargó y tenemos datos válidos, no cargar de nuevo
+    // Skip loading if we have recent data (unless forced)
     if (this.userDataLoaded && this.currentUser) {
       return;
     }
-    
+
     this.isLoading.set(true);
     
     try {
-      // Primero intentar desde caché (más rápido)
-      if (this._userApplication.isUserCached()) {
-        const cachedUser = this._userApplication.getCachedUser();
-        if (cachedUser) {
-          this.updateUserSignals(cachedUser);
-          this.userDataLoaded = true;
-          this.isLoading.set(false);
-          return;
-        }
-      }
-      
-      // Si no hay caché válido, cargar desde Supabase
       const user = await this._userApplication.getCurrentUser();
-      
+
       if (user) {
         this.updateUserSignals(user);
         this.userDataLoaded = true;
+        this.currentUser = user;
       } else {
         this.setDefaultValues();
       }
-      
     } catch (error) {
-      console.error('Error loading user information:', error);
-      
-      // En caso de error, intentar mantener datos del caché si existen
-      const cachedUser = this._userApplication.getCachedUser();
-      if (cachedUser) {
-        this.updateUserSignals(cachedUser);
-        this.userDataLoaded = true;
-      } else {
-        this.setDefaultValues();
-      }
+      console.error('❌ Error loading user:', error);
+      this.setDefaultValues();
     } finally {
       this.isLoading.set(false);
     }
   }
 
   private updateUserSignals(user: User): void {
-    this.currentUser = user;
-    this.userName.set(this._userApplication.getFullName(user));
-    this.userRole.set(this._userApplication.getRoleDisplayName(user));
+    const fullName = this._userApplication.getFullName(user);
+    const roleDisplay = this._userApplication.getRoleDisplayName(user);
+    
+    this.userName.set(fullName);
+    this.userRole.set(roleDisplay);
   }
 
   private setDefaultValues(): void {
-    this.currentUser = null;
     this.userName.set('Usuario');
     this.userRole.set('Usuario');
+    this.currentUser = null;
+    this.userDataLoaded = false;
   }
   
   // Método para forzar recarga si es necesario
@@ -84,9 +67,9 @@ export class UserService {
   
   // Método para limpiar el caché (útil para logout)
   clearCache(): void {
+    this._userApplication.logout();
     this.userDataLoaded = false;
     this.currentUser = null;
-    this._userApplication.logout();
     this.setDefaultValues();
   }
 

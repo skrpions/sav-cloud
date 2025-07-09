@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { catchError, Observable, throwError, from, map, switchMap, of } from 'rxjs';
+import { Observable, from, throwError, of } from 'rxjs';
+import { map, catchError, switchMap } from 'rxjs/operators';
 
 import { 
   AuthResponse, 
@@ -23,8 +24,56 @@ export class AuthInfrastructure implements AuthRepository {
         options: request.options
       })
     ).pipe(
-      map(response => this.mapSupabaseResponse(response)),
-      catchError(this.handleError.bind(this))
+      switchMap(response => {
+        const mappedResponse = this.mapSupabaseResponse(response);
+        
+        // Si el registro fue exitoso y tenemos un usuario, crear entrada en public.users
+        if (!mappedResponse.error && mappedResponse.data?.user) {
+          const user = mappedResponse.data.user;
+          
+          // Extraer nombre y apellido del email o metadata
+          const emailName = user.email?.split('@')[0] || 'Usuario';
+          const firstName = user.metadata?.['first_name'] || emailName;
+          const lastName = user.metadata?.['last_name'] || 'Sin Apellido';
+          
+          // Crear usuario en la tabla public.users
+          return from(
+            this._supabaseService.supabaseClient
+              .from('users')
+              .insert([{
+                id: user.id, // Usar el mismo ID de auth.users
+                email: user.email,
+                first_name: firstName,
+                last_name: lastName,
+                role: 'farm_owner', // Rol por defecto
+                is_active: true,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }])
+              .select()
+          ).pipe(
+            map(insertResponse => {
+              // Si hubo error creando en public.users, logearlo pero no fallar el registro
+              if (insertResponse.error) {
+                console.warn('Warning: Error creating user in public.users:', insertResponse.error);
+              } else {
+                console.log('✅ User created in public.users successfully');
+              }
+              
+              // Retornar el response original del registro
+              return mappedResponse;
+            }),
+            catchError(error => {
+              console.warn('Warning: Failed to create user in public.users:', error);
+              // No fallar el registro completo, solo advertir
+              return of(mappedResponse);
+            })
+          );
+        }
+        
+        return of(mappedResponse);
+      }),
+      catchError(error => this.handleError(error))
     );
   }
 
@@ -42,7 +91,7 @@ export class AuthInfrastructure implements AuthRepository {
 
   signOut(): Observable<AuthResponse> {
     return from(
-      this._supabaseService.supabaseClient.auth.signOut()
+      this._supabaseService.supabaseClient.auth.signOut(),
     ).pipe(
       map(response => this.mapSupabaseSignOutResponse(response)),
       catchError(this.handleError.bind(this))

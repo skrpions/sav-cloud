@@ -31,6 +31,12 @@ export class SidebarComponent implements OnInit {
   userName = this._userService.userName;
   userRole = this._userService.userRole;
 
+  // Effect como field initializer para el contexto de inyección correcto
+  private farmsUpdateEffect = effect(() => {
+    this._farmStateService.farms(); // Read the signal to register dependency
+    this.updateDisabledStates();
+  });
+
   sidebarItems: SidebarItem[] = [
     { icon: 'dashboard', labelKey: 'sidebar.navigation.dashboard', route: '/dashboard', active: true },
     { 
@@ -65,14 +71,10 @@ export class SidebarComponent implements OnInit {
 
     // Load current user information through service
     if (this._userService.userName() === 'Usuario') {
-      this._userService.loadCurrentUser();
+      this._userService.loadCurrentUser().catch(error => {
+        console.error('Error loading user in sidebar:', error);
+      });
     }
-
-    // Update disabled state based on farms availability and listen to changes
-    effect(() => {
-      this._farmStateService.farms(); // Read the signal to register dependency
-      this.updateDisabledStates();
-    });
   }
 
   private updateActiveItemFromRoute(): void {

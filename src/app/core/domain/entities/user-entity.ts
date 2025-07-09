@@ -9,10 +9,10 @@ export interface User {
   updatedAt: Date;
 }
 
-export type UserRole = 'admin' | 'collaborator';
+export type UserRole = 'admin' | 'farm_owner' | 'farm_manager' | 'collaborator';
 
 export interface UserMetadata {
   displayName: string;
   fullName: string;
   role: string;
-} 
+}

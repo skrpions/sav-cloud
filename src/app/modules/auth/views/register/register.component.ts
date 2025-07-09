@@ -27,22 +27,26 @@ export class RegisterComponent extends FormAuthComponent implements OnInit {
   private _supabaseService = inject(SupabaseService);
   private _cdr = inject(ChangeDetectorRef);
 
-  authForm: FormGroup;
+  authForm!: FormGroup;
   config: AuthFormConfig = {} as AuthFormConfig;
 
   constructor() {
     super();
-    // Crear el formulario con valores hardcodeados
+    // Solo inicializar configuración en constructor
+    this.initializeConfig();
+  }
+
+  ngOnInit(): void {
+    // Crear el formulario en ngOnInit para evitar problemas de detección de cambios
     this.authForm = this.createBaseForm();
     // Hardcodear los valores para testing rápido
     this.authForm.patchValue({
       email: 'sksmartinez@gmail.com',
       password: 'Pa$$w0rd!'
     });
-  }
-
-  ngOnInit(): void {
-    this.initializeConfig();
+    
+    // Forzar detección de cambios después de la inicialización
+    this._cdr.detectChanges();
   }
 
   private initializeConfig(): void {
@@ -80,7 +84,7 @@ export class RegisterComponent extends FormAuthComponent implements OnInit {
       }
 
       toast.success('Registro exitoso', {
-        description: 'Revisa tu email para verificar tu cuenta'
+        description: 'Ahora deberías iniciar sesión'
       });
 
       this.router.navigate(['/auth/login']);

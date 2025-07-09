@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, from, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 import { SupabaseService } from '@/app/shared/services/supabase.service';
 import { 
@@ -46,21 +46,36 @@ export class FarmsService {
    * Obtiene todas las fincas del usuario actual
    */
   getAllFarms(): Observable<FarmListResponse> {
+    console.log('🚜 FarmsService: getAllFarms called');
+    
     return from(this._supabaseService.supabaseClient.auth.getUser()).pipe(
-      map(({ data: { user } }) => {
+      switchMap(({ data: { user } }) => {
         if (!user) throw new Error('Usuario no autenticado');
-        return user.id;
+        
+        console.log('🚜 FarmsService: Getting farms for user ID:', user.id);
+        
+        return from(
+          this._supabaseService.supabaseClient
+            .from(this.tableName)
+            .select(this.fieldList)
+            .eq('owner_id', user.id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+        );
       }),
-      map((userId) => 
-        this._supabaseService.supabaseClient
-          .from(this.tableName)
-          .select(this.fieldList)
-          .eq('owner_id', userId)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-      ),
-      map(response => this.mapListResponse(response)),
-      catchError(error => this.handleError(error))
+      map(response => {
+        console.log('🚜 FarmsService: getAllFarms raw response:', response);
+        
+        const mappedResponse = this.mapListResponse(response);
+        
+        console.log('🚜 FarmsService: getAllFarms mapped response:', mappedResponse);
+        
+        return mappedResponse;
+      }),
+      catchError(error => {
+        console.error('🚜 FarmsService: getAllFarms error:', error);
+        return this.handleError(error);
+      })
     );
   }
 
@@ -68,21 +83,36 @@ export class FarmsService {
    * Obtiene las fincas activas del usuario actual
    */
   getActiveFarms(): Observable<FarmListResponse> {
+    console.log('🚜 FarmsService: getActiveFarms called');
+    
     return from(this._supabaseService.supabaseClient.auth.getUser()).pipe(
-      map(({ data: { user } }) => {
+      switchMap(({ data: { user } }) => {
         if (!user) throw new Error('Usuario no autenticado');
-        return user.id;
+        
+        console.log('🚜 FarmsService: Getting active farms for user ID:', user.id);
+        
+        return from(
+          this._supabaseService.supabaseClient
+            .from(this.tableName)
+            .select(this.fieldList)
+            .eq('owner_id', user.id)
+            .eq('is_active', true)
+            .order('name', { ascending: true })
+        );
       }),
-      map((userId) => 
-        this._supabaseService.supabaseClient
-          .from(this.tableName)
-          .select(this.fieldList)
-          .eq('owner_id', userId)
-          .eq('is_active', true)
-          .order('name', { ascending: true })
-      ),
-      map(response => this.mapListResponse(response)),
-      catchError(error => this.handleError(error))
+      map(response => {
+        console.log('🚜 FarmsService: getActiveFarms raw response:', response);
+        
+        const mappedResponse = this.mapListResponse(response);
+        
+        console.log('🚜 FarmsService: getActiveFarms mapped response:', mappedResponse);
+        
+        return mappedResponse;
+      }),
+      catchError(error => {
+        console.error('🚜 FarmsService: getActiveFarms error:', error);
+        return this.handleError(error);
+      })
     );
   }
 
@@ -90,15 +120,28 @@ export class FarmsService {
    * Obtiene una finca por su ID
    */
   getFarmById(id: string): Observable<FarmResponse> {
-    const query = this._supabaseService.supabaseClient
-      .from(this.tableName)
-      .select(this.fieldList)
-      .eq('id', id)
-      .single();
-
-    return from(query).pipe(
-      map(response => this.mapSingleResponse(response)),
-      catchError(error => this.handleError(error))
+    console.log('🚜 FarmsService: getFarmById called with ID:', id);
+    
+    return from(
+      this._supabaseService.supabaseClient
+        .from(this.tableName)
+        .select(this.fieldList)
+        .eq('id', id)
+        .single()
+    ).pipe(
+      map(response => {
+        console.log('🚜 FarmsService: getFarmById raw response:', response);
+        
+        const mappedResponse = this.mapSingleResponse(response);
+        
+        console.log('🚜 FarmsService: getFarmById mapped response:', mappedResponse);
+        
+        return mappedResponse;
+      }),
+      catchError(error => {
+        console.error('🚜 FarmsService: getFarmById error:', error);
+        return this.handleError(error);
+      })
     );
   }
 
@@ -106,8 +149,11 @@ export class FarmsService {
    * Crea una nueva finca
    */
   createFarm(request: CreateFarmRequest): Observable<FarmResponse> {
+    // Debug: log the request
+    console.log('🚜 FarmsService: createFarm called with request:', request);
+
     return from(this._supabaseService.supabaseClient.auth.getUser()).pipe(
-      map(({ data: { user } }) => {
+      switchMap(({ data: { user } }) => {
         if (!user) throw new Error('Usuario no autenticado');
         
         const farmData = {
@@ -117,14 +163,32 @@ export class FarmsService {
           country: request.country || 'Colombia'
         };
 
-        return this._supabaseService.supabaseClient
-          .from(this.tableName)
-          .insert(farmData)
-          .select(this.fieldList)
-          .single();
+        // Debug: log the data that will be sent to database
+        console.log('🚜 FarmsService: farmData prepared for insert:', farmData);
+
+        return from(
+          this._supabaseService.supabaseClient
+            .from(this.tableName)
+            .insert([farmData])
+            .select(this.fieldList)
+            .single()
+        );
       }),
-      map(response => this.mapSingleResponse(response)),
-      catchError(error => this.handleError(error))
+      map(response => {
+        // Debug: log the raw response
+        console.log('🚜 FarmsService: createFarm raw response:', response);
+        
+        const mappedResponse = this.mapSingleResponse(response);
+        
+        // Debug: log the mapped response
+        console.log('🚜 FarmsService: createFarm mapped response:', mappedResponse);
+        
+        return mappedResponse;
+      }),
+      catchError(error => {
+        console.error('🚜 FarmsService: createFarm error:', error);
+        return this.handleError(error);
+      })
     );
   }
 
@@ -132,6 +196,8 @@ export class FarmsService {
    * Actualiza una finca existente
    */
   updateFarm(request: UpdateFarmRequest): Observable<FarmResponse> {
+    console.log('🚜 FarmsService: updateFarm called with request:', request);
+    
     const updateData = {
       name: request.name,
       description: request.description,
@@ -152,16 +218,29 @@ export class FarmsService {
       updated_at: new Date().toISOString()
     };
 
-    const query = this._supabaseService.supabaseClient
-      .from(this.tableName)
-      .update(updateData)
-      .eq('id', request.id)
-      .select(this.fieldList)
-      .single();
+    console.log('🚜 FarmsService: updateData prepared:', updateData);
 
-    return from(query).pipe(
-      map(response => this.mapSingleResponse(response)),
-      catchError(error => this.handleError(error))
+    return from(
+      this._supabaseService.supabaseClient
+        .from(this.tableName)
+        .update(updateData)
+        .eq('id', request.id)
+        .select(this.fieldList)
+        .single()
+    ).pipe(
+      map(response => {
+        console.log('🚜 FarmsService: updateFarm raw response:', response);
+        
+        const mappedResponse = this.mapSingleResponse(response);
+        
+        console.log('🚜 FarmsService: updateFarm mapped response:', mappedResponse);
+        
+        return mappedResponse;
+      }),
+      catchError(error => {
+        console.error('🚜 FarmsService: updateFarm error:', error);
+        return this.handleError(error);
+      })
     );
   }
 
@@ -169,19 +248,32 @@ export class FarmsService {
    * Desactiva una finca (soft delete)
    */
   deactivateFarm(id: string): Observable<FarmResponse> {
-    const query = this._supabaseService.supabaseClient
-      .from(this.tableName)
-      .update({ 
-        is_active: false,
-        updated_at: new Date().toISOString()
+    console.log('🚜 FarmsService: deactivateFarm called with ID:', id);
+    
+    return from(
+      this._supabaseService.supabaseClient
+        .from(this.tableName)
+        .update({ 
+          is_active: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select(this.fieldList)
+        .single()
+    ).pipe(
+      map(response => {
+        console.log('🚜 FarmsService: deactivateFarm raw response:', response);
+        
+        const mappedResponse = this.mapSingleResponse(response);
+        
+        console.log('🚜 FarmsService: deactivateFarm mapped response:', mappedResponse);
+        
+        return mappedResponse;
+      }),
+      catchError(error => {
+        console.error('🚜 FarmsService: deactivateFarm error:', error);
+        return this.handleError(error);
       })
-      .eq('id', id)
-      .select(this.fieldList)
-      .single();
-
-    return from(query).pipe(
-      map(response => this.mapSingleResponse(response)),
-      catchError(error => this.handleError(error))
     );
   }
 
@@ -189,14 +281,22 @@ export class FarmsService {
    * Elimina una finca permanentemente (solo si no tiene datos relacionados)
    */
   deleteFarm(id: string): Observable<FarmResponse> {
-    const query = this._supabaseService.supabaseClient
-      .from(this.tableName)
-      .delete()
-      .eq('id', id);
-
-    return from(query).pipe(
-      map(() => ({ data: undefined })),
-      catchError(error => this.handleError(error))
+    console.log('🚜 FarmsService: deleteFarm called with ID:', id);
+    
+    return from(
+      this._supabaseService.supabaseClient
+        .from(this.tableName)
+        .delete()
+        .eq('id', id)
+    ).pipe(
+      map(response => {
+        console.log('🚜 FarmsService: deleteFarm raw response:', response);
+        return { data: undefined };
+      }),
+      catchError(error => {
+        console.error('🚜 FarmsService: deleteFarm error:', error);
+        return this.handleError(error);
+      })
     );
   }
 

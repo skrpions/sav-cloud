@@ -12,36 +12,39 @@ export class UserInfrastructure extends UserRepository {
 
   async getCurrentUser(): Promise<User | null> {
     try {
-      // Primero verificar si tenemos datos en caché
-      const cachedUser = this.getUserFromCache();
-      if (cachedUser) {
-        return cachedUser;
+      // Get user from Supabase Auth
+      const { data: { user: authUser }, error: authError } = await this._supabaseService.supabaseClient.auth.getUser();
+      
+      if (authError) {
+        console.error('❌ UserInfrastructure: Auth error:', authError);
+        throw authError;
       }
-
-      // Si no hay caché, obtener de Supabase
-      const { data: { user: authUser } } = await this._supabaseService.supabaseClient.auth.getUser();
       
       if (!authUser) {
         return null;
       }
 
-      // Consultar la tabla public.users para obtener el perfil completo
-      const { data: userData, error: _error } = await this._supabaseService.supabaseClient
+      // Ensure user exists in public.users table
+      await this.ensureUserExistsInPublicTable(authUser);
+
+      // Get user from public.users table with our custom fields
+      const { data: userData, error: userError } = await this._supabaseService.supabaseClient
         .from('users')
-        .select('id, email, first_name, last_name, role, is_active, created_at, updated_at')
+        .select('*')
         .eq('id', authUser.id)
         .single();
 
-      if (_error || !userData) {
-        // Fallback: crear usuario básico desde auth
+      if (userError) {
+        console.error('❌ UserInfrastructure: Error fetching user from public.users:', userError);
+        // Fallback: create basic user object from auth data
         const fallbackUser: User = {
           id: authUser.id,
           email: authUser.email || '',
           firstName: this.extractFirstName(authUser),
           lastName: this.extractLastName(authUser),
-          role: 'collaborator' as UserRole,
+          role: 'farm_owner',
           isActive: true,
-          createdAt: new Date(),
+          createdAt: new Date(authUser.created_at),
           updatedAt: new Date()
         };
         
@@ -49,24 +52,126 @@ export class UserInfrastructure extends UserRepository {
         return fallbackUser;
       }
 
-      // Mapear datos de la BD a nuestra entidad
+      // Map database user to our User interface
       const user: User = {
         id: userData.id,
         email: userData.email,
         firstName: userData.first_name,
         lastName: userData.last_name,
-        role: userData.role as UserRole,
+        role: userData.role as 'admin' | 'farm_owner',
         isActive: userData.is_active,
         createdAt: new Date(userData.created_at),
         updatedAt: new Date(userData.updated_at)
       };
 
+      // Check if cached user is different from server data
+      const cachedUser = this.getUserFromCache();
+      if (cachedUser && this.isUserDataDifferent(cachedUser, user)) {
+        this.clearUserCache();
+      }
+
+      // Cache the fresh user data
       this.saveUserToCache(user);
+      
       return user;
 
-    } catch (error) {
-      console.error('Error loading current user:', error);
+    } catch (error: unknown) {
+      console.error('❌ UserInfrastructure: Error in getCurrentUser:', error);
+      
+      // Clear potentially corrupted cache
+      this.clearUserCache();
+      
       return null;
+    }
+  }
+
+  /**
+   * Ensures the authenticated user exists in the public.users table
+   */
+  private async ensureUserExistsInPublicTable(authUser: any): Promise<void> {
+    try {
+      // First, check if user exists by ID (normal case)
+      const { data: existingUserById, error: checkByIdError } = await this._supabaseService.supabaseClient
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (!checkByIdError && existingUserById) {
+        return;
+      }
+
+      // If not found by ID, check by email (for cases where user was created via SQL)
+      const { data: existingUserByEmail, error: checkByEmailError } = await this._supabaseService.supabaseClient
+        .from('users')
+        .select('*')
+        .eq('email', authUser.email)
+        .single();
+
+      if (!checkByEmailError && existingUserByEmail) {
+        // Create new record with correct auth ID but preserve existing data
+        const migrationData = {
+          id: authUser.id, // Use the correct auth ID
+          email: existingUserByEmail.email,
+          first_name: existingUserByEmail.first_name,
+          last_name: existingUserByEmail.last_name,
+          role: existingUserByEmail.role,
+          phone: existingUserByEmail.phone,
+          is_active: existingUserByEmail.is_active,
+          created_at: existingUserByEmail.created_at,
+          updated_at: new Date().toISOString()
+        };
+        
+        const { error: insertError } = await this._supabaseService.supabaseClient
+          .from('users')
+          .insert([migrationData]);
+
+        if (insertError) {
+          console.error('❌ UserInfrastructure: Error creating migrated user in public.users:', insertError);
+          throw insertError;
+        }
+
+        // Delete the old record with incorrect ID
+        const { error: deleteError } = await this._supabaseService.supabaseClient
+          .from('users')
+          .delete()
+          .eq('email', authUser.email)
+          .neq('id', authUser.id); // Delete only the old record, not the new one
+
+        if (deleteError) {
+          console.warn('⚠️ UserInfrastructure: Warning: Could not delete old user record, but migration completed:', deleteError);
+        }
+
+        return;
+      }
+
+      // If user doesn't exist by ID or email, create new user
+      const firstName = authUser.user_metadata?.['first_name'] || this.extractFirstName(authUser);
+      const lastName = authUser.user_metadata?.['last_name'] || this.extractLastName(authUser);
+
+      const newUserData = {
+        id: authUser.id,
+        email: authUser.email,
+        first_name: firstName,
+        last_name: lastName,
+        role: 'farm_owner',
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: insertError } = await this._supabaseService.supabaseClient
+        .from('users')
+        .insert([newUserData]);
+
+      if (insertError) {
+        console.error('❌ UserInfrastructure: Error creating user in public.users:', insertError);
+        throw insertError;
+      }
+
+    } catch (error) {
+      console.error('❌ UserInfrastructure: Error in ensureUserExistsInPublicTable:', error);
+      throw error;
     }
   }
 
@@ -155,5 +260,17 @@ export class UserInfrastructure extends UserRepository {
            typeof data.lastName === 'string' &&
            typeof data.role === 'string' &&
            typeof data.isActive === 'boolean';
+  }
+
+  /**
+   * Checks if cached user data is different from server data
+   */
+  private isUserDataDifferent(cachedUser: User, serverUser: User): boolean {
+    return (
+      cachedUser.firstName !== serverUser.firstName ||
+      cachedUser.lastName !== serverUser.lastName ||
+      cachedUser.role !== serverUser.role ||
+      cachedUser.email !== serverUser.email
+    );
   }
 } 
