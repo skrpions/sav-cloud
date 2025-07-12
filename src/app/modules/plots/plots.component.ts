@@ -10,6 +10,7 @@ import { SidebarComponent } from '@/app/shared/components/sidebar/sidebar.compon
 import { HeaderComponent } from '@/app/shared/components/header/header.component';
 import { ActionButtonComponent } from '@/app/shared/components/action-button/action-button.component';
 import { PlotsService } from './services/plots.service';
+import { CropVarietyService } from '@/app/shared/services/crop-variety.service';
 import { FarmStateService } from '@/app/shared/services/farm-state.service';
 import { 
   PlotEntity, 
@@ -22,6 +23,7 @@ import {
   IRRIGATION_SYSTEM_OPTIONS,
   PLOT_CONSTRAINTS
 } from '@/app/shared/models/plot.models';
+import { CropVarietyEntity, CROP_TYPE_VARIETIES } from '@/app/shared/models/crop-variety.models';
 import { FarmEntity } from '@/app/shared/models/farm.models';
 import { 
   formatPlotArea,
@@ -51,6 +53,7 @@ export type ViewMode = 'list' | 'cards';
 })
 export class PlotsComponent implements OnInit {
   private _plotsService = inject(PlotsService);
+  private _cropVarietyService = inject(CropVarietyService);
   private _formBuilder = inject(FormBuilder);
   private _router = inject(Router);
   private _translateService = inject(TranslateService);
@@ -61,6 +64,7 @@ export class PlotsComponent implements OnInit {
 
   // Signals para el estado del componente
   plots = signal<PlotEntity[]>([]);
+  cropVarieties = signal<CropVarietyEntity[]>([]);
   isLoading = signal(false);
   showSidePanel = signal(false);
   isEditMode = signal(false);
@@ -88,6 +92,7 @@ export class PlotsComponent implements OnInit {
   soilTypeOptions = SOIL_TYPE_OPTIONS;
   irrigationSystemOptions = IRRIGATION_SYSTEM_OPTIONS;
   constraints = PLOT_CONSTRAINTS;
+  cropTypeVarieties = CROP_TYPE_VARIETIES;
 
   constructor() {
     this.plotForm = this.createPlotForm();
@@ -104,7 +109,7 @@ export class PlotsComponent implements OnInit {
   }
 
   private createPlotForm(): FormGroup {
-    return this._formBuilder.group({
+    const form = this._formBuilder.group({
       farm_id: [null, Validators.required],
       name: ['', [
         Validators.required,
@@ -119,6 +124,7 @@ export class PlotsComponent implements OnInit {
         Validators.max(this.constraints.area.max)
       ]],
       crop_type: [''],
+      variety_id: [null], // Opcional, se habilita cuando se selecciona un cultivo con variedades
       planting_date: [null],
       last_renovation_date: [null],
       status: ['active', Validators.required],
@@ -131,6 +137,18 @@ export class PlotsComponent implements OnInit {
       altitude: [null],
       notes: ['', [Validators.maxLength(this.constraints.notes.maxLength)]]
     });
+
+    // Listener para cambios en el tipo de cultivo
+    form.get('crop_type')?.valueChanges.subscribe(cropType => {
+      if (cropType) {
+        this.onCropTypeChange(cropType);
+      } else {
+        this.cropVarieties.set([]);
+        this.plotForm.patchValue({ variety_id: null });
+      }
+    });
+
+    return form;
   }
 
   async loadPlots(): Promise<void> {
@@ -162,6 +180,38 @@ export class PlotsComponent implements OnInit {
     }
   }
 
+  // Callback para cuando cambia el tipo de cultivo
+  async onCropTypeChange(cropType: string): Promise<void> {
+    if (cropType && this.cropTypeVarieties[cropType]) {
+      // Si el cultivo tiene variedades, cargarlas
+      await this.loadCropVarieties(cropType);
+    } else {
+      // Si no tiene variedades, limpiar la lista y el campo
+      this.cropVarieties.set([]);
+      this.plotForm.patchValue({ variety_id: null });
+    }
+  }
+
+  async loadCropVarieties(cropType: string): Promise<void> {
+    try {
+      const response = await this._cropVarietyService.getVarietiesByCropType(cropType).toPromise();
+      
+      if (response?.error) {
+        console.error('Error loading crop varieties:', response.error);
+        this.cropVarieties.set([]);
+        return;
+      }
+
+      this.cropVarieties.set(response?.data || []);
+      console.log(`Variedades de ${cropType} cargadas:`, this.cropVarieties().length);
+      
+    } catch (error) {
+      console.error('Error in loadCropVarieties:', error);
+      this.cropVarieties.set([]);
+    }
+  }
+
+  // Métodos de vista y paginación
   switchView(mode: ViewMode): void {
     this.viewMode.set(mode);
     this.currentPage.set(0);
@@ -201,6 +251,11 @@ export class PlotsComponent implements OnInit {
       this.selectedPlot.set(plot);
       this.isEditMode.set(true);
 
+      // Cargar variedades si el cultivo las tiene
+      if (plot.crop_type && this.cropTypeVarieties[plot.crop_type]) {
+        this.loadCropVarieties(plot.crop_type);
+      }
+
       // Cargar datos en el formulario
       this.plotForm.patchValue({
         farm_id: plot.farm_id,
@@ -208,6 +263,7 @@ export class PlotsComponent implements OnInit {
         code: plot.code || '',
         area: plot.area,
         crop_type: plot.crop_type || '',
+        variety_id: plot.variety_id || null,
         planting_date: plot.planting_date ? new Date(plot.planting_date) : null,
         last_renovation_date: plot.last_renovation_date ? new Date(plot.last_renovation_date) : null,
         status: plot.status,
@@ -222,11 +278,15 @@ export class PlotsComponent implements OnInit {
       this.selectedPlot.set(null);
       this.isEditMode.set(false);
       
+      // Limpiar variedades
+      this.cropVarieties.set([]);
+      
       // Preseleccionar la finca actual
       const currentFarmId = this.farmStateService.getCurrentFarmIdOrDefault();
       this.plotForm.reset({
         farm_id: currentFarmId,
-        status: 'active'
+        status: 'active',
+        variety_id: null
       });
     }
 
@@ -237,6 +297,7 @@ export class PlotsComponent implements OnInit {
     this.showSidePanel.set(false);
     this.selectedPlot.set(null);
     this.isEditMode.set(false);
+    this.cropVarieties.set([]);
     this.plotForm.reset({
       status: 'active'
     });
@@ -470,6 +531,12 @@ export class PlotsComponent implements OnInit {
     return option ? option.label : irrigation_system;
   }
 
+  getVarietyName(varietyId?: string): string {
+    if (!varietyId) return 'Sin variedad específica';
+    const variety = this.cropVarieties().find(v => v.id === varietyId);
+    return variety ? variety.name : 'Variedad no encontrada';
+  }
+
   formatDate(dateString?: string): string {
     if (!dateString) return 'No especificada';
 
@@ -515,9 +582,18 @@ export class PlotsComponent implements OnInit {
     return getPlotHealthScore(plot).factors;
   }
 
-  // Getter para las fincas disponibles
+  // Getters para el template
   get availableFarms(): FarmEntity[] {
     return this.farmStateService.farms();
+  }
+
+  get availableCropVarieties(): CropVarietyEntity[] {
+    return this.cropVarieties();
+  }
+
+  // Verificar si el cultivo seleccionado tiene variedades
+  cropHasVarieties(cropType?: string): boolean {
+    return !!(cropType && this.cropTypeVarieties[cropType]);
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {

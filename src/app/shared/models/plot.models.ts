@@ -10,6 +10,7 @@ export interface PlotEntity {
   code?: string;
   area: number; // Área en hectáreas
   crop_type?: string; // Tipo de cultivo principal
+  variety_id?: string; // Variedad específica del cultivo (opcional)
   planting_date?: string; // ISO date string - fecha de siembra
   last_renovation_date?: string; // ISO date string - fecha de última renovación
   status: PlotStatus;
@@ -24,10 +25,9 @@ export interface PlotEntity {
   updated_at?: string;
 }
 
-export interface PlotCoordinates {
-  type: 'Polygon';
-  coordinates: number[][][]; // GeoJSON format for polygon
-}
+// ========================================
+// REQUEST INTERFACES
+// ========================================
 
 export interface CreatePlotRequest {
   farm_id: string;
@@ -35,6 +35,7 @@ export interface CreatePlotRequest {
   code?: string;
   area: number;
   crop_type?: string;
+  variety_id?: string;
   planting_date?: string;
   last_renovation_date?: string;
   status: PlotStatus;
@@ -44,12 +45,32 @@ export interface CreatePlotRequest {
   altitude?: number;
   coordinates?: PlotCoordinates;
   notes?: string;
-}
-
-export interface UpdatePlotRequest extends CreatePlotRequest {
-  id: string;
   is_active?: boolean;
 }
+
+export interface UpdatePlotRequest {
+  id: string;
+  farm_id: string;
+  name: string;
+  code?: string;
+  area: number;
+  crop_type?: string;
+  variety_id?: string;
+  planting_date?: string;
+  last_renovation_date?: string;
+  status: PlotStatus;
+  soil_type?: string;
+  slope_percentage?: number;
+  irrigation_system?: string;
+  altitude?: number;
+  coordinates?: PlotCoordinates;
+  notes?: string;
+  is_active?: boolean;
+}
+
+// ========================================
+// RESPONSE INTERFACES
+// ========================================
 
 export interface PlotListResponse {
   data: PlotEntity[];
@@ -77,6 +98,11 @@ export type PlotStatus =
   | 'renovation'
   | 'resting'
   | 'abandoned';
+
+export interface PlotCoordinates {
+  type: 'Polygon';
+  coordinates: number[][][]; // Array de arrays de [longitude, latitude]
+}
 
 // ========================================
 // CONSTANTS AND OPTIONS
@@ -116,9 +142,9 @@ export const IRRIGATION_SYSTEM_OPTIONS = [
   { value: 'drip', label: 'Goteo' },
   { value: 'sprinkler', label: 'Aspersión' },
   { value: 'flood', label: 'Inundación' },
-  { value: 'natural', label: 'Natural (lluvia)' },
   { value: 'manual', label: 'Manual' },
-  { value: 'none', label: 'Sin riego' }
+  { value: 'rain_fed', label: 'Dependiente de lluvia' },
+  { value: 'mixed', label: 'Mixto' }
 ] as const;
 
 // ========================================

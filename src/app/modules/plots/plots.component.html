@@ -358,7 +358,12 @@
                         <mat-icon>eco</mat-icon>
                         <div class="detail-content">
                           <div class="detail-label">Cultivo</div>
-                          <div class="detail-value">{{ getCropTypeLabel(plot.crop_type) }}</div>
+                          <div class="detail-value">
+                            {{ getCropTypeLabel(plot.crop_type) }}
+                            @if (plot.variety_id) {
+                              <div class="variety-info">{{ getVarietyName(plot.variety_id) }}</div>
+                            }
+                          </div>
                         </div>
                       </div>
                     }
@@ -623,6 +628,29 @@
                       }
                     </mat-select>
                   </mat-form-field>
+
+                  @if (cropHasVarieties(plotForm.get('crop_type')?.value)) {
+                    <mat-form-field appearance="fill" class="form-field">
+                      <mat-label>Variedad</mat-label>
+                      <mat-select formControlName="variety_id">
+                        <mat-option [value]="null">Sin variedad específica</mat-option>
+                        @if (availableCropVarieties.length === 0) {
+                          <mat-option disabled>Cargando variedades...</mat-option>
+                        }
+                        @for (variety of availableCropVarieties; track variety.id) {
+                          <mat-option [value]="variety.id">
+                            <div class="variety-option">
+                              <div class="variety-name">{{ variety.name }}</div>
+                              @if (variety.scientific_name) {
+                                <div class="variety-scientific">{{ variety.scientific_name }}</div>
+                              }
+                            </div>
+                          </mat-option>
+                        }
+                      </mat-select>
+                      <mat-hint>Selecciona la variedad específica del cultivo</mat-hint>
+                    </mat-form-field>
+                  }
 
                   <div class="form-row">
                     <mat-form-field appearance="fill" class="form-field half-width">

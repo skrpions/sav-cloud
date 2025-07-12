@@ -15,11 +15,16 @@ import { HarvestService } from './services/harvest.service';
 import { HarvestEntity, QualityGrade, QUALITY_GRADE_OPTIONS, WEATHER_CONDITIONS_OPTIONS, getQualityGradeColor, getQualityGradeLabel } from '@/app/shared/models/harvest.models';
 import { CollaboratorsService } from '../collaborators/services/collaborators.service';
 import { CollaboratorEntity } from '@/app/shared/models/collaborator.models';
+import { PlotsService } from '../plots/services/plots.service';
+import { PlotEntity } from '@/app/shared/models/plot.models';
 import { SettingsService } from '../settings/services/settings.service';
 import { SettingsEntity } from '@/app/shared/models/settings.models';
+import { CropVarietyService } from '@/app/shared/services/crop-variety.service';
+import { CropVarietyEntity, CROP_TYPE_VARIETIES } from '@/app/shared/models/crop-variety.models';
 import { DateUtils } from '@/app/shared/utils/validators';
 import { SidebarItem } from '@/app/shared/models/ui.models';
 import { FarmStateService } from '@/app/shared/services/farm-state.service';
+import { FarmEntity } from '@/app/shared/models/farm.models';
 
 // Tipos para las vistas
 export type ViewMode = 'list' | 'cards';
@@ -45,7 +50,9 @@ export type ViewMode = 'list' | 'cards';
 export class HarvestComponent implements OnInit {
   private _harvestService = inject(HarvestService);
   private _collaboratorsService = inject(CollaboratorsService);
+  private _plotsService = inject(PlotsService);
   private _settingsService = inject(SettingsService);
+  private _cropVarietyService = inject(CropVarietyService);
   private _formBuilder = inject(FormBuilder);
   private _translateService = inject(TranslateService);
   private _cdr = inject(ChangeDetectorRef);
@@ -56,6 +63,8 @@ export class HarvestComponent implements OnInit {
   // Signals para el estado
   harvests = signal<HarvestEntity[]>([]);
   collaborators = signal<CollaboratorEntity[]>([]);
+  plots = signal<PlotEntity[]>([]);
+  cropVarieties = signal<CropVarietyEntity[]>([]);
   settings = signal<SettingsEntity | undefined>(undefined);
   isLoading = signal(false);
   showSidePanel = signal(false);
@@ -74,6 +83,7 @@ export class HarvestComponent implements OnInit {
   filterQualityGrade = '';
   filterDate = '';
   filterIsSold = '';
+  filterPlot = '';
 
   // Formulario
   harvestForm: FormGroup;
@@ -81,6 +91,7 @@ export class HarvestComponent implements OnInit {
   // Opciones para selects
   qualityGradeOptions = QUALITY_GRADE_OPTIONS;
   weatherConditionsOptions = WEATHER_CONDITIONS_OPTIONS;
+  cropTypeVarieties = CROP_TYPE_VARIETIES;
 
   constructor() {
     this.harvestForm = this.createHarvestForm();
@@ -94,14 +105,18 @@ export class HarvestComponent implements OnInit {
     
     // Cargar datos necesarios
     await this.loadCollaborators();
+    await this.loadPlots();
     await this.loadSettings();
     await this.loadHarvests();
   }
 
   private createHarvestForm(): FormGroup {
     const today = new Date();
-    return this._formBuilder.group({
+    const form = this._formBuilder.group({
+      farm_id: [null, Validators.required],
       collaborator_id: ['', Validators.required],
+      plot_id: [null], // Opcional
+      variety_id: [null], // Opcional
       date: [today, Validators.required],
       start_time: [''],
       end_time: [''],
@@ -115,6 +130,26 @@ export class HarvestComponent implements OnInit {
       weather_conditions: [''],
       notes: ['']
     });
+
+    // Listener para cambios en el lote seleccionado
+    form.get('plot_id')?.valueChanges.subscribe(plotId => {
+      if (plotId) {
+        this.onPlotChange(plotId);
+      } else {
+        this.cropVarieties.set([]);
+        this.harvestForm.patchValue({ variety_id: null });
+      }
+    });
+
+    // Watchers para cálculo automático
+    const fieldsToWatch = ['quantity', 'price_per_unit'];
+    fieldsToWatch.forEach(fieldName => {
+      form.get(fieldName)?.valueChanges.subscribe(() => {
+        this.calculateTotalPayment();
+      });
+    });
+
+    return form;
   }
 
   async loadHarvests(): Promise<void> {
@@ -161,6 +196,24 @@ export class HarvestComponent implements OnInit {
       
     } catch (error) {
       console.error('Error in loadCollaborators:', error);
+    }
+  }
+
+  async loadPlots(): Promise<void> {
+    try {
+      const currentFarmId = this.farmStateService.getCurrentFarmIdOrDefault();
+      const response = await this._plotsService.getAllPlots(currentFarmId).toPromise();
+      
+      if (response?.error) {
+        console.error('Error loading plots:', response.error);
+        return;
+      }
+
+      this.plots.set(response?.data || []);
+      console.log('Lotes cargados para cosechas:', this.plots().length);
+      
+    } catch (error) {
+      console.error('Error in loadPlots:', error);
     }
   }
 
@@ -238,7 +291,10 @@ export class HarvestComponent implements OnInit {
       
       // Preparar datos de la cosecha
       const harvestData: Record<string, unknown> = {
+        farm_id: harvest.farm_id || this.farmStateService.getCurrentFarmIdOrDefault(),
         collaborator_id: harvest.collaborator_id || '',
+        plot_id: harvest.plot_id || null,
+        variety_id: harvest.variety_id || null,
         date: harvest.date ? DateUtils.formatForDatepicker(harvest.date) : new Date(),
         start_time: harvest.start_time || '',
         end_time: harvest.end_time || '',
@@ -253,16 +309,36 @@ export class HarvestComponent implements OnInit {
         notes: harvest.notes || ''
       };
       this.harvestForm.patchValue(harvestData);
+      
+      // Cargar plots de la finca si es diferente a la actual
+      if (harvest.farm_id !== this.farmStateService.getCurrentFarmIdOrDefault()) {
+        this.loadPlotsByFarm(harvest.farm_id);
+      }
+
+      // Cargar variedades si el lote tiene un tipo de cultivo con variedades
+      if (harvest.plot_id) {
+        const selectedPlot = this.plots().find(p => p.id === harvest.plot_id);
+        if (selectedPlot && selectedPlot.crop_type && this.cropTypeVarieties[selectedPlot.crop_type]) {
+          this.loadCropVarieties(selectedPlot.crop_type);
+        }
+      }
     } else {
       // Modo creación
       this.isEditMode.set(false);
       this.selectedHarvest.set(null);
       
+      // Limpiar variedades
+      this.cropVarieties.set([]);
+      
       // Valores por defecto
       const currentSettings = this.settings();
       const defaultPricePerUnit = currentSettings?.crop_prices?.['coffee']?.price_per_kg || 0;
+      const currentFarmId = this.farmStateService.getCurrentFarmIdOrDefault();
       const defaultData = { 
+        farm_id: currentFarmId,
         collaborator_id: '',
+        plot_id: null,
+        variety_id: null,
         date: new Date(),
         start_time: '',
         end_time: '',
@@ -284,18 +360,22 @@ export class HarvestComponent implements OnInit {
     this.showSidePanel.set(false);
     this.isEditMode.set(false);
     this.selectedHarvest.set(null);
+    this.cropVarieties.set([]);
     this.harvestForm.reset();
     
     // Restaurar valores por defecto
     const today = new Date();
     const currentSettings = this.settings();
     const defaultPricePerUnit = currentSettings?.crop_prices?.['coffee']?.price_per_kg || 0;
+    const currentFarmId = this.farmStateService.getCurrentFarmIdOrDefault();
     this.harvestForm.patchValue({
+      farm_id: currentFarmId,
       date: today,
       quality_grade: 'standard',
       price_per_unit: defaultPricePerUnit,
       quantity: 0,
-      total_payment: 0
+      total_payment: 0,
+      variety_id: null
     });
   }
 
@@ -309,8 +389,7 @@ export class HarvestComponent implements OnInit {
     try {
       this.isLoading.set(true);
       const formData = { 
-        ...this.harvestForm.value,
-        farm_id: this.farmStateService.getCurrentFarmIdOrDefault() // Agregar farm_id requerido
+        ...this.harvestForm.value
       };
       
       // Formatear la fecha para el backend
@@ -323,6 +402,7 @@ export class HarvestComponent implements OnInit {
       if (formData.end_time === '') formData.end_time = undefined;
       if (formData.weather_conditions === '') formData.weather_conditions = undefined;
       if (formData.notes === '') formData.notes = undefined;
+      if (!formData.variety_id) formData.variety_id = undefined;
 
       let response;
       if (this.isEditMode()) {
@@ -418,18 +498,75 @@ export class HarvestComponent implements OnInit {
     }
   }
 
+  // Callback para actualizar lotes cuando cambia la finca
+  onFarmChange(farmId: string): void {
+    if (farmId) {
+      this.loadPlotsByFarm(farmId);
+      // Limpiar selección de lote y variedad
+      this.harvestForm.patchValue({ plot_id: null, variety_id: null });
+      this.cropVarieties.set([]);
+    }
+  }
+
+  // Callback para cuando cambia el lote seleccionado
+  async onPlotChange(plotId: string): Promise<void> {
+    if (plotId) {
+      const selectedPlot = this.plots().find(p => p.id === plotId);
+      if (selectedPlot && selectedPlot.crop_type && this.cropTypeVarieties[selectedPlot.crop_type]) {
+        // Si el lote tiene un tipo de cultivo con variedades, cargarlas
+        await this.loadCropVarieties(selectedPlot.crop_type);
+      } else {
+        // Si no tiene variedades, limpiar la lista
+        this.cropVarieties.set([]);
+        this.harvestForm.patchValue({ variety_id: null });
+      }
+    }
+  }
+
+  // Cargar variedades de cultivo por tipo
+  async loadCropVarieties(cropType: string): Promise<void> {
+    try {
+      const response = await this._cropVarietyService.getVarietiesByCropType(cropType).toPromise();
+      
+      if (response?.error) {
+        console.error('Error loading crop varieties:', response.error);
+        this.cropVarieties.set([]);
+        return;
+      }
+
+      this.cropVarieties.set(response?.data || []);
+      console.log(`Variedades de ${cropType} cargadas:`, this.cropVarieties().length);
+      
+    } catch (error) {
+      console.error('Error in loadCropVarieties:', error);
+      this.cropVarieties.set([]);
+    }
+  }
+
+  private async loadPlotsByFarm(farmId: string): Promise<void> {
+    try {
+      const response = await this._plotsService.getAllPlots(farmId).toPromise();
+      if (response?.error) throw new Error(response.error.message);
+      this.plots.set(response?.data || []);
+    } catch (error: unknown) {
+      console.error('Error loading plots by farm:', error);
+      this.plots.set([]);
+    }
+  }
+
   // Filtros
   clearFilters(): void {
     this.filterCollaborator = '';
     this.filterQualityGrade = '';
     this.filterDate = '';
     this.filterIsSold = '';
+    this.filterPlot = '';
     this.currentPage.set(0);
     this.updatePagination();
   }
 
   hasFilters(): boolean {
-    return !!(this.filterCollaborator || this.filterQualityGrade || this.filterDate || this.filterIsSold);
+    return !!(this.filterCollaborator || this.filterQualityGrade || this.filterDate || this.filterIsSold || this.filterPlot);
   }
 
   get filteredHarvests(): HarvestEntity[] {
@@ -441,6 +578,10 @@ export class HarvestComponent implements OnInit {
 
     if (this.filterQualityGrade) {
       filtered = filtered.filter(h => h.quality_grade === this.filterQualityGrade);
+    }
+
+    if (this.filterPlot) {
+      filtered = filtered.filter(h => h.plot_id === this.filterPlot);
     }
 
     if (this.filterDate) {
@@ -477,6 +618,12 @@ export class HarvestComponent implements OnInit {
   getCollaboratorName(collaboratorId: string): string {
     const collaborator = this.collaborators().find(c => c.id === collaboratorId);
     return collaborator ? `${collaborator.first_name} ${collaborator.last_name}` : 'Colaborador no encontrado';
+  }
+
+  getPlotName(plotId?: string): string {
+    if (!plotId) return 'Sin lote específico';
+    const plot = this.plots().find(p => p.id === plotId);
+    return plot ? plot.name : 'Lote no encontrado';
   }
 
   formatDate(dateString: string): string {
@@ -526,6 +673,28 @@ export class HarvestComponent implements OnInit {
     this.calculateTotalPayment();
   }
 
+  // Getters para el template
+  get availableFarms(): FarmEntity[] {
+    return this.farmStateService.farms();
+  }
+
+  get availableCollaborators(): CollaboratorEntity[] {
+    return this.collaborators();
+  }
+
+  get availablePlots(): PlotEntity[] {
+    return this.plots();
+  }
+
+  get availableCropVarieties(): CropVarietyEntity[] {
+    return this.cropVarieties();
+  }
+
+  // Verificar si un cultivo tiene variedades disponibles
+  cropHasVarieties(cropType: string): boolean {
+    return !!(cropType && this.cropTypeVarieties[cropType]);
+  }
+
   // Validaciones del formulario
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(field => {
@@ -548,6 +717,7 @@ export class HarvestComponent implements OnInit {
     return {
       harvestsCount: this.harvests().length,
       collaboratorsCount: this.collaborators().length,
+      plotsCount: this.plots().length,
       hasSettings: !!this.settings(),
       isLoading: this.isLoading(),
       showSidePanel: this.showSidePanel(),

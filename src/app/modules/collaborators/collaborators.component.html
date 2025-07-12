@@ -129,7 +129,7 @@
                 <th mat-header-cell *matHeaderCellDef class="header-cell">Nombre</th>
                 <td mat-cell *matCellDef="let collaborator" class="data-cell">
                   <div class="name-info">
-                    <mat-icon class="person-icon">person</mat-icon>
+                    <mat-icon class="info-icon">person</mat-icon>
                     <span>{{getFullName(collaborator)}}</span>
                   </div>
                 </td>
@@ -148,7 +148,7 @@
                 <th mat-header-cell *matHeaderCellDef class="header-cell">Teléfono</th>
                 <td mat-cell *matCellDef="let collaborator" class="data-cell">
                   <div class="phone-info">
-                    <mat-icon class="phone-icon">phone</mat-icon>
+                    <mat-icon class="info-icon">phone</mat-icon>
                     <span>{{collaborator.phone}}</span>
                   </div>
                 </td>
@@ -319,17 +319,17 @@
                   <!-- Información de contacto -->
                   <div class="contact-details">
                     <div class="detail-item">
-                      <mat-icon class="detail-icon">phone</mat-icon>
+                      <mat-icon class="info-icon">phone</mat-icon>
                       <span>{{collaborator.phone}}</span>
                     </div>
                     
                     <div class="detail-item">
-                      <mat-icon class="detail-icon">email</mat-icon>
+                      <mat-icon class="info-icon">email</mat-icon>
                       <span>{{collaborator.email}}</span>
                     </div>
 
                     <div class="detail-item">
-                      <mat-icon class="detail-icon">location_on</mat-icon>
+                      <mat-icon class="info-icon">location_on</mat-icon>
                       <span>{{collaborator.address}}</span>
                     </div>
                   </div>

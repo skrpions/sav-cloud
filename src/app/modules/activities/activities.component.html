@@ -462,7 +462,13 @@
                   <div class="form-row">
                     <mat-form-field appearance="fill" class="form-field half-width">
                       <mat-label>Costo por Día *</mat-label>
-                      <input matInput type="number" formControlName="rate_per_day" min="0" step="1000" required>
+                      <input 
+                        matInput 
+                        type="text" 
+                        formControlName="rate_per_day" 
+                        mask="separator.0" 
+                        thousandSeparator="."
+                        required>
                       <span matPrefix>$</span>
                       @if (activityForm.get('rate_per_day')?.invalid && activityForm.get('rate_per_day')?.touched) {
                         <mat-error>
@@ -487,7 +493,13 @@
 
                   <mat-form-field appearance="fill" class="form-field">
                     <mat-label>Costo Total *</mat-label>
-                    <input matInput type="number" formControlName="total_cost" min="0" step="1000" required readonly>
+                    <input 
+                      matInput 
+                      type="text" 
+                      formControlName="total_cost" 
+                      readonly
+                      mask="separator.0" 
+                      thousandSeparator=".">
                     <span matPrefix>$</span>
                     <mat-hint>Se calcula automáticamente (Días × Costo por Día)</mat-hint>
                     @if (activityForm.get('total_cost')?.invalid && activityForm.get('total_cost')?.touched) {

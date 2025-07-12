@@ -87,9 +87,10 @@
                   <mat-form-field appearance="fill" class="form-field-full settings-field">
                     <mat-label>{{ 'settings.form.harvestPricePerKg' | translate }}</mat-label>
                     <input matInput 
-                           type="number" 
+                           type="text" 
                                formControlName="price_per_kg"
-                           step="0.01"
+                           mask="separator.0" 
+                           thousandSeparator="."
                                [class.is-invalid]="isFieldInvalid('crop_prices.coffee.price_per_kg')">
                     <span matSuffix>{{ settingsForm.get('currency')?.value }}</span>
                     <mat-icon matSuffix>scale</mat-icon>
@@ -117,9 +118,10 @@
                   <mat-form-field appearance="fill" class="form-field settings-field">
                     <mat-label>{{ 'settings.form.dailyRateLibre' | translate }}</mat-label>
                     <input matInput 
-                           type="number" 
+                           type="text" 
                            formControlName="daily_rate_libre"
-                           step="0.01"
+                           mask="separator.0" 
+                           thousandSeparator="."
                            [class.is-invalid]="isFieldInvalid('daily_rate_libre')">
                     <span matSuffix>{{ settingsForm.get('currency')?.value }}</span>
                     <mat-error *ngIf="isFieldInvalid('daily_rate_libre')">
@@ -134,9 +136,10 @@
                   <mat-form-field appearance="fill" class="form-field settings-field">
                     <mat-label>{{ 'settings.form.dailyRateGrabado' | translate }}</mat-label>
                     <input matInput 
-                           type="number" 
+                           type="text" 
                            formControlName="daily_rate_grabado"
-                           step="0.01"
+                           mask="separator.0" 
+                           thousandSeparator="."
                            [class.is-invalid]="isFieldInvalid('daily_rate_grabado')">
                     <span matSuffix>{{ settingsForm.get('currency')?.value }}</span>
                     <mat-error *ngIf="isFieldInvalid('daily_rate_grabado')">
@@ -164,9 +167,10 @@
                     class="activity-field settings-field">
                     <mat-label>{{ activity.labelKey | translate }}</mat-label>
                     <input matInput 
-                           type="number" 
+                           type="text" 
                            [formControlName]="activity.key"
-                           step="0.01"
+                           mask="separator.0" 
+                           thousandSeparator="."
                            min="0">
                     <mat-icon matSuffix>{{ activity.icon }}</mat-icon>
                     <span matSuffix>{{ settingsForm.get('currency')?.value }}</span>
