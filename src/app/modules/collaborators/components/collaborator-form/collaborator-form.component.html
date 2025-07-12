@@ -7,7 +7,10 @@
       <div class="form-column">
         <!-- Información Personal -->
         <div class="form-section">
-          <h3 class="section-title">{{ 'collaborators.form.personalInfo' | translate }}</h3>
+          <h3 class="section-title">
+            <mat-icon>person</mat-icon>
+            {{ 'collaborators.form.personalInfo' | translate }}
+          </h3>
           
           <div class="form-row">
             <!-- Nombres -->
@@ -102,7 +105,10 @@
 
         <!-- Información Laboral -->
         <div class="form-section">
-          <h3 class="section-title">{{ 'collaborators.form.employmentInfo' | translate }}</h3>
+          <h3 class="section-title">
+            <mat-icon>work</mat-icon>
+            {{ 'collaborators.form.employmentInfo' | translate }}
+          </h3>
           
           <div class="form-row">
             <!-- Fecha de Contratación -->
@@ -148,7 +154,10 @@
       <div class="form-column">
         <!-- Contacto de Emergencia -->
         <div class="form-section">
-          <h3 class="section-title">{{ 'collaborators.form.emergencyContact' | translate }}</h3>
+          <h3 class="section-title">
+            <mat-icon>contact_phone</mat-icon>
+            {{ 'collaborators.form.emergencyContact' | translate }}
+          </h3>
           
           <div class="form-row">
             <!-- Nombre de Contacto -->
@@ -176,7 +185,10 @@
 
         <!-- Información Bancaria -->
         <div class="form-section">
-          <h3 class="section-title">{{ 'collaborators.form.bankingInfo' | translate }}</h3>
+          <h3 class="section-title">
+            <mat-icon>account_balance</mat-icon>
+            {{ 'collaborators.form.bankingInfo' | translate }}
+          </h3>
 
           <!-- Nueva Información Bancaria Estructurada -->
           <div formGroupName="banking_info" class="banking-info-section">
@@ -248,7 +260,10 @@
 
         <!-- Información Adicional -->
         <div class="form-section">
-          <h3 class="section-title">{{ 'collaborators.form.additionalInfo' | translate }}</h3>
+          <h3 class="section-title">
+            <mat-icon>notes</mat-icon>
+            {{ 'collaborators.form.additionalInfo' | translate }}
+          </h3>
           
           <!-- Notas -->
           <mat-form-field appearance="fill" class="form-field full-width">

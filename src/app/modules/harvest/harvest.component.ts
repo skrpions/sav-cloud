@@ -19,7 +19,7 @@ import { SettingsService } from '../settings/services/settings.service';
 import { SettingsEntity } from '@/app/shared/models/settings.models';
 import { DateUtils } from '@/app/shared/utils/validators';
 import { SidebarItem } from '@/app/shared/models/ui.models';
-import { TEMP_FARM_CONSTANTS } from '@/app/shared/constants/form-constrains';
+import { FarmStateService } from '@/app/shared/services/farm-state.service';
 
 // Tipos para las vistas
 export type ViewMode = 'list' | 'cards';
@@ -49,6 +49,9 @@ export class HarvestComponent implements OnInit {
   private _formBuilder = inject(FormBuilder);
   private _translateService = inject(TranslateService);
   private _cdr = inject(ChangeDetectorRef);
+  
+  // Farm state service para obtener la finca actual
+  protected readonly farmStateService = inject(FarmStateService);
 
   // Signals para el estado
   harvests = signal<HarvestEntity[]>([]);
@@ -84,6 +87,11 @@ export class HarvestComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    // Inicializar farm state service si no está ya inicializado
+    if (!this.farmStateService.hasFarms()) {
+      await this.farmStateService.initialize();
+    }
+    
     // Cargar datos necesarios
     await this.loadCollaborators();
     await this.loadSettings();
@@ -113,7 +121,8 @@ export class HarvestComponent implements OnInit {
     try {
       this.isLoading.set(true);
       
-      const response = await this._harvestService.getAllHarvests(TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID).toPromise();
+      const currentFarmId = this.farmStateService.getCurrentFarmIdOrDefault();
+      const response = await this._harvestService.getAllHarvests(currentFarmId).toPromise();
       
       if (response?.error) {
         console.error('Error loading harvests:', response.error);
@@ -136,8 +145,9 @@ export class HarvestComponent implements OnInit {
 
   async loadCollaborators(): Promise<void> {
     try {
-      // Usar getAllCollaborators con farmId y filtrar activos aquí
-      const response = await this._collaboratorsService.getAllCollaborators(TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID).toPromise();
+      // Usar getCurrentFarmIdOrDefault en lugar de TEMP_FARM_CONSTANTS
+      const currentFarmId = this.farmStateService.getCurrentFarmIdOrDefault();
+      const response = await this._collaboratorsService.getAllCollaborators(currentFarmId).toPromise();
       
       if (response?.error) {
         console.error('Error loading collaborators:', response.error);
@@ -157,7 +167,8 @@ export class HarvestComponent implements OnInit {
   async loadSettings(): Promise<void> {
     try {
       const currentYear = new Date().getFullYear();
-      const response = await this._settingsService.getSettingsByYear(currentYear, TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID).toPromise();
+      const currentFarmId = this.farmStateService.getCurrentFarmIdOrDefault();
+      const response = await this._settingsService.getSettingsByYear(currentYear, currentFarmId).toPromise();
       
       if (response?.error) {
         console.warn('No settings found (this is normal for new installations):', response.error);
@@ -299,7 +310,7 @@ export class HarvestComponent implements OnInit {
       this.isLoading.set(true);
       const formData = { 
         ...this.harvestForm.value,
-        farm_id: TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID // Agregar farm_id requerido
+        farm_id: this.farmStateService.getCurrentFarmIdOrDefault() // Agregar farm_id requerido
       };
       
       // Formatear la fecha para el backend
@@ -433,9 +444,11 @@ export class HarvestComponent implements OnInit {
     }
 
     if (this.filterDate) {
+      // Asegurar que tratamos el filterDate como fecha local sin zona horaria
       const filterDate = DateUtils.formatToLocalDate(new Date(this.filterDate));
       filtered = filtered.filter(h => {
-        const harvestDate = DateUtils.formatToLocalDate(new Date(h.date));
+        // Extraer solo la parte de fecha de la cosecha (sin hora)
+        const harvestDate = h.date.split('T')[0]; // Extraer YYYY-MM-DD
         return harvestDate === filterDate;
       });
     }

@@ -72,26 +72,22 @@ export interface PlotResponse {
 // ========================================
 
 export type PlotStatus = 
-  | 'preparation' 
-  | 'planted' 
-  | 'growing' 
-  | 'ready_harvest' 
-  | 'harvested' 
-  | 'resting' 
-  | 'maintenance';
+  | 'active'
+  | 'preparation'
+  | 'renovation'
+  | 'resting'
+  | 'abandoned';
 
 // ========================================
 // CONSTANTS AND OPTIONS
 // ========================================
 
 export const PLOT_STATUS_OPTIONS = [
-  { value: 'preparation', label: 'Preparación', color: '#f59e0b', icon: 'construction' },
-  { value: 'planted', label: 'Sembrado', color: '#10b981', icon: 'eco' },
-  { value: 'growing', label: 'Crecimiento', color: '#3b82f6', icon: 'trending_up' },
-  { value: 'ready_harvest', label: 'Listo para Cosecha', color: '#f97316', icon: 'agriculture' },
-  { value: 'harvested', label: 'Cosechado', color: '#8b5cf6', icon: 'check_circle' },
+  { value: 'active', label: 'Activo/Productivo', color: '#10b981', icon: 'eco' },
+  { value: 'preparation', label: 'En Preparación', color: '#f59e0b', icon: 'construction' },
+  { value: 'renovation', label: 'En Renovación', color: '#3b82f6', icon: 'build' },
   { value: 'resting', label: 'En Descanso', color: '#6b7280', icon: 'pause_circle' },
-  { value: 'maintenance', label: 'Mantenimiento', color: '#ef4444', icon: 'build' }
+  { value: 'abandoned', label: 'Abandonado', color: '#ef4444', icon: 'warning' }
 ] as const;
 
 export const CROP_TYPE_OPTIONS = [
@@ -149,94 +145,4 @@ export const PLOT_CONSTRAINTS = {
   notes: {
     maxLength: 1000
   }
-} as const;
-
-// ========================================
-// UTILITY FUNCTIONS
-// ========================================
-
-export function getPlotStatusConfig(status: PlotStatus) {
-  return PLOT_STATUS_OPTIONS.find(option => option.value === status) || PLOT_STATUS_OPTIONS[0];
-}
-
-export function formatPlotArea(area?: number): string {
-  if (!area || area === 0) return 'Sin especificar';
-  
-  if (area < 1) {
-    // Convertir a metros cuadrados para áreas pequeñas
-    const sqMeters = area * 10000;
-    return `${sqMeters.toFixed(0)} m²`;
-  }
-  
-  return `${area.toFixed(2)} ha`;
-}
-
-export function calculatePlotProductionCycle(plantingDate?: string, expectedHarvestDate?: string): {
-  daysSincePlanting?: number;
-  daysToHarvest?: number;
-  cycleLength?: number;
-} {
-  if (!plantingDate) return {};
-  
-  const planted = new Date(plantingDate);
-  const today = new Date();
-  const daysSincePlanting = Math.floor((today.getTime() - planted.getTime()) / (1000 * 60 * 60 * 24));
-  
-  if (!expectedHarvestDate) {
-    return { daysSincePlanting };
-  }
-  
-  const expectedHarvest = new Date(expectedHarvestDate);
-  const daysToHarvest = Math.floor((expectedHarvest.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  const cycleLength = Math.floor((expectedHarvest.getTime() - planted.getTime()) / (1000 * 60 * 60 * 24));
-  
-  return {
-    daysSincePlanting,
-    daysToHarvest,
-    cycleLength
-  };
-}
-
-export function getPlotHealthScore(plot: PlotEntity): {
-  score: number;
-  factors: string[];
-} {
-  let score = 100;
-  const factors: string[] = [];
-  
-  // Verificar fechas
-  if (plot.planting_date && plot.last_renovation_date) {
-    const cycle = calculatePlotProductionCycle(plot.planting_date, plot.last_renovation_date);
-    
-    if (cycle.daysToHarvest && cycle.daysToHarvest < 0) {
-      score -= 20;
-      factors.push('Fecha de cosecha pasada');
-    }
-  }
-  
-  // Verificar estado del cultivo
-  if (plot.status === 'maintenance') {
-    score -= 15;
-    factors.push('En mantenimiento');
-  } else if (plot.status === 'resting') {
-    score -= 10;
-    factors.push('En descanso');
-  }
-  
-  // Verificar pendiente excesiva
-  if (plot.slope_percentage && plot.slope_percentage > 30) {
-    score -= 10;
-    factors.push('Pendiente elevada');
-  }
-  
-  // Verificar área muy pequeña
-  if (plot.area < 0.5) {
-    score -= 5;
-    factors.push('Área muy pequeña');
-  }
-  
-  return {
-    score: Math.max(0, Math.min(100, score)),
-    factors
-  };
-} 
+} as const; 

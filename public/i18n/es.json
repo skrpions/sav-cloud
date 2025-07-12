@@ -66,10 +66,24 @@
         },
         "activities": {
             "title": "Gestión de Actividades",
+            "new": "Nueva Actividad",
             "emptyTitle": "No hay actividades registradas",
             "emptyMessage": "Comienza registrando tu primera actividad",
             "emptyFiltersMessage": "No se encontraron actividades con los filtros aplicados",
-            "firstButton": "Registrar Primera Actividad"
+            "firstButton": "Registrar Primera Actividad",
+            "types": {
+                "fertilization": "Fertilización",
+                "fumigation": "Fumigación",
+                "pruning": "Poda",
+                "weeding": "Deshierbe",
+                "planting": "Siembra",
+                "maintenance": "Mantenimiento",
+                "harvesting": "Cosecha",
+                "soil_preparation": "Preparación de Suelo",
+                "pest_control": "Control de Plagas",
+                "irrigation": "Riego",
+                "other": "Otras Actividades"
+            }
         },
         "harvest": {
             "title": "Gestión de Cosechas",

@@ -225,7 +225,6 @@ export class UserInfrastructure extends UserRepository {
     return sessionStorage.getItem(this.STORAGE_KEY) !== null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private extractFirstName(authUser: any): string {
     // Intentar extraer de user_metadata primero
     if (authUser.user_metadata?.first_name) {
@@ -237,7 +236,6 @@ export class UserInfrastructure extends UserRepository {
     return fullName.split(' ')[0] || 'Usuario';
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private extractLastName(authUser: any): string {
     // Intentar extraer de user_metadata primero
     if (authUser.user_metadata?.last_name) {
@@ -250,7 +248,6 @@ export class UserInfrastructure extends UserRepository {
     return nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Usuario';
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private isValidUserData(data: any): boolean {
     return data && 
            typeof data === 'object' && 

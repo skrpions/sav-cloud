@@ -25,7 +25,6 @@ export abstract class FormAuthComponent {
   hidePassword = true;
 
   protected createBaseForm(): FormGroup {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const baseControls: any = {
       email: ['sksmartinez@gmail.com', createEmailValidators()],
       password: ['Pa$$w0rd!', createPasswordValidators()]

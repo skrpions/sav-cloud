@@ -152,7 +152,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this._router.navigate([ROUTES.AUTH.LOGIN]);
       }, 1000);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Logout error:', error);
       

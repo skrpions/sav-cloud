@@ -484,94 +484,88 @@
                         <mat-error>{{ getFieldError('name') }}</mat-error>
                       }
                     </mat-form-field>
-
-                    <mat-form-field appearance="fill" class="form-field">
-                      <mat-label>Descripción</mat-label>
-                      <textarea matInput formControlName="description" rows="2" placeholder="Descripción breve..."></textarea>
-                      @if (isFieldInvalid('description')) {
-                        <mat-error>{{ getFieldError('description') }}</mat-error>
-                      }
-                    </mat-form-field>
-                  </div>
-
-                  <!-- Ubicación -->
-                  <div class="form-section">
-                    <h3 class="section-title">
-                      <mat-icon>place</mat-icon>
-                      Ubicación
-                    </h3>
                     
                     <mat-form-field appearance="fill" class="form-field">
-                      <mat-label>Dirección</mat-label>
-                      <input matInput formControlName="address">
-                      @if (isFieldInvalid('address')) {
-                        <mat-error>{{ getFieldError('address') }}</mat-error>
+                      <mat-label>Departamento *</mat-label>
+                      <mat-select formControlName="department" required>
+                        @for (dept of departmentOptions; track dept.value) {
+                          <mat-option [value]="dept.value">{{ dept.label }}</mat-option>
+                        }
+                      </mat-select>
+                      @if (isFieldInvalid('department')) {
+                        <mat-error>{{ getFieldError('department') }}</mat-error>
                       }
                     </mat-form-field>
 
                     <div class="form-row">
                       <mat-form-field appearance="fill" class="form-field half-width">
-                        <mat-label>Municipio</mat-label>
-                        <input matInput formControlName="municipality">
+                        <mat-label>Municipio *</mat-label>
+                        <input matInput formControlName="municipality" required>
                         @if (isFieldInvalid('municipality')) {
                           <mat-error>{{ getFieldError('municipality') }}</mat-error>
                         }
                       </mat-form-field>
 
                       <mat-form-field appearance="fill" class="form-field half-width">
-                        <mat-label>Departamento</mat-label>
-                        <mat-select formControlName="department">
-                          @for (dept of departmentOptions; track dept.value) {
-                            <mat-option [value]="dept.value">{{ dept.label }}</mat-option>
-                          }
-                        </mat-select>
-                        @if (isFieldInvalid('department')) {
-                          <mat-error>{{ getFieldError('department') }}</mat-error>
+                        <mat-label>Área (hectáreas) *</mat-label>
+                        <input matInput type="number" formControlName="total_area" min="0" step="0.01" required>
+                        @if (isFieldInvalid('total_area')) {
+                          <mat-error>{{ getFieldError('total_area') }}</mat-error>
                         }
                       </mat-form-field>
                     </div>
-
-                    <mat-form-field appearance="fill" class="form-field">
-                      <mat-label>País</mat-label>
-                      <input matInput formControlName="country" readonly>
-                    </mat-form-field>
                   </div>
 
-                  <!-- Características físicas -->
+                  <!-- Ubicación -->
+                  <div class="form-section">
+                    <h3 class="section-title">
+                      <mat-icon>location_on</mat-icon>
+                      Ubicación
+                    </h3>
+                    
+                    <mat-form-field appearance="fill" class="form-field">
+                      <mat-label>Dirección</mat-label>
+                      <textarea matInput formControlName="address" rows="2"></textarea>
+                    </mat-form-field>
+
+                    <div class="form-row">
+                      <mat-form-field appearance="fill" class="form-field half-width">
+                        <mat-label>Altitud Mínima (m.s.n.m.)</mat-label>
+                        <input matInput type="number" formControlName="altitude_min" min="0">
+                      </mat-form-field>
+
+                      <mat-form-field appearance="fill" class="form-field half-width">
+                        <mat-label>Altitud Máxima (m.s.n.m.)</mat-label>
+                        <input matInput type="number" formControlName="altitude_max" min="0">
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <!-- Características -->
                   <div class="form-section">
                     <h3 class="section-title">
                       <mat-icon>terrain</mat-icon>
                       Características
                     </h3>
                     
-                    <mat-form-field appearance="fill" class="form-field">
-                      <mat-label>Área Total</mat-label>
-                      <input matInput type="number" formControlName="total_area" min="0" step="0.1">
-                      <span matSuffix>hectáreas</span>
-                      @if (isFieldInvalid('total_area')) {
-                        <mat-error>{{ getFieldError('total_area') }}</mat-error>
-                      }
-                    </mat-form-field>
-
                     <div class="form-row">
-                      <mat-form-field appearance="fill" class="form-field half-width">
-                        <mat-label>Altitud Mínima</mat-label>
-                        <input matInput type="number" formControlName="altitude_min" min="0">
-                        <span matSuffix>m.s.n.m.</span>
-                        @if (isFieldInvalid('altitude_min')) {
-                          <mat-error>{{ getFieldError('altitude_min') }}</mat-error>
-                        }
-                      </mat-form-field>
+                      <!-- <mat-form-field appearance="fill" class="form-field half-width">
+                        <mat-label>Año de Establecimiento</mat-label>
+                        <input matInput type="number" formControlName="establishment_year" min="1900" [max]="currentYear">
+                      </mat-form-field> -->
 
-                      <mat-form-field appearance="fill" class="form-field half-width">
-                        <mat-label>Altitud Máxima</mat-label>
-                        <input matInput type="number" formControlName="altitude_max" min="0">
-                        <span matSuffix>m.s.n.m.</span>
-                        @if (isFieldInvalid('altitude_max')) {
-                          <mat-error>{{ getFieldError('altitude_max') }}</mat-error>
-                        }
-                      </mat-form-field>
+                      <!-- <mat-form-field appearance="fill" class="form-field half-width">
+                        <mat-label>Fecha de Compra</mat-label>
+                        <input matInput [matDatepicker]="purchaseDatePicker" formControlName="purchase_date">
+                        <mat-datepicker-toggle matSuffix [for]="purchaseDatePicker"></mat-datepicker-toggle>
+                        <mat-datepicker #purchaseDatePicker></mat-datepicker>
+                      </mat-form-field> -->
                     </div>
+
+                    <!-- <mat-form-field appearance="fill" class="form-field">
+                      <mat-label>Notas</mat-label>
+                      <textarea matInput formControlName="notes" rows="3" placeholder="Observaciones sobre la finca..."></textarea>
+                    </mat-form-field> -->
                   </div>
                 </div>
 
@@ -587,7 +581,7 @@
                     <div class="form-row">
                       <mat-form-field appearance="fill" class="form-field half-width">
                         <mat-label>Latitud</mat-label>
-                        <input matInput type="number" formControlName="latitude" step="0.000001">
+                        <input matInput type="number" formControlName="latitude" step="0.000001" placeholder="6.123456">
                         @if (isFieldInvalid('latitude')) {
                           <mat-error>{{ getFieldError('latitude') }}</mat-error>
                         }
@@ -595,7 +589,7 @@
 
                       <mat-form-field appearance="fill" class="form-field half-width">
                         <mat-label>Longitud</mat-label>
-                        <input matInput type="number" formControlName="longitude" step="0.000001">
+                        <input matInput type="number" formControlName="longitude" step="0.000001" placeholder="-75.123456">
                         @if (isFieldInvalid('longitude')) {
                           <mat-error>{{ getFieldError('longitude') }}</mat-error>
                         }
@@ -610,46 +604,39 @@
                       Contacto
                     </h3>
                     
-                    <div class="form-row">
-                      <mat-form-field appearance="fill" class="form-field">
-                        <mat-label>Fecha de Establecimiento</mat-label>
-                        <input matInput [matDatepicker]="establishedDatePicker" formControlName="established_date">
-                        <mat-datepicker-toggle matSuffix [for]="establishedDatePicker"></mat-datepicker-toggle>
-                        <mat-datepicker #establishedDatePicker></mat-datepicker>
-                      </mat-form-field>
-
-                      <mat-form-field appearance="fill" class="form-field half-width">
-                        <mat-label>Teléfono</mat-label>
-                        <input matInput formControlName="phone" placeholder="+57 300 123 4567">
-                        @if (isFieldInvalid('phone')) {
-                          <mat-error>{{ getFieldError('phone') }}</mat-error>
-                        }
-                      </mat-form-field>
-                    </div>
-
-                    <mat-form-field appearance="fill" class="form-field half-width">
-                      <mat-label>Email</mat-label>
-                      <input matInput type="email" formControlName="email">
-                      @if (isFieldInvalid('email')) {
-                        <mat-error>{{ getFieldError('email') }}</mat-error>
-                      }
+                    <!-- <mat-form-field appearance="fill" class="form-field">
+                      <mat-label>Nombre del Administrador</mat-label>
+                      <input matInput formControlName="manager_name">
                     </mat-form-field>
+
+                    <mat-form-field appearance="fill" class="form-field">
+                      <mat-label>Teléfono del Administrador</mat-label>
+                      <input matInput type="tel" formControlName="manager_phone">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill" class="form-field">
+                      <mat-label>Email del Administrador</mat-label>
+                      <input matInput type="email" formControlName="manager_email">
+                    </mat-form-field> -->
                   </div>
 
                   <!-- Certificaciones -->
-                  <div class="form-section" formGroupName="certifications">
+                  <div class="form-section">
                     <h3 class="section-title">
                       <mat-icon>verified</mat-icon>
                       Certificaciones
                     </h3>
                     
-                    <div class="certifications-grid">
+                    <div formGroupName="certifications">
                       @for (cert of certificationOptions; track cert.key) {
-                        <mat-checkbox [formControlName]="cert.key" class="certification-checkbox">
-                          <div class="certification-info">
-                            <div class="certification-label">{{ cert.label }}</div>
-                            <div class="certification-description">{{ cert.description }}</div>
-                          </div>
+                        <mat-checkbox 
+                          [formControlName]="cert.key" 
+                          color="primary" 
+                          class="certification-checkbox">
+                          {{ cert.label }}
+                          <span class="certification-description" *ngIf="cert.description">
+                            - {{ cert.description }}
+                          </span>
                         </mat-checkbox>
                       }
                     </div>

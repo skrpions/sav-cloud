@@ -68,7 +68,6 @@ export class SpanishDateAdapter extends NativeDateAdapter {
     return super.format(date, displayFormat);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   override parse(value: any): Date | null {
     if (typeof value === 'string' && value.includes('/')) {
       const parts = value.split('/');

@@ -33,6 +33,24 @@
                 <mat-icon matSuffix>search</mat-icon>
               </mat-form-field>
 
+              <!-- Filtro por finca -->
+              <mat-form-field appearance="fill" class="filter-field">
+                <mat-label>Finca</mat-label>
+                <mat-select [(ngModel)]="filterFarm" (ngModelChange)="updatePagination()">
+                  <mat-option value="">Todas las fincas</mat-option>
+                  @for (farm of availableFarms; track farm.id) {
+                    <mat-option [value]="farm.id">
+                      <div class="farm-option">
+                        <div class="farm-name">{{ farm.name }}</div>
+                        <div class="farm-location" *ngIf="farm.municipality">
+                          {{ farm.municipality }}{{ farm.department ? ', ' + farm.department : '' }}
+                        </div>
+                      </div>
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
               <!-- Filtro por estado -->
               <mat-form-field appearance="fill" class="filter-field">
                 <mat-label>Estado</mat-label>
@@ -136,7 +154,7 @@
                 <td mat-cell *matCellDef="let plot" class="data-cell">
                   <div class="plot-info">
                     <div class="plot-name">{{ plot.name }}</div>
-                    <div class="plot-description" *ngIf="plot.description">{{ plot.description }}</div>
+                    <div class="plot-description" *ngIf="plot.notes">{{ plot.notes }}</div>
                   </div>
                 </td>
               </ng-container>
@@ -476,6 +494,27 @@
                   </h3>
                   
                   <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Finca *</mat-label>
+                    <mat-select formControlName="farm_id" required>
+                      @for (farm of availableFarms; track farm.id) {
+                        <mat-option [value]="farm.id">
+                          <div class="farm-option">
+                            <div class="farm-name">{{ farm.name }}</div>
+                            <div class="farm-location" *ngIf="farm.municipality">
+                              {{ farm.municipality }}{{ farm.department ? ', ' + farm.department : '' }}
+                            </div>
+                          </div>
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (plotForm.get('farm_id')?.invalid && plotForm.get('farm_id')?.touched) {
+                      <mat-error>
+                        La finca es requerida
+                      </mat-error>
+                    }
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="fill" class="form-field">
                     <mat-label>Nombre del Lote *</mat-label>
                     <input matInput formControlName="name" required>
                     @if (plotForm.get('name')?.invalid && plotForm.get('name')?.touched) {
@@ -519,40 +558,6 @@
                           </mat-option>
                         }
                       </mat-select>
-                    </mat-form-field>
-                  </div>
-                </div>
-
-                <!-- Cultivo -->
-                <div class="form-section">
-                  <h3 class="section-title">
-                    <mat-icon>eco</mat-icon>
-                    Información de Cultivo
-                  </h3>
-                  
-                  <mat-form-field appearance="fill" class="form-field">
-                    <mat-label>Tipo de Cultivo</mat-label>
-                    <mat-select formControlName="crop_type">
-                      <mat-option value="">Sin especificar</mat-option>
-                      @for (crop of cropTypeOptions; track crop.value) {
-                        <mat-option [value]="crop.value">{{ crop.label }}</mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
-
-                  <div class="form-row">
-                    <mat-form-field appearance="fill" class="form-field half-width">
-                      <mat-label>Fecha de Siembra</mat-label>
-                      <input matInput [matDatepicker]="plantingDatePicker" formControlName="planting_date">
-                      <mat-datepicker-toggle matSuffix [for]="plantingDatePicker"></mat-datepicker-toggle>
-                      <mat-datepicker #plantingDatePicker></mat-datepicker>
-                    </mat-form-field>
-
-                    <mat-form-field appearance="fill" class="form-field half-width">
-                      <mat-label>Fecha de Última Renovación</mat-label>
-                      <input matInput [matDatepicker]="renovationDatePicker" formControlName="last_renovation_date">
-                      <mat-datepicker-toggle matSuffix [for]="renovationDatePicker"></mat-datepicker-toggle>
-                      <mat-datepicker #renovationDatePicker></mat-datepicker>
                     </mat-form-field>
                   </div>
                 </div>
@@ -601,6 +606,40 @@
                     </mat-select>
                   </mat-form-field>
                 </div>
+
+                <!-- Información de Cultivo -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <mat-icon>eco</mat-icon>
+                    Información de Cultivo
+                  </h3>
+                  
+                  <mat-form-field appearance="fill" class="form-field">
+                    <mat-label>Tipo de Cultivo</mat-label>
+                    <mat-select formControlName="crop_type">
+                      <mat-option value="">Sin especificar</mat-option>
+                      @for (crop of cropTypeOptions; track crop.value) {
+                        <mat-option [value]="crop.value">{{ crop.label }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="fill" class="form-field half-width">
+                      <mat-label>Fecha de Siembra</mat-label>
+                      <input matInput [matDatepicker]="plantingDatePicker" formControlName="planting_date">
+                      <mat-datepicker-toggle matSuffix [for]="plantingDatePicker"></mat-datepicker-toggle>
+                      <mat-datepicker #plantingDatePicker></mat-datepicker>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill" class="form-field half-width">
+                      <mat-label>Fecha de Última Renovación</mat-label>
+                      <input matInput [matDatepicker]="renovationDatePicker" formControlName="last_renovation_date">
+                      <mat-datepicker-toggle matSuffix [for]="renovationDatePicker"></mat-datepicker-toggle>
+                      <mat-datepicker #renovationDatePicker></mat-datepicker>
+                    </mat-form-field>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -618,8 +657,7 @@
               [label]="(isEditMode() ? 'Actualizar' : 'Crear') + ' Lote'"
               [disabled]="plotForm.invalid || isLoading()"
               [loading]="isLoading()"
-              type="submit"
-              (buttonClick)="onSavePlot()">
+              type="submit">
             </app-action-button>
           </div>
         </form>

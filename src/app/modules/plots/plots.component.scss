@@ -844,7 +844,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  width: 650px;
+  width: 1050px;
   height: 100vh;
   background: white;
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
@@ -928,11 +928,20 @@
     }
     
     .form-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--white);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 119, 1, 0.3);
+      box-shadow: 0 1px 3px rgba(0, 119, 1, 0.1);
+      
       .section-title {
+        margin: 0 0 12px 0;
         font-size: 14px;
         font-weight: 600;
         color: var(--holiday-teal-dark);
-        margin-bottom: 12px;
         padding-bottom: 6px;
         border-bottom: 2px solid rgba(0, 119, 1, 0.1);
         display: flex;
@@ -943,6 +952,7 @@
           font-size: 18px;
           width: 18px;
           height: 18px;
+          color: var(--holiday-green-medium);
         }
       }
     }
@@ -962,28 +972,114 @@
         width: 100%;
       }
       
-      // Mismos estilos de appearance="fill" transparente que los filtros
+      // Usar los mismos estilos del login para appearance="fill"
       ::ng-deep {
-        .mat-mdc-form-field-flex {
-          background-color: rgba(255, 255, 255, 0.8);
-          border-radius: 8px;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(0, 119, 1, 0.1);
-          transition: all 0.3s ease;
+        // Personalización específica para appearance="fill"
+        .mat-mdc-form-field {
+          background-color: transparent !important;
+        }
+
+        // Forzar transparencia en todos los elementos del fill
+        .mdc-text-field--filled {
+          background-color: transparent !important;
           
-          &:hover {
-            border-color: rgba(0, 119, 1, 0.2);
-            background-color: rgba(255, 255, 255, 0.9);
+          .mdc-text-field__input {
+            background-color: transparent !important;
+          }
+
+          // Remover el fondo gris característico del fill
+          &::before {
+            background-color: transparent !important;
+          }
+
+          &:not(.mdc-text-field--disabled) {
+            background-color: transparent !important;
+            
+            &::before {
+              background-color: transparent !important;
+            }
+          }
+
+          // Estados hover y focus sin fondo gris
+          &:hover:not(.mdc-text-field--disabled) {
+            background-color: transparent !important;
+            
+            &::before {
+              background-color: transparent !important;
+            }
+          }
+
+          &.mdc-text-field--focused {
+            background-color: transparent !important;
+            
+            &::before {
+              background-color: transparent !important;
+            }
           }
         }
-        
-        .mat-mdc-form-field.mat-focused .mat-mdc-form-field-flex {
-          border-color: var(--holiday-teal);
-          background-color: rgba(255, 255, 255, 0.95);
+
+        // Personalizar la línea inferior del fill
+        .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+          .mdc-line-ripple::before {
+            border-bottom-color: rgba(0, 0, 0, 0.42);
+            border-bottom-width: 1px;
+          }
+
+          &:hover .mdc-line-ripple::before {
+            border-bottom-color: rgba(0, 0, 0, 0.87);
+          }
+
+          // Estado focused - verde
+          &.mdc-text-field--focused .mdc-line-ripple::after {
+            border-bottom-color: var(--holiday-green-medium) !important;
+            border-bottom-width: 1px;
+          }
+
+          // Estado unfocused - forzar transparencia
+          &:not(.mdc-text-field--focused) .mdc-line-ripple::after {
+            border-bottom-color: transparent !important;
+            border-bottom-width: 0 !important;
+            opacity: 0 !important;
+          }
+
+          // Transición suave
+          .mdc-line-ripple::after {
+            transition: border-bottom-color 0.3s ease, opacity 0.3s ease !important;
+          }
         }
-        
+
+        // Estilos para labels
+        .mat-mdc-form-field-label {
+          color: rgba(0, 0, 0, 0.6);
+          transition: color 0.3s ease;
+        }
+
+        // Label en estado focused con color Holiday Cheer
+        &.mat-focused .mat-mdc-form-field-label {
+          color: var(--holiday-green-medium) !important;
+        }
+
+        // Label flotante en estado focused
+        .mdc-floating-label--float-above {
+          &.mdc-floating-label--focused {
+            color: var(--holiday-green-medium) !important;
+          }
+        }
+
+        .mat-mdc-input-element {
+          color: rgba(0, 0, 0, 0.87);
+          background-color: transparent !important;
+        }
+
+        // Remover overlays adicionales
+        .mat-mdc-form-field-focus-overlay,
         .mat-mdc-form-field-subscript-wrapper {
-          margin-top: 4px;
+          background-color: transparent !important;
+        }
+
+        // Asegurar que no haya ripples con fondo
+        .mdc-line-ripple {
+          background-color: transparent !important;
         }
       }
     }
@@ -1002,16 +1098,22 @@
   }
   
   .form-actions {
-    padding: 16px 20px;
-    border-top: 1px solid rgba(0, 119, 1, 0.1);
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
     display: flex;
-    gap: 12px;
     justify-content: flex-end;
-    
+    gap: 12px;
+    padding: 24px;
+    border-top: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+
     app-action-button {
       min-width: 120px;
+      height: 44px;
+      
+      ::ng-deep .mdc-button__label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
     }
   }
   

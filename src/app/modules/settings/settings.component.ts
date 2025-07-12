@@ -9,6 +9,7 @@ import { MaterialModule } from '@/app/shared/material.module';
 import { SidebarComponent } from '@/app/shared/components/sidebar/sidebar.component';
 import { HeaderComponent } from '@/app/shared/components/header/header.component';
 import { SettingsService } from './services/settings.service';
+import { FarmStateService } from '@/app/shared/services/farm-state.service';
 import { 
   SettingsEntity, 
   CreateSettingsRequest, 
@@ -16,7 +17,7 @@ import {
   CURRENCY_OPTIONS,
   ACTIVITY_RATES_CONFIG 
 } from '@/app/shared/models/settings.models';
-import { FORM_CONSTRAINTS, TEMP_FARM_CONSTANTS } from '@/app/shared/constants/form-constrains';
+import { FORM_CONSTRAINTS } from '@/app/shared/constants/form-constrains';
 import { SidebarItem } from '@/app/shared/models/ui.models';
 
 @Component({
@@ -35,6 +36,7 @@ import { SidebarItem } from '@/app/shared/models/ui.models';
 })
 export class SettingsComponent implements OnInit {
   private _settingsService = inject(SettingsService);
+  private _farmStateService = inject(FarmStateService);
   private _formBuilder = inject(FormBuilder);
   private _router = inject(Router);
   private _translateService = inject(TranslateService);
@@ -59,8 +61,12 @@ export class SettingsComponent implements OnInit {
     this.settingsForm = this.createSettingsForm();
   }
 
-  ngOnInit(): void {
-    this.loadSettings();
+  async ngOnInit(): Promise<void> {
+    // Inicializar farm state service si no está ya inicializado
+    if (!this._farmStateService.hasFarms()) {
+      await this._farmStateService.initialize();
+    }
+    await this.loadSettings();
   }
 
   private createSettingsForm(): FormGroup {
@@ -98,7 +104,8 @@ export class SettingsComponent implements OnInit {
     
     try {
       console.log('Loading settings...');
-      const response = await this._settingsService.getAllSettings().toPromise();
+      const currentFarmId = this._farmStateService.getCurrentFarmIdOrDefault();
+      const response = await this._settingsService.getAllSettings(currentFarmId).toPromise();
       
       if (response?.error) {
         console.error('Service returned error:', response.error);
@@ -208,12 +215,13 @@ export class SettingsComponent implements OnInit {
 
     try {
       const formData = this.settingsForm.value;
+      const currentFarmId = this._farmStateService.getCurrentFarmIdOrDefault();
       
       if (this.isEditMode() && this.currentSettings()?.id) {
         // Actualizar configuración existente
         const updateRequest: UpdateSettingsRequest = {
           id: this.currentSettings()!.id!,
-          farm_id: this.currentSettings()!.farm_id,
+          farm_id: currentFarmId,
           ...formData
         };
 
@@ -228,10 +236,11 @@ export class SettingsComponent implements OnInit {
           duration: FORM_CONSTRAINTS.timing.toastDuration
         });
 
+        this.currentSettings.set(response?.data);
       } else {
         // Crear nueva configuración
         const createRequest: CreateSettingsRequest = {
-          farm_id: TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID, // TODO: Obtener farm_id del usuario actual
+          farm_id: currentFarmId,
           ...formData
         };
         

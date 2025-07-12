@@ -20,12 +20,15 @@ import {
   CROP_TYPE_OPTIONS,
   SOIL_TYPE_OPTIONS,
   IRRIGATION_SYSTEM_OPTIONS,
-  PLOT_CONSTRAINTS,
+  PLOT_CONSTRAINTS
+} from '@/app/shared/models/plot.models';
+import { FarmEntity } from '@/app/shared/models/farm.models';
+import { 
   formatPlotArea,
   getPlotStatusConfig,
   calculatePlotProductionCycle,
   getPlotHealthScore
-} from '@/app/shared/models/plot.models';
+} from '@/app/shared/utils/plot.utils';
 import { SidebarItem } from '@/app/shared/models/ui.models';
 
 export type ViewMode = 'list' | 'cards';
@@ -65,12 +68,13 @@ export class PlotsComponent implements OnInit {
   isSidebarCollapsed = signal(false);
 
   // Vista y paginación
-  viewMode = signal<ViewMode>('cards');
+  viewMode = signal<ViewMode>('list');
   currentPage = signal(0);
   pageSize = signal(8);
   totalPages = signal(0);
 
   // Filtros
+  filterFarm = '';
   filterStatus = '';
   filterCropType = '';
   searchTerm = '';
@@ -90,12 +94,18 @@ export class PlotsComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    // Inicializar farm state service si no está ya inicializado
+    if (!this.farmStateService.hasFarms()) {
+      await this.farmStateService.initialize();
+    }
+    
     await this.loadPlots();
     this.updatePagination();
   }
 
   private createPlotForm(): FormGroup {
     return this._formBuilder.group({
+      farm_id: [null, Validators.required],
       name: ['', [
         Validators.required,
         Validators.minLength(this.constraints.name.minLength),
@@ -111,7 +121,7 @@ export class PlotsComponent implements OnInit {
       crop_type: [''],
       planting_date: [null],
       last_renovation_date: [null],
-      status: ['preparation', Validators.required],
+      status: ['active', Validators.required],
       soil_type: [''],
       slope_percentage: [null, [
         Validators.min(this.constraints.slope.min),
@@ -193,6 +203,7 @@ export class PlotsComponent implements OnInit {
 
       // Cargar datos en el formulario
       this.plotForm.patchValue({
+        farm_id: plot.farm_id,
         name: plot.name,
         code: plot.code || '',
         area: plot.area,
@@ -210,8 +221,12 @@ export class PlotsComponent implements OnInit {
       // Modo creación
       this.selectedPlot.set(null);
       this.isEditMode.set(false);
+      
+      // Preseleccionar la finca actual
+      const currentFarmId = this.farmStateService.getCurrentFarmIdOrDefault();
       this.plotForm.reset({
-        status: 'preparation'
+        farm_id: currentFarmId,
+        status: 'active'
       });
     }
 
@@ -223,7 +238,7 @@ export class PlotsComponent implements OnInit {
     this.selectedPlot.set(null);
     this.isEditMode.set(false);
     this.plotForm.reset({
-      status: 'preparation'
+      status: 'active'
     });
   }
 
@@ -240,7 +255,6 @@ export class PlotsComponent implements OnInit {
 
     try {
       const formData = this.plotForm.value;
-      const currentFarmId = this.farmStateService.getCurrentFarmIdOrDefault();
 
       // Formatear fechas de manera segura
       if (formData.planting_date) {
@@ -260,7 +274,6 @@ export class PlotsComponent implements OnInit {
         // Actualizar lote existente
         const updateRequest: UpdatePlotRequest = {
           id: this.selectedPlot()!.id!,
-          farm_id: currentFarmId,
           ...formData
         };
 
@@ -276,10 +289,7 @@ export class PlotsComponent implements OnInit {
 
       } else {
         // Crear nuevo lote
-        const createRequest: CreatePlotRequest = {
-          farm_id: currentFarmId,
-          ...formData
-        };
+        const createRequest: CreatePlotRequest = formData;
 
         const response = await this._plotsService.createPlot(createRequest).toPromise();
 
@@ -373,6 +383,7 @@ export class PlotsComponent implements OnInit {
   }
 
   clearFilters(): void {
+    this.filterFarm = '';
     this.filterStatus = '';
     this.filterCropType = '';
     this.searchTerm = '';
@@ -381,7 +392,7 @@ export class PlotsComponent implements OnInit {
   }
 
   hasFilters(): boolean {
-    return !!(this.filterStatus || this.filterCropType || this.searchTerm);
+    return !!(this.filterFarm || this.filterStatus || this.filterCropType || this.searchTerm);
   }
 
   get filteredPlots(): PlotEntity[] {
@@ -396,6 +407,11 @@ export class PlotsComponent implements OnInit {
         plot.crop_type?.toLowerCase().includes(search) ||
         plot.soil_type?.toLowerCase().includes(search)
       );
+    }
+
+    // Filtro por finca
+    if (this.filterFarm) {
+      filtered = filtered.filter(plot => plot.farm_id === this.filterFarm);
     }
 
     // Filtro por estado
@@ -497,6 +513,11 @@ export class PlotsComponent implements OnInit {
 
   getPlotHealthFactors(plot: PlotEntity): string[] {
     return getPlotHealthScore(plot).factors;
+  }
+
+  // Getter para las fincas disponibles
+  get availableFarms(): FarmEntity[] {
+    return this.farmStateService.farms();
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {

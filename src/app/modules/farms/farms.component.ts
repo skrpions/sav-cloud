@@ -74,6 +74,7 @@ export class FarmsComponent implements OnInit {
   departmentOptions = DEPARTMENT_OPTIONS;
   certificationOptions = CERTIFICATION_OPTIONS;
   constraints = FARM_CONSTRAINTS;
+  currentYear = new Date().getFullYear();
 
   constructor() {
     this.farmForm = this.createFarmForm();
@@ -137,6 +138,15 @@ export class FarmsComponent implements OnInit {
         Validators.pattern(this.constraints.email.pattern)
       ]],
       established_date: [new Date('1985-03-15')],
+      // establishment_year: [1985, [
+      //   Validators.min(1900),
+      //   Validators.max(this.currentYear)
+      // ]],
+      // purchase_date: [new Date('1985-03-15')],
+      // notes: ['Finca con excelente calidad de café y vista panorámica'],
+      // manager_name: ['Juan Carlos Restrepo'],
+      // manager_phone: ['3105338818'],
+      // manager_email: ['admin@eltriangulo.co'],
       // Certificaciones como FormGroup anidado
       certifications: this._formBuilder.group({
         organic: [false],
@@ -271,6 +281,12 @@ export class FarmsComponent implements OnInit {
         phone: farm.phone || '',
         email: farm.email || '',
         established_date: farm.established_date ? new Date(farm.established_date) : null,
+        // establishment_year: farm.establishment_year || null,
+        // purchase_date: farm.purchase_date ? new Date(farm.purchase_date) : null,
+        // notes: farm.notes || '',
+        // manager_name: farm.manager_name || '',
+        // manager_phone: farm.manager_phone || '',
+        // manager_email: farm.manager_email || '',
         certifications: {
           organic: certifications['organic'] || false,
           fair_trade: certifications['fair_trade'] || false,

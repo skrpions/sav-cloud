@@ -27,7 +27,8 @@ import {
   BankingInfo
 } from '@/app/shared/models/collaborator.models';
 import { CollaboratorsService } from '../../services/collaborators.service';
-import { FORM_CONSTRAINTS, TEMP_FARM_CONSTANTS } from '@/app/shared/constants/form-constrains';
+import { FarmStateService } from '@/app/shared/services/farm-state.service';
+import { FORM_CONSTRAINTS } from '@/app/shared/constants/form-constrains';
 
 @Component({
   selector: 'app-collaborator-form',
@@ -44,6 +45,7 @@ export class CollaboratorFormComponent implements OnInit, OnChanges {
 
   private _fb = inject(FormBuilder);
   private _collaboratorsService = inject(CollaboratorsService);
+  private _farmStateService = inject(FarmStateService);
   private _translateService = inject(TranslateService);
 
   collaboratorForm!: FormGroup;
@@ -62,8 +64,7 @@ export class CollaboratorFormComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Detectar cuando cambia el input collaborator
-    if (changes['collaborator'] && this.collaboratorForm && this.collaborator) {
+    if (changes['collaborator'] && this.collaboratorForm) {
       this.populateForm();
     }
   }
@@ -149,10 +150,16 @@ export class CollaboratorFormComponent implements OnInit, OnChanges {
     try {
       const formValue = this.collaboratorForm.value;
       
+      // Obtener farm_id actual del servicio de estado
+      const currentFarmId = this._farmStateService.getCurrentFarmIdOrDefault();
+      if (!currentFarmId) {
+        throw new Error('No hay una finca seleccionada. Por favor selecciona una finca antes de crear un colaborador.');
+      }
+      
       // Convertir fechas usando DateUtils para evitar problemas de zona horaria
       const requestData = {
         ...formValue,
-        farm_id: TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID, // Agregar farm_id requerido
+        farm_id: currentFarmId, // Usar farm_id del servicio de estado
         birth_date: DateUtils.formatForBackend(formValue.birth_date),
         hire_date: DateUtils.formatForBackend(formValue.hire_date)
       };
@@ -194,18 +201,9 @@ export class CollaboratorFormComponent implements OnInit, OnChanges {
       this.formSubmitted.emit();
 
     } catch (error: unknown) {
-      console.error('Error saving collaborator:', error);
+      console.error('❌ Error in onSubmit:', error);
       
-      // Verificar si es un error de documento duplicado
-      let errorMessage = this._translateService.instant('collaborators.toasts.error.description');
-      
-      if (error instanceof Error) {
-        if (error.message && error.message.includes('duplicate key value violates unique constraint')) {
-          errorMessage = this._translateService.instant('collaborators.toasts.error.duplicateIdentification');
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-      }
+      const errorMessage = error instanceof Error ? error.message : this._translateService.instant('collaborators.toasts.error.description');
       
       toast.error(this._translateService.instant('collaborators.toasts.error.title'), {
         description: errorMessage,
@@ -220,86 +218,33 @@ export class CollaboratorFormComponent implements OnInit, OnChanges {
     this.formCancelled.emit();
   }
 
-  private markFormGroupTouched(): void {
-    Object.keys(this.collaboratorForm.controls).forEach(key => {
-      const control = this.collaboratorForm.get(key);
-      control?.markAsTouched();
-    });
-  }
-
-  // Métodos de validación para el template
-  isFieldRequired(fieldName: string): boolean {
-    const control = this.collaboratorForm.get(fieldName);
-    return !!(control?.invalid && control?.touched && control?.errors?.['required']);
-  }
-
-  isFieldInvalid(fieldName: string, validationType: string): boolean {
-    const control = this.collaboratorForm.get(fieldName);
-    return !!(control?.invalid && control?.touched && control?.errors?.[validationType]);
-  }
-
-  isEmailInvalid(): boolean {
-    const emailControl = this.collaboratorForm.get('email');
-    return !!(emailControl?.invalid && emailControl?.touched && emailControl?.errors?.['email']);
-  }
-
-  isPatternInvalid(fieldName: string): boolean {
-    const control = this.collaboratorForm.get(fieldName);
-    return !!(control?.invalid && control?.touched && control?.errors?.['pattern']);
-  }
-
-  isMinLengthInvalid(fieldName: string): boolean {
-    const control = this.collaboratorForm.get(fieldName);
-    return !!(control?.invalid && control?.touched && control?.errors?.['minlength']);
-  }
-
-  isMaxLengthInvalid(fieldName: string): boolean {
-    const control = this.collaboratorForm.get(fieldName);
-    return !!(control?.invalid && control?.touched && control?.errors?.['maxlength']);
-  }
-
-  isMinimumAgeInvalid(fieldName: string): boolean {
-    const control = this.collaboratorForm.get(fieldName);
-    return !!(control?.invalid && control?.touched && control?.errors?.['minimumAge']);
-  }
-
-  // Métodos para la funcionalidad bancaria avanzada
-  onBankChange(selectedBank: BankType): void {
-    this.selectedBank = selectedBank;
+  // Métodos para manejo de información bancaria
+  onBankChange(bank: BankType): void {
+    this.selectedBank = bank;
     
-    // Limpiar el tipo de producto cuando cambia el banco
-    const bankingInfoGroup = this.collaboratorForm.get('banking_info');
-    if (bankingInfoGroup) {
-      bankingInfoGroup.patchValue({
-        product_type: '',
-        use_phone_number: false
-      });
+    // Resetear el toggle cuando cambie el banco
+    if (bank !== 'nequi') {
+      this.usePhoneForNequi = false;
+      this.collaboratorForm.get('banking_info')?.get('use_phone_number')?.setValue(false);
     }
     
-    // Resetear el toggle de Nequi
-    this.usePhoneForNequi = false;
+    // Limpiar el número de cuenta cuando cambie el banco
+    this.collaboratorForm.get('banking_info')?.get('account_number')?.setValue('');
   }
 
   onUsePhoneToggle(usePhone: boolean): void {
     this.usePhoneForNequi = usePhone;
+    this.collaboratorForm.get('banking_info')?.get('use_phone_number')?.setValue(usePhone);
     
-    const bankingInfoGroup = this.collaboratorForm.get('banking_info');
-    const phoneValue = this.collaboratorForm.get('phone')?.value || '';
-    
-    if (bankingInfoGroup && this.selectedBank === 'nequi') {
-      if (usePhone && phoneValue) {
-        // Usar el número de teléfono como número de cuenta para Nequi
-        bankingInfoGroup.patchValue({
-          account_number: phoneValue,
-          use_phone_number: true
-        });
-      } else {
-        bankingInfoGroup.patchValue({
-          account_number: '',
-          use_phone_number: false
-        });
-      }
+    if (usePhone) {
+      // Limpiar el campo de número de cuenta si se va a usar el teléfono
+      this.collaboratorForm.get('banking_info')?.get('account_number')?.setValue('');
     }
+  }
+
+  // Helpers para el template
+  isNequiSelected(): boolean {
+    return this.selectedBank === 'nequi';
   }
 
   getProductTypeOptions() {
@@ -309,7 +254,39 @@ export class CollaboratorFormComponent implements OnInit, OnChanges {
     return this.genericProductOptions;
   }
 
-  isNequiSelected(): boolean {
-    return this.selectedBank === 'nequi';
+  // Métodos de validación para el template
+  isFieldRequired(fieldName: string): boolean {
+    const control = this.collaboratorForm.get(fieldName);
+    return !!(control?.hasError('required') && control?.touched);
+  }
+
+  isPatternInvalid(fieldName: string): boolean {
+    const control = this.collaboratorForm.get(fieldName);
+    return !!(control?.hasError('pattern') && control?.touched && !control?.hasError('required'));
+  }
+
+  isEmailInvalid(): boolean {
+    const control = this.collaboratorForm.get('email');
+    return !!(control?.hasError('email') && control?.touched && !control?.hasError('required'));
+  }
+
+  isMinimumAgeInvalid(fieldName: string): boolean {
+    const control = this.collaboratorForm.get(fieldName);
+    return !!(control?.hasError('minimumAge') && control?.touched);
+  }
+
+  private markFormGroupTouched(): void {
+    this.markAllFieldsAsTouched(this.collaboratorForm);
+  }
+
+  private markAllFieldsAsTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markAllFieldsAsTouched(control);
+      }
+    });
   }
 } 

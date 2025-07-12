@@ -11,9 +11,11 @@ import { HeaderComponent } from '@/app/shared/components/header/header.component
 import { CollaboratorFormComponent } from './components/collaborator-form/collaborator-form.component';
 import { CollaboratorsService } from './services/collaborators.service';
 import { CollaboratorEntity } from '@/app/shared/models/collaborator.models';
-import { FORM_CONSTRAINTS, TEMP_FARM_CONSTANTS } from '@/app/shared/constants/form-constrains';
+import { FarmStateService } from '@/app/shared/services/farm-state.service';
+import { FORM_CONSTRAINTS } from '@/app/shared/constants/form-constrains';
 import { SidebarItem } from '@/app/shared/models/ui.models';
 import { DateUtils } from '@/app/shared/utils/validators';
+import { UpdateCollaboratorRequest } from '@/app/shared/models/collaborator.models';
 
 // Tipos para las vistas
 export type ViewMode = 'list' | 'cards';
@@ -35,6 +37,7 @@ export type ViewMode = 'list' | 'cards';
 })
 export class CollaboratorsComponent implements OnInit {
   private _collaboratorsService = inject(CollaboratorsService);
+  private _farmStateService = inject(FarmStateService);
   private _router = inject(Router);
   private _translateService = inject(TranslateService);
 
@@ -58,8 +61,13 @@ export class CollaboratorsComponent implements OnInit {
   filterContractType = '';
   filterHireDate = '';
 
-  ngOnInit(): void {
-    this.loadCollaborators();
+  async ngOnInit(): Promise<void> {
+    // Inicializar farm state service si no está ya inicializado
+    if (!this._farmStateService.hasFarms()) {
+      await this._farmStateService.initialize();
+    }
+    
+    await this.loadCollaborators();
   }
 
   async loadCollaborators(): Promise<void> {
@@ -67,7 +75,8 @@ export class CollaboratorsComponent implements OnInit {
     
     try {
       console.log('Loading collaborators...');
-      const response = await this._collaboratorsService.getAllCollaborators(TEMP_FARM_CONSTANTS.DEFAULT_FARM_ID).toPromise();
+      const currentFarmId = this._farmStateService.getCurrentFarmIdOrDefault();
+      const response = await this._collaboratorsService.getAllCollaborators(currentFarmId).toPromise();
       
       if (response?.error) {
         console.error('Service returned error:', response.error);
@@ -94,30 +103,54 @@ export class CollaboratorsComponent implements OnInit {
     }
   }
 
+  updatePagination(): void {
+    const filteredCount = this.filteredCollaborators().length;
+    const pages = Math.ceil(filteredCount / this.pageSize());
+    this.totalPages.set(pages);
+    
+    if (this.currentPage() >= pages && pages > 0) {
+      this.currentPage.set(pages - 1);
+    }
+  }
 
-
-  // Métodos de vista y paginación
   switchView(mode: ViewMode): void {
     this.viewMode.set(mode);
+  }
+
+  onSearchChanged(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const searchTerm = target?.value || '';
+    this.searchTerm.set(searchTerm);
     this.currentPage.set(0);
     this.updatePagination();
   }
 
-  public updatePagination(): void {
-    const filtered = this.filteredCollaborators();
-    const total = Math.ceil(filtered.length / this.pageSize());
-    this.totalPages.set(total);
-    
-    // Asegurar que la página actual sea válida
-    if (this.currentPage() >= total && total > 0) {
-      this.currentPage.set(total - 1);
+  clearFilters(): void {
+    this.filterStatus = '';
+    this.filterContractType = '';
+    this.filterHireDate = '';
+    this.searchTerm.set('');
+    this.currentPage.set(0);
+    this.updatePagination();
+  }
+
+  hasFilters(): boolean {
+    return !!(this.filterStatus || this.filterContractType || this.filterHireDate || this.searchTerm());
+  }
+
+  onSidebarItemClicked(item: SidebarItem): void {
+    if (item.route) {
+      this._router.navigate([item.route]);
     }
   }
 
+  onSidebarCollapseChanged(isCollapsed: boolean): void {
+    this.isSidebarCollapsed.set(isCollapsed);
+  }
+
+  // Paginación
   changePage(page: number): void {
-    if (page >= 0 && page < this.totalPages()) {
-      this.currentPage.set(page);
-    }
+    this.currentPage.set(page);
   }
 
   nextPage(): void {
@@ -130,24 +163,6 @@ export class CollaboratorsComponent implements OnInit {
     if (this.currentPage() > 0) {
       this.currentPage.set(this.currentPage() - 1);
     }
-  }
-
-  updateFilters(): void {
-    this.currentPage.set(0);
-    this.updatePagination();
-  }
-
-  // Filtros
-  clearFilters(): void {
-    this.filterStatus = '';
-    this.filterContractType = '';
-    this.filterHireDate = '';
-    this.currentPage.set(0);
-    this.updatePagination();
-  }
-
-  hasFilters(): boolean {
-    return !!(this.filterStatus || this.filterContractType || this.filterHireDate);
   }
 
   get filteredCollaborators(): () => CollaboratorEntity[] {
@@ -164,9 +179,11 @@ export class CollaboratorsComponent implements OnInit {
       }
 
       if (this.filterHireDate) {
+        // Asegurar que tratamos el filterHireDate como fecha local sin zona horaria
         const filterDate = DateUtils.formatToLocalDate(new Date(this.filterHireDate));
         filtered = filtered.filter(c => {
-          const hireDate = DateUtils.formatToLocalDate(new Date(c.hire_date));
+          // Extraer solo la parte de fecha de hire_date (sin hora)
+          const hireDate = c.hire_date.split('T')[0]; // Extraer YYYY-MM-DD
           return hireDate === filterDate;
         });
       }
@@ -188,19 +205,9 @@ export class CollaboratorsComponent implements OnInit {
 
   get paginatedCollaborators(): CollaboratorEntity[] {
     const filtered = this.filteredCollaborators();
-    
-    if (this.viewMode() === 'cards') {
-      return filtered; // Sin paginación en vista de tarjetas
-    }
-    
-    const start = this.currentPage() * this.pageSize();
-    const end = start + this.pageSize();
-    return filtered.slice(start, end);
-  }
-
-  onSearchChanged(searchTerm: string): void {
-    this.searchTerm.set(searchTerm);
-    this.updatePagination();
+    const startIndex = this.currentPage() * this.pageSize();
+    const endIndex = startIndex + this.pageSize();
+    return filtered.slice(startIndex, endIndex);
   }
 
   onAddNewCollaborator(): void {
@@ -216,41 +223,63 @@ export class CollaboratorsComponent implements OnInit {
   }
 
   onViewCollaborator(collaborator: CollaboratorEntity): void {
-    // TODO: Implementar vista de detalles del colaborador
-    console.log('Ver detalles de:', collaborator);
-    // Por ahora, simplemente editamos
-    this.onEditCollaborator(collaborator);
+    // Implementar vista de detalles
+    console.log('View collaborator:', collaborator);
   }
 
   async onDeleteCollaborator(collaborator: CollaboratorEntity): Promise<void> {
     if (!collaborator.id) return;
-
-    // Confirm deletion
-    const confirmed = confirm('¿Estás seguro de eliminar este colaborador?');
-    if (!confirmed) return;
-
-    try {
-      const result = await this._collaboratorsService.deleteCollaborator(collaborator.id).toPromise();
+    
+    const confirmMessage = `¿Estás seguro de desactivar al colaborador "${collaborator.first_name} ${collaborator.last_name}"?`;
+    
+    if (confirm(confirmMessage)) {
+      this.isLoading.set(true);
       
-      if (result?.error) {
-        throw new Error(result.error.message);
+      try {
+        const updateRequest: UpdateCollaboratorRequest = {
+          id: collaborator.id, // Ya verificamos que no es undefined arriba
+          farm_id: collaborator.farm_id,
+          first_name: collaborator.first_name,
+          last_name: collaborator.last_name,
+          identification: collaborator.identification,
+          phone: collaborator.phone,
+          address: collaborator.address,
+          email: collaborator.email,
+          birth_date: collaborator.birth_date,
+          hire_date: collaborator.hire_date,
+          contract_type: collaborator.contract_type,
+          emergency_contact_name: collaborator.emergency_contact_name,
+          emergency_contact_phone: collaborator.emergency_contact_phone,
+          banking_info: collaborator.banking_info,
+          specializations: collaborator.specializations,
+          notes: collaborator.notes,
+          is_active: false
+        };
+        
+        const result = await this._collaboratorsService.updateCollaborator(updateRequest).toPromise();
+        
+        if (result?.error) {
+          throw new Error(result.error.message);
+        }
+        
+        toast.success('Colaborador desactivado', {
+          description: 'El colaborador ha sido desactivado exitosamente.',
+          duration: FORM_CONSTRAINTS.timing.toastDuration
+        });
+        
+        await this.loadCollaborators();
+        
+      } catch (error: unknown) {
+        console.error('Error deactivating collaborator:', error);
+        
+        const errorMessage = error instanceof Error ? error.message : 'Error al desactivar el colaborador';
+        toast.error('Error', {
+          description: errorMessage,
+          duration: FORM_CONSTRAINTS.timing.toastDuration
+        });
+      } finally {
+        this.isLoading.set(false);
       }
-
-      toast.success(this._translateService.instant('collaborators.toasts.deleteSuccess.title'), {
-        description: this._translateService.instant('collaborators.toasts.deleteSuccess.description'),
-        duration: FORM_CONSTRAINTS.timing.toastDuration
-      });
-
-      // Reload the list
-      await this.loadCollaborators();
-
-    } catch (error: unknown) {
-      console.error('Error deleting collaborator:', error);
-      
-      toast.error(this._translateService.instant('collaborators.toasts.error.title'), {
-        description: error instanceof Error ? error.message : this._translateService.instant('collaborators.toasts.error.description'),
-        duration: FORM_CONSTRAINTS.timing.toastDuration
-      });
     }
   }
 
@@ -269,29 +298,22 @@ export class CollaboratorsComponent implements OnInit {
     this.isEditMode.set(false);
   }
 
-  onSidebarItemClicked(item: SidebarItem): void {
-    console.log('Sidebar item clicked:', item);
-    // The navigation is already handled in the sidebar component
-    // Here we could handle additional logic specific to this component if needed
-  }
-
-  onSidebarCollapseChanged(isCollapsed: boolean): void {
-    this.isSidebarCollapsed.set(isCollapsed);
-  }
-
-  onOverlayKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape') {
-      event.preventDefault();
-      this.onFormCancelled();
-    }
+  // Métodos de utilidad para el template
+  formatDate(dateString?: string): string {
+    return DateUtils.formatToLocalDate(dateString ? new Date(dateString) : new Date());
   }
 
   getFullName(collaborator: CollaboratorEntity): string {
     return `${collaborator.first_name} ${collaborator.last_name}`;
   }
 
-  formatDate(dateString: string): string {
-    return DateUtils.formatToDisplay(dateString);
+  getBankingInfo(collaborator: CollaboratorEntity): string {
+    if (!collaborator.banking_info) return 'Sin información bancaria';
+    
+    const { bank, product_type } = collaborator.banking_info;
+    if (!bank || !product_type) return 'Información incompleta';
+    
+    return `${bank} - ${product_type}`;
   }
 
   getContractTypeLabel(contractType: string): string {
@@ -302,7 +324,18 @@ export class CollaboratorsComponent implements OnInit {
     }
   }
 
-  // TrackBy functions para mejor rendimiento
+  updateFilters(): void {
+    this.currentPage.set(0);
+    this.updatePagination();
+  }
+
+  onOverlayKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape') {
+      event.preventDefault();
+      this.onFormCancelled();
+    }
+  }
+
   trackByCollaboratorId(index: number, item: CollaboratorEntity): string {
     return item.id || index.toString();
   }

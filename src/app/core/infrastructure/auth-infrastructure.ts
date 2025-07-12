@@ -135,7 +135,6 @@ export class AuthInfrastructure implements AuthRepository {
   /**
    * Mapea la respuesta de Supabase al formato de nuestra entidad AuthResponse
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapSupabaseResponse(response: any): AuthResponse {
     console.log('Supabase response:', response);
     
@@ -175,7 +174,6 @@ export class AuthInfrastructure implements AuthRepository {
   /**
    * Mapea la respuesta de signOut de Supabase
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapSupabaseSignOutResponse(response: any): AuthResponse {
     if (response.error) {
       return {
@@ -196,7 +194,6 @@ export class AuthInfrastructure implements AuthRepository {
   /**
    * Mapea la respuesta de resetPassword de Supabase
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapSupabaseResetResponse(response: any): AuthResponse {
     if (response.error) {
       return {
@@ -217,7 +214,6 @@ export class AuthInfrastructure implements AuthRepository {
   /**
    * Mapea el usuario de Supabase al formato de nuestra entidad UserEntity
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapSupabaseUser(user: any): UserEntity {
     return {
       id: user.id,

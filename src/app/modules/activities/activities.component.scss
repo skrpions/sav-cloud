@@ -883,7 +883,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  width: 600px;
+  width: 1050px;
   height: 100vh;
   background: white;
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
@@ -967,11 +967,20 @@
     }
     
     .form-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--white);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 119, 1, 0.3);
+      box-shadow: 0 1px 3px rgba(0, 119, 1, 0.1);
+      
       .section-title {
+        margin: 0 0 12px 0;
         font-size: 14px;
         font-weight: 600;
         color: var(--holiday-teal-dark);
-        margin-bottom: 12px;
         padding-bottom: 6px;
         border-bottom: 2px solid rgba(0, 119, 1, 0.1);
         display: flex;
@@ -982,6 +991,7 @@
           font-size: 18px;
           width: 18px;
           height: 18px;
+          color: var(--holiday-green-medium);
         }
       }
     }

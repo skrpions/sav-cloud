@@ -363,7 +363,6 @@ export class PlotsService {
   // ========================================
 
   private mapListResponse(response: unknown): PlotListResponse {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabaseResponse = response as { data: any[] | null, error: any | null };
     
     if (supabaseResponse.error) {
@@ -382,7 +381,6 @@ export class PlotsService {
   }
 
   private mapSingleResponse(response: unknown): PlotResponse {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabaseResponse = response as { data: any | null, error: any | null };
     
     if (supabaseResponse.error) {
